@@ -3,8 +3,16 @@ import { CatalogItemKind } from '../features/catalog/api/types';
 /** Root path of the Pufferfin interface. */
 export const PUFFERFIN_APP_PATH = 'pufferfin';
 
+/** The Pufferfin home replaces the upstream home on the same path. */
+export const HOME_APP_PATH = 'home';
+
+/** Pufferfin home: titles on disk and catalog titles mixed. */
+export const getHomePath = () => `/${HOME_APP_PATH}`;
+
 export const isPufferfinPath = (pathname: string) =>
-    pathname === `/${PUFFERFIN_APP_PATH}` || pathname.startsWith(`/${PUFFERFIN_APP_PATH}/`);
+    pathname === getHomePath()
+    || pathname === `/${PUFFERFIN_APP_PATH}`
+    || pathname.startsWith(`/${PUFFERFIN_APP_PATH}/`);
 
 /** Detail page of a movie or a series. */
 export const getItemPath = (itemId: string) => `/${PUFFERFIN_APP_PATH}/item/${itemId}`;
@@ -27,6 +35,9 @@ export function parseCatalogTitleKind(segment: string | undefined): CatalogTitle
 
 /** Library tab: only the titles on disk. */
 export const getLibraryPath = () => `/${PUFFERFIN_APP_PATH}/library`;
+
+/** Menu: account, administration and the other Jellyfin libraries. */
+export const getMenuPath = () => `/${PUFFERFIN_APP_PATH}/menu`;
 
 /** Universal search. */
 export const getSearchPath = () => `/${PUFFERFIN_APP_PATH}/search`;

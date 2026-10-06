@@ -61,22 +61,28 @@ export const Component = () => {
 
     useInitialFocus(pageRef, []);
 
-    // After Show more, the focus goes to the first new title: the button may be gone, and the focus must not be lost
-    const pendingFocusIndex = useRef<number>();
+    // After Show more, the focus goes to the first new title: the button may be gone, and the focus must not be lost.
+    // The shelf is kept with the index, so a page that lands after a shelf change does not pull the focus.
+    const pendingFocus = useRef<{ kind: LibraryKind, index: number }>();
     const onShowMore = useCallback(() => {
         // Not disabled while loading: a disabled button would drop the focus
         if (isFetchingNextPage) return;
-        pendingFocusIndex.current = items.length;
+        pendingFocus.current = { kind, index: items.length };
         fetchNextPage().catch(() => undefined);
-    }, [ fetchNextPage, isFetchingNextPage, items.length ]);
+    }, [ fetchNextPage, isFetchingNextPage, items.length, kind ]);
 
     useEffect(() => {
-        const index = pendingFocusIndex.current;
-        if (index === undefined || items.length <= index) return;
-        pendingFocusIndex.current = undefined;
-        const target = gridRef.current?.querySelectorAll<HTMLElement>(`[${FOCUSABLE_ATTRIBUTE}]`)[index];
+        const pending = pendingFocus.current;
+        if (!pending) return;
+        if (pending.kind !== kind) {
+            pendingFocus.current = undefined;
+            return;
+        }
+        if (items.length <= pending.index) return;
+        pendingFocus.current = undefined;
+        const target = gridRef.current?.querySelectorAll<HTMLElement>(`[${FOCUSABLE_ATTRIBUTE}]`)[pending.index];
         if (target) focusElement(target);
-    }, [ items.length ]);
+    }, [ items.length, kind ]);
 
     const kindOptions = useMemo(
         () => LIBRARY_KINDS.map(id => ({ id, name: t(KIND_LABELS[id]) })),

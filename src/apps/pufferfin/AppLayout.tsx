@@ -6,7 +6,7 @@ import { clearBackdrop } from 'components/backdrop/backdrop';
 import AppNav from './components/AppNav';
 import { TranslationProvider } from './i18n/useTranslation';
 import { useSpatialNavigation } from './navigation/useSpatialNavigation';
-import { PUFFERFIN_APP_PATH } from './routes/paths';
+import { getHomePath } from './routes/paths';
 
 import './styles/pufferfin.scss';
 
@@ -31,7 +31,7 @@ export const Component = () => {
 
     // Back leaves the current screen; on the Pufferfin home it falls through to the upstream handler
     const onBack = useCallback(() => {
-        if (location.pathname === `/${PUFFERFIN_APP_PATH}`) return false;
+        if (location.pathname === getHomePath()) return false;
         navigate(-1);
         return true;
     }, [ location.pathname, navigate ]);

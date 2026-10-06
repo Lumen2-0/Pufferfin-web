@@ -18,7 +18,7 @@
     "Group.language": "Language",
     "Group.language.Description": "Which audio Pufferfin looks for. When no preferred language is available, the original version is used.",
     "Group.behavior": "Behavior",
-    "Group.behavior.Description": "How many downloads run at once and how long downloads keep seeding.",
+    "Group.behavior.Description": "How many downloads run at once, how long downloads keep seeding, and where the files are stored.",
 
     "Service.Radarr": "Radarr",
     "Service.Sonarr": "Sonarr",
@@ -57,6 +57,8 @@
     "ValidationInteger": "Enter a whole number.",
     "ValidationDecimal": "Enter a number.",
     "ValidationMinimum": "Enter a value of at least {0}.",
+    "ValidationMaximum": "Enter a value of at most {0}.",
+    "ValidationPath": "Enter an absolute folder path such as /media, without '..'.",
     "ValidationLanguageList": "Enter language codes such as fr or pt-BR, separated by commas.",
     "ValidationTextList": "Enter short identifiers made of letters, digits, - or _, separated by commas.",
     "ValidationTooLong": "This value is too long.",
@@ -326,5 +328,15 @@
     "Setting.SEED_TARGET_RATIO": "Target ratio",
     "Setting.SEED_TARGET_RATIO.Help": "Once the minimum seeding time is reached, a download that reaches this ratio may be removed.",
     "Setting.MAX_CONCURRENT_DOWNLOADS": "Maximum simultaneous downloads",
-    "Setting.MAX_CONCURRENT_DOWNLOADS.Help": "Number of downloads that can run at the same time."
+    "Setting.MAX_CONCURRENT_DOWNLOADS.Help": "Number of downloads that can run at the same time.",
+    "Setting.SEED_CATEGORIES": "Managed qBittorrent categories",
+    "Setting.SEED_CATEGORIES.Help": "The seeding policy only removes torrents in these categories, separated by commas, for example radarr, sonarr. Torrents in other categories are never touched.",
+    "Setting.MEDIA_PATH": "Library folder",
+    "Setting.MEDIA_PATH.Help": "Absolute path of the library, as the Pufferfin server sees it, for example /media. Used by the storage screen.",
+    "Setting.DOWNLOADS_PATH": "Downloads folder",
+    "Setting.DOWNLOADS_PATH.Help": "Absolute path of the downloads, as the Pufferfin server sees it, for example /downloads. On the same disk as the library, downloads can be hard linked and seeding takes no extra space.",
+    "Setting.QBITTORRENT_DOWNLOADS_PATH": "Downloads folder seen by qBittorrent",
+    "Setting.QBITTORRENT_DOWNLOADS_PATH.Help": "Absolute path of the downloads, as qBittorrent sees it. Only needed when it differs from the downloads folder of the Pufferfin server.",
+    "Setting.STORAGE_WARNING_PERCENT": "Disk usage warning (%)",
+    "Setting.STORAGE_WARNING_PERCENT.Help": "The storage screen warns when a disk is used at this percentage or more, from 1 to 100."
 }
