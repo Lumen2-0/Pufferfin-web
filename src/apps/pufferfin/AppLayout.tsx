@@ -23,6 +23,11 @@ export const Component = () => {
         clearBackdrop(true);
     }, []);
 
+    // Each screen starts at the top: the scroll container outlives the routes
+    useEffect(() => {
+        if (rootRef.current) rootRef.current.scrollTop = 0;
+    }, [ location.pathname ]);
+
     // Back leaves the current screen; on the Pufferfin home it falls through to the upstream handler
     const onBack = useCallback(() => {
         if (location.pathname === `/${PUFFERFIN_APP_PATH}`) return false;

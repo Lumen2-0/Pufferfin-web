@@ -1,5 +1,6 @@
 import type { Api } from '@jellyfin/sdk';
 import { ImageType } from '@jellyfin/sdk/lib/generated-client/models/image-type';
+import type { BaseItemPerson } from '@jellyfin/sdk/lib/generated-client/models/base-item-person';
 import { getImageApi } from '@jellyfin/sdk/lib/utils/api/image-api';
 
 import type { ItemDto } from 'types/base/models/item-dto';
@@ -71,4 +72,9 @@ export function getCardImageUrl(api: Api, item: ItemDto, shape: CardShape) {
 /** Full width background art for the featured area. */
 export function getBackdropUrl(api: Api, item: ItemDto) {
     return toUrl(api, getBackdropSources(item), 1920);
+}
+
+/** Portrait of a cast or crew member. */
+export function getPersonImageUrl(api: Api, person: BaseItemPerson) {
+    return toUrl(api, [ source(person.Id, ImageType.Primary, person.PrimaryImageTag) ], 300);
 }

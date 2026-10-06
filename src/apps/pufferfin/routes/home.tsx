@@ -1,9 +1,8 @@
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import PlayArrow from '@mui/icons-material/PlayArrow';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { playbackManager } from 'components/playback/playbackmanager';
-import { appRouter } from 'components/router/appRouter';
 import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
 
@@ -13,12 +12,10 @@ import PosterCard from '../components/PosterCard';
 import RoundButton from '../components/RoundButton';
 import { useLatestItems, useNextUpItems, useResumeItems } from '../features/home/api/useHomeRows';
 import { useTranslation } from '../i18n/useTranslation';
-import { focusFirst } from '../navigation/focus';
+import { useInitialFocus } from '../navigation/useInitialFocus';
 import { type CardShape, getBackdropUrl, getCardImageUrl } from '../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, isResumable } from '../utils/items';
-
-// The item details screen is the next Pufferfin screen; until then cards open the existing one
-const openItem = (item: ItemDto) => appRouter.showItem(item);
+import { useOpenItem } from '../utils/navigation';
 
 const playItem = (item: ItemDto) => {
     playbackManager.play({
@@ -34,6 +31,7 @@ const getKey = (item: ItemDto) => item.Id ?? '';
 export const Component = () => {
     const t = useTranslation();
     const { api } = useApi();
+    const openItem = useOpenItem();
     const pageRef = useRef<HTMLDivElement>(null);
 
     const resume = useResumeItems();
@@ -45,13 +43,7 @@ export const Component = () => {
     const isEmpty = isLoaded && !featured && !nextUp.data?.length
         && !resume.isError && !nextUp.isError && !latest.isError;
 
-    // Give the focus a starting point once there is something to focus, unless the user already moved it
-    useEffect(() => {
-        const page = pageRef.current;
-        if (page && (!document.activeElement || document.activeElement === document.body)) {
-            focusFirst(page);
-        }
-    }, [ featured, isLoaded ]);
+    useInitialFocus(pageRef, [ featured, isLoaded ]);
 
     const getEpisodeLabel = useCallback((item: ItemDto) => {
         const numbers = getEpisodeNumbers(item);
@@ -74,7 +66,7 @@ export const Component = () => {
             );
         };
         return CardRenderer;
-    }, [ api, getEpisodeLabel, t ]);
+    }, [ api, getEpisodeLabel, openItem, t ]);
 
     return (
         <div ref={pageRef} className='pf-home'>

@@ -201,10 +201,38 @@
     -webkit-box-orient: vertical;
 }
 
+.pf-hero__meta {
+    margin-top: 0.75rem;
+}
+
 .pf-hero__actions {
+    margin-top: 1.75rem;
+}
+
+// Facts line: year, runtime, rating, genres, separated by a dot
+
+.pf-meta {
     display: flex;
     flex-wrap: wrap;
-    margin-top: 1.75rem;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 1.05rem;
+    list-style: none;
+}
+
+.pf-meta__item + .pf-meta__item::before {
+    margin: 0 0.6rem;
+    content: '\00b7';
+}
+
+// Wrapping row of round buttons: hero actions, season picker
+
+.pf-button-row {
+    display: flex;
+    flex-wrap: wrap;
 
     .pf-button {
         margin: 0 1rem 1rem 0;
@@ -433,6 +461,153 @@
 
     to {
         opacity: 0.9;
+    }
+}
+
+// Detail page
+
+.pf-details__sections {
+    position: relative;
+    margin-top: -1rem;
+}
+
+.pf-details__episodes {
+    margin-top: 2rem;
+}
+
+.pf-seasons {
+    padding: 0 var(--pf-gutter);
+}
+
+.pf-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 35vh var(--pf-gutter) 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+// Cast: round portraits, the name under them
+
+.pf-person {
+    display: block;
+    width: 8.5rem;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-color-text);
+    font-family: inherit;
+    text-align: center;
+    background: none;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    scroll-margin: 0 calc(var(--pf-gutter) + 4rem);
+}
+
+.pf-person__portrait {
+    position: relative;
+    display: block;
+    width: 8.5rem;
+    height: 8.5rem;
+    overflow: hidden;
+    background: var(--pf-color-surface);
+    border-radius: 50%;
+    transition:
+        transform var(--pf-duration) var(--pf-ease),
+        box-shadow var(--pf-duration) var(--pf-ease);
+}
+
+.pf-person__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pf-person__initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 2rem;
+}
+
+.pf-person__caption {
+    display: block;
+    padding-top: 0.75rem;
+}
+
+.pf-person__name,
+.pf-person__role {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-person__name {
+    font-weight: 600;
+}
+
+.pf-person__role {
+    color: var(--pf-color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.pf-person:focus .pf-person__portrait,
+.pf-person:focus-visible .pf-person__portrait {
+    transform: scale(var(--pf-focus-scale));
+    box-shadow: var(--pf-focus-ring);
+}
+
+// About: the full overview and the remaining facts
+
+.pf-about {
+    margin: 2.5rem var(--pf-gutter) 0;
+    padding: 1.25rem 0;
+    border-radius: var(--pf-radius-card);
+    outline: none;
+    transition: box-shadow var(--pf-duration) var(--pf-ease);
+    scroll-margin: 2rem;
+
+    // A text section has no control to scale: the halo alone shows the focus
+    &:focus,
+    &:focus-visible {
+        box-shadow: var(--pf-focus-ring);
+    }
+}
+
+.pf-about__title {
+    padding: 0 1.25rem;
+}
+
+.pf-about__body {
+    max-width: 52rem;
+    padding: 0.75rem 1.25rem 0;
+}
+
+.pf-about__overview {
+    margin: 0 0 1.5rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.pf-about__facts {
+    margin: 0;
+
+    dt {
+        color: var(--pf-color-text-secondary);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    dd {
+        margin: 0.25rem 0 1rem;
     }
 }
 
