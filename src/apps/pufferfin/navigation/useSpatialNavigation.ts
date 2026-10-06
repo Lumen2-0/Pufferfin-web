@@ -36,9 +36,14 @@ export function useSpatialNavigation(
             if (!root || e.defaultPrevented) return;
             if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
 
+            const active = document.activeElement;
+            // The focus belongs to someone else (an upstream dialog or action sheet
+            // appended to the body): leave the key to the upstream handler
+            const isFocusLost = !active || active === document.body;
+            if (!isFocusLost && !root.contains(active)) return;
+
             const key = getKeyName(e);
             const direction = getDirection(key);
-            const active = document.activeElement;
 
             if (direction) {
                 // Left and right move the caret inside a text field

@@ -69,7 +69,6 @@
 
 .pf-button {
     display: inline-flex;
-    gap: 0.5rem;
     align-items: center;
     justify-content: center;
     min-height: 3.25rem;
@@ -127,6 +126,17 @@
 
     svg {
         font-size: 1.6rem;
+    }
+}
+
+// Spacing uses margins rather than flex gap, which older TV engines lack
+
+.pf-button__icon + .pf-button__label {
+    margin-left: 0.5rem;
+
+    [dir='rtl'] & {
+        margin-right: 0.5rem;
+        margin-left: 0;
     }
 }
 
@@ -194,8 +204,15 @@
 .pf-hero__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
     margin-top: 1.75rem;
+
+    .pf-button {
+        margin: 0 1rem 1rem 0;
+
+        [dir='rtl'] & {
+            margin: 0 0 1rem 1rem;
+        }
+    }
 }
 
 // Rows
@@ -225,7 +242,6 @@
 
 .pf-row__list {
     display: flex;
-    gap: 1.25rem;
     margin: 0;
     // Room for the focus scale and halo, so they are never clipped
     padding: 1.25rem var(--pf-gutter) 1.5rem;
@@ -240,17 +256,34 @@
     }
 }
 
-.pf-row__item {
+.pf-row__list > * {
     flex: none;
+}
+
+.pf-row__list > * + * {
+    margin-left: 1.25rem;
+
+    [dir='rtl'] & {
+        margin-right: 1.25rem;
+        margin-left: 0;
+    }
 }
 
 .pf-row__error {
     display: flex;
-    gap: 0.5rem;
     align-items: center;
     margin: 0;
     padding: 1rem var(--pf-gutter);
     color: var(--pf-color-text-secondary);
+
+    svg {
+        margin-right: 0.5rem;
+
+        [dir='rtl'] & {
+            margin-right: 0;
+            margin-left: 0.5rem;
+        }
+    }
 }
 
 // Cards: a real button, the art is the content, the title shows on focus
@@ -288,19 +321,29 @@
         transform var(--pf-duration) var(--pf-ease),
         box-shadow var(--pf-duration) var(--pf-ease);
 
-    .pf-card--landscape & {
-        aspect-ratio: 16 / 9;
+    // Ratio box through padding: aspect-ratio is missing on older TV engines
+    &::before {
+        display: block;
+        padding-top: 56.25%;
+        content: '';
     }
 
-    .pf-card--portrait & {
-        aspect-ratio: 2 / 3;
+    .pf-card--portrait &::before {
+        padding-top: 150%;
     }
+}
+
+.pf-card__image,
+.pf-card__placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .pf-card__image {
     display: block;
-    width: 100%;
-    height: 100%;
     object-fit: cover;
 }
 
@@ -308,7 +351,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
     padding: 1rem;
     color: var(--pf-color-text-secondary);
     font-weight: 600;

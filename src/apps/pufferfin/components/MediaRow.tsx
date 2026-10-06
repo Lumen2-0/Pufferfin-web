@@ -36,12 +36,13 @@ const MediaRow = <T, >({
     if (isPending) {
         content = (
             <div className='pf-row__list' aria-busy='true'>
-                <span className='pf-visually-hidden'>{t('Loading')}</span>
                 {Array.from({ length: SKELETON_COUNT }, (_, index) => (
                     <span key={index} className={`pf-card pf-card--${shape} pf-card--skeleton`} aria-hidden='true'>
                         <span className='pf-card__art' />
                     </span>
                 ))}
+                {/* Last, so the row spacing still starts with the first card */}
+                <span className='pf-visually-hidden'>{t('Loading')}</span>
             </div>
         );
     } else if (isError) {
@@ -56,7 +57,7 @@ const MediaRow = <T, >({
         content = (
             <ul className='pf-row__list'>
                 {items?.map(item => (
-                    <li key={getKey(item)} className='pf-row__item'>
+                    <li key={getKey(item)}>
                         {renderItem(item)}
                     </li>
                 ))}
