@@ -53,7 +53,16 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     {
         id: SettingsGroupId.Behavior,
         services: [],
-        settings: [ 'MAX_CONCURRENT_DOWNLOADS', 'SEED_MIN_DAYS', 'SEED_MAX_DAYS', 'SEED_TARGET_RATIO' ]
+        settings: [
+            'MAX_CONCURRENT_DOWNLOADS',
+            'SEED_MIN_DAYS',
+            'SEED_MAX_DAYS',
+            'SEED_TARGET_RATIO',
+            'SEED_CATEGORIES',
+            'MEDIA_PATH',
+            'DOWNLOADS_PATH',
+            'STORAGE_WARNING_PERCENT'
+        ]
     }
 ];
 
