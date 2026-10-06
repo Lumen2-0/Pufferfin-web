@@ -15,7 +15,11 @@ const GENERAL_KEYS = [
     'SEED_MIN_DAYS',
     'SEED_MAX_DAYS',
     'SEED_TARGET_RATIO',
-    'MAX_CONCURRENT_DOWNLOADS'
+    'SEED_CATEGORIES',
+    'MAX_CONCURRENT_DOWNLOADS',
+    'MEDIA_PATH',
+    'DOWNLOADS_PATH',
+    'STORAGE_WARNING_PERCENT'
 ];
 
 // The keys of the server contract that belong to a service.
@@ -33,7 +37,8 @@ const SERVICE_KEYS = [
     'BAZARR_API_KEY',
     'SHELFMARK_URL',
     'TMDB_API_KEY',
-    'FLARESOLVERR_URL'
+    'FLARESOLVERR_URL',
+    'QBITTORRENT_DOWNLOADS_PATH'
 ];
 
 const strings: Record<string, string> = enUs;

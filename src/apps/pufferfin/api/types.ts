@@ -21,7 +21,9 @@ export enum SettingKind {
     Decimal = 'Decimal',
     Boolean = 'Boolean',
     LanguageList = 'LanguageList',
-    TextList = 'TextList'
+    TextList = 'TextList',
+    /** An absolute directory path, as the server or a service sees it. */
+    Path = 'Path'
 }
 
 /** Where the value of a setting comes from. */

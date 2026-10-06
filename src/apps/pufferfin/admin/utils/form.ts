@@ -24,8 +24,19 @@ const MINIMUMS = new Map<string, number>([
     [ 'SEED_MIN_DAYS', 0 ],
     [ 'SEED_MAX_DAYS', 0 ],
     [ 'SEED_TARGET_RATIO', 0 ],
-    [ 'MAX_CONCURRENT_DOWNLOADS', 1 ]
+    [ 'MAX_CONCURRENT_DOWNLOADS', 1 ],
+    [ 'STORAGE_WARNING_PERCENT', 1 ]
 ]);
+
+const MAXIMUMS = new Map<string, number>([
+    [ 'STORAGE_WARNING_PERCENT', 100 ]
+]);
+
+// Same rule as the server: '/' starts an absolute path even on a Windows server, because the services run in Linux
+// containers. A Windows path needs a drive and a separator, or is a UNC path.
+const ABSOLUTE_PATH_REGEX = /^(\/|[A-Za-z]:[\\/]|\\\\)/;
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARACTER_REGEX = /[\u0000-\u001f\u007f]/;
 
 export const isListKind = (kind: SettingKind) => kind === SettingKind.LanguageList || kind === SettingKind.TextList;
 
@@ -139,8 +150,17 @@ const validateNumber = (setting: PufferfinSetting, value: number): string | unde
     }
 
     const minimum = MINIMUMS.get(setting.Key);
-    return minimum !== undefined && value < minimum ? translate('ValidationMinimum', minimum) : undefined;
+    if (minimum !== undefined && value < minimum) return translate('ValidationMinimum', minimum);
+
+    const maximum = MAXIMUMS.get(setting.Key);
+    return maximum !== undefined && value > maximum ? translate('ValidationMaximum', maximum) : undefined;
 };
+
+const isValidPath = (text: string) => (
+    ABSOLUTE_PATH_REGEX.test(text)
+    && !CONTROL_CHARACTER_REGEX.test(text)
+    && !text.split(/[\\/]/).includes('..')
+);
 
 const validateList = (kind: SettingKind, items: string[]): string | undefined => {
     if (kind === SettingKind.LanguageList) {
@@ -157,6 +177,7 @@ export const validateValue = (setting: PufferfinSetting, value: SettingValue | n
     if (Array.isArray(value)) return validateList(setting.Type, value);
     if (value.length > MAX_TEXT_LENGTH) return translate('ValidationTooLong');
     if (setting.Type === SettingKind.Url && !isValidUrl(value)) return translate('ValidationUrl');
+    if (setting.Type === SettingKind.Path && !isValidPath(value)) return translate('ValidationPath');
 
     return undefined;
 };

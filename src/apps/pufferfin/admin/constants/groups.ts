@@ -38,7 +38,7 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     {
         id: SettingsGroupId.Downloads,
         services: [ PufferfinService.Prowlarr, PufferfinService.QBittorrent ],
-        settings: []
+        settings: [ 'MEDIA_PATH', 'DOWNLOADS_PATH' ]
     },
     {
         id: SettingsGroupId.Optional,
@@ -53,7 +53,14 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     {
         id: SettingsGroupId.Behavior,
         services: [],
-        settings: [ 'MAX_CONCURRENT_DOWNLOADS', 'SEED_MIN_DAYS', 'SEED_MAX_DAYS', 'SEED_TARGET_RATIO' ]
+        settings: [
+            'MAX_CONCURRENT_DOWNLOADS',
+            'SEED_MIN_DAYS',
+            'SEED_MAX_DAYS',
+            'SEED_TARGET_RATIO',
+            'SEED_CATEGORIES',
+            'STORAGE_WARNING_PERCENT'
+        ]
     }
 ];
 

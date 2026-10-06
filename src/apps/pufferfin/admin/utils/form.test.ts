@@ -164,6 +164,28 @@ describe('validateUpdate', () => {
         expect(Object.keys(validateUpdate(ALL, update))).toEqual([ 'SEED_MAX_DAYS' ]);
     });
 
+    it('rejects a value above its maximum', () => {
+        const warning = setting('STORAGE_WARNING_PERCENT', SettingKind.Integer);
+
+        expect(validateUpdate([ warning ], { STORAGE_WARNING_PERCENT: 100 })).toEqual({});
+        expect(Object.keys(validateUpdate([ warning ], { STORAGE_WARNING_PERCENT: 101 })))
+            .toEqual([ 'STORAGE_WARNING_PERCENT' ]);
+        expect(Object.keys(validateUpdate([ warning ], { STORAGE_WARNING_PERCENT: 0 })))
+            .toEqual([ 'STORAGE_WARNING_PERCENT' ]);
+    });
+
+    it.each([ '/media', '/mnt/data/downloads', 'D:\\Media', '\\\\nas\\media' ])('accepts the path %s', path => {
+        const mediaPath = setting('MEDIA_PATH', SettingKind.Path);
+
+        expect(validateUpdate([ mediaPath ], { MEDIA_PATH: path })).toEqual({});
+    });
+
+    it.each([ 'media', './media', '/media/../etc', 'D:Media', '/media\u0000' ])('rejects the path %s', path => {
+        const mediaPath = setting('MEDIA_PATH', SettingKind.Path);
+
+        expect(Object.keys(validateUpdate([ mediaPath ], { MEDIA_PATH: path }))).toEqual([ 'MEDIA_PATH' ]);
+    });
+
     it('rejects a maximum seeding time below the stored minimum', () => {
         expect(Object.keys(validateUpdate(ALL, { SEED_MAX_DAYS: 2 }))).toEqual([ 'SEED_MAX_DAYS' ]);
     });
