@@ -13,7 +13,7 @@ import RoundButton from '../components/RoundButton';
 import { CatalogItemKind, type CatalogItem } from '../features/catalog/api/types';
 import { useRecommendedForYou, useTrending } from '../features/catalog/api/useCatalog';
 import { getOpenableItems } from '../features/catalog/utils/catalog';
-import { useLatestItems, useNextUpItems, useResumeItems } from '../features/home/api/useHomeRows';
+import { useAudiobookItems, useLatestItems, useNextUpItems, useResumeItems } from '../features/home/api/useHomeRows';
 import DownloadsRow from '../features/requests/components/DownloadsRow';
 import { useTranslation } from '../i18n/useTranslation';
 import { useInitialFocus } from '../navigation/useInitialFocus';
@@ -35,6 +35,7 @@ export const Component = () => {
     const resume = useResumeItems();
     const nextUp = useNextUpItems();
     const latest = useLatestItems();
+    const audiobooks = useAudiobookItems();
     // Catalog rows mix titles on disk and missing ones; they are not needed to pick the featured title
     const forYou = useRecommendedForYou();
     const trendingMovies = useTrending(CatalogItemKind.Movie);
@@ -73,6 +74,23 @@ export const Component = () => {
         };
         return CardRenderer;
     }, [ api, getEpisodeLabel, openItem, t ]);
+
+    // A book plays from where the user stopped: the card is Listen
+    const renderAudiobook = useCallback((item: ItemDto) => {
+        const progress = getPlayedPercentage(item);
+        return (
+            <PosterCard
+                title={getDisplayTitle(item)}
+                subtitle={item.AlbumArtist ?? item.Artists?.[0] ?? undefined}
+                imageUrl={api ? getCardImageUrl(api, item, 'portrait') : undefined}
+                shape='portrait'
+                progress={progress}
+                progressLabel={progress ? t('ListenedPercent', progress) : undefined}
+                value={item}
+                onSelect={playItem}
+            />
+        );
+    }, [ api, t ]);
 
     return (
         <div ref={pageRef} className='pf-home'>
@@ -158,6 +176,15 @@ export const Component = () => {
                     renderItem={renderCard('portrait')}
                 />
                 <DownloadsRow />
+                <MediaRow
+                    title={t('RowAudiobooks')}
+                    shape='portrait'
+                    items={audiobooks.data}
+                    isPending={audiobooks.isPending}
+                    isError={audiobooks.isError}
+                    getKey={getKey}
+                    renderItem={renderAudiobook}
+                />
 
                 {isEmpty && <p className='pf-home__empty'>{t('HomeEmpty')}</p>}
             </div>
