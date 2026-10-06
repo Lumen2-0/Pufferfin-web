@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { type FC } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import type { CardShape } from '../utils/images';
@@ -12,6 +12,8 @@ interface PosterCardProps {
     /** Playback progress between 0 and 100, shown as a bar and announced as text. */
     progress?: number
     progressLabel?: string
+    /** Discreet state on the art, such as a title missing from the library. Told by an icon and words, never by color alone. */
+    badge?: { icon: ReactNode, label: string }
     onSelect: () => void
 }
 
@@ -22,9 +24,10 @@ const PosterCard: FC<PosterCardProps> = ({
     shape,
     progress,
     progressLabel,
+    badge,
     onSelect
 }) => {
-    const accessibleName = [ title, subtitle, progressLabel ].filter(Boolean).join(', ');
+    const accessibleName = [ title, subtitle, progressLabel, badge?.label ].filter(Boolean).join(', ');
 
     return (
         <button
@@ -40,6 +43,12 @@ const PosterCard: FC<PosterCardProps> = ({
                 ) : (
                     // No art: the title stands in, on a neutral surface
                     <span className='pf-card__placeholder' aria-hidden='true'>{title}</span>
+                )}
+                {badge && (
+                    <span className='pf-card__badge' aria-hidden='true'>
+                        <span className='pf-card__badge-icon'>{badge.icon}</span>
+                        <span className='pf-card__badge-label'>{badge.label}</span>
+                    </span>
                 )}
                 {progress !== undefined && progress > 0 && (
                     <span className='pf-card__progress' aria-hidden='true'>

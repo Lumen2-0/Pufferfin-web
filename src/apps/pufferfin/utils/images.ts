@@ -78,3 +78,8 @@ export function getBackdropUrl(api: Api, item: ItemDto) {
 export function getPersonImageUrl(api: Api, person: BaseItemPerson) {
     return toUrl(api, [ source(person.Id, ImageType.Primary, person.PrimaryImageTag) ], 300);
 }
+
+/** Poster of a library item known only by its id, such as a catalog entry found on disk. */
+export function getItemPosterUrl(api: Api, itemId: string) {
+    return getImageApi(api).getItemImageUrlById(itemId, ImageType.Primary, { maxWidth: 400, quality: 90 });
+}

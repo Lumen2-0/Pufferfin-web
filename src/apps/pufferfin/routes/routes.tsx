@@ -22,6 +22,10 @@ export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
                         lazy: () => import('./item')
                     },
                     {
+                        path: 'title/:kind/:tmdbId',
+                        lazy: () => import('./title')
+                    },
+                    {
                         path: 'person/:personId',
                         lazy: () => import('./person')
                     },
