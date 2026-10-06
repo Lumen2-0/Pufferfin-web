@@ -493,7 +493,7 @@
     margin-top: 2rem;
 }
 
-.pf-seasons {
+.pf-choices {
     padding: 0 var(--pf-gutter);
 }
 
@@ -829,6 +829,31 @@
     margin: 1rem 0 0;
     padding: 0 var(--pf-gutter);
     color: var(--pf-color-text-secondary);
+}
+
+// Library tab: a title, the shelf picker, then a compact grid of what is on disk
+
+.pf-library {
+    padding-top: 7rem;
+    padding-bottom: 3rem;
+}
+
+.pf-library__title {
+    margin: 0 0 1.5rem;
+    padding: 0 var(--pf-gutter);
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.1;
+}
+
+.pf-library__note {
+    margin: 0;
+    padding: 1rem var(--pf-gutter);
+    color: var(--pf-color-text-secondary);
+}
+
+.pf-library__more {
+    padding: 0.5rem var(--pf-gutter) 0;
 }
 
 // A search result: the card, and its Play button under it

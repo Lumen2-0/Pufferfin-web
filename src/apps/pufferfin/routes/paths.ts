@@ -25,6 +25,9 @@ export function parseCatalogTitleKind(segment: string | undefined): CatalogTitle
     return undefined;
 }
 
+/** Library tab: only the titles on disk. */
+export const getLibraryPath = () => `/${PUFFERFIN_APP_PATH}/library`;
+
 /** Universal search. */
 export const getSearchPath = () => `/${PUFFERFIN_APP_PATH}/search`;
 
