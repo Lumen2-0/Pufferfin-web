@@ -1,0 +1,41 @@
+// The Pufferfin bar on the upstream pages: same tokens, same buttons, sitting
+// in the upstream header slot instead of floating over a Pufferfin screen.
+
+@use '../styles/tokens' as *;
+
+.pf-shell {
+    @include pf-tokens;
+
+    color: var(--pf-color-text);
+    font-family: inherit;
+    background: var(--pf-color-background);
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    // In the flow of the header, not over the content
+    .pf-nav {
+        position: relative;
+        padding: 1rem var(--pf-gutter);
+    }
+}
+
+// Legacy layouts: the upstream header keeps its section tabs, its row of buttons gives way to the bar
+.pf-shell-legacy .skinHeader {
+    background: #000;
+    backdrop-filter: none;
+
+    .headerTop {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-shell {
+        --pf-duration: 0ms;
+        --pf-focus-scale: 1;
+    }
+}

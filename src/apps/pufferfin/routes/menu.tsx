@@ -8,6 +8,7 @@ import { AppFeature } from 'constants/appFeature';
 import { useUserViews } from 'hooks/api/useUserViews';
 import { useApi } from 'hooks/useApi';
 import { useQuickConnectEnabled } from 'hooks/useQuickConnect';
+import { useWebConfig } from 'hooks/useWebConfig';
 import shell from 'scripts/shell';
 import Dashboard from 'utils/dashboard';
 
@@ -32,7 +33,7 @@ const MENU_ACTIONS: Record<MenuActionId, () => void> = {
 
 const runAction = (id: MenuActionId) => MENU_ACTIONS[id]();
 
-const LINK_CLASS_NAME = 'pf-button pf-button--glass pf-menu__link';
+const LINK_CLASS_NAME = 'pf-button pf-button--quiet pf-menu__link';
 
 const MenuEntries: FC<{ entries: MenuEntry[] }> = ({ entries }) => {
     const t = useTranslation();
@@ -65,6 +66,8 @@ export const Component = () => {
     const pageRef = useRef<HTMLDivElement>(null);
     const { data: isQuickConnectEnabled } = useQuickConnectEnabled();
     const { data: userViews, isPending, isError } = useUserViews({ userId: user?.Id });
+    // Custom links of the server web config, which the upstream header listed with the libraries
+    const { menuLinks } = useWebConfig();
 
     const context = useMemo(() => ({
         userId: user?.Id,
@@ -107,6 +110,19 @@ export const Component = () => {
                         >
                             <span className='pf-button__label'>{view.Name}</span>
                         </Link>
+                    </li>
+                ))}
+                {menuLinks?.map(link => (
+                    <li key={link.url} className='pf-menu__item'>
+                        <a
+                            href={link.url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className={LINK_CLASS_NAME}
+                            {...{ [FOCUSABLE_ATTRIBUTE]: true }}
+                        >
+                            <span className='pf-button__label'>{link.name}</span>
+                        </a>
                     </li>
                 ))}
             </ul>

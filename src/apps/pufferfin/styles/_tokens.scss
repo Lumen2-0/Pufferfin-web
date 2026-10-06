@@ -1,4 +1,4 @@
-// Design tokens shared by the Pufferfin screens and the Pufferfin player skin.
+// Design tokens shared by the Pufferfin screens, the Pufferfin shell and the player skin.
 // Pure black and warm neutrals only: no hue of blue anywhere.
 
 @mixin pf-tokens {
@@ -10,23 +10,30 @@
     --pf-color-accent: #f5f2ec;
     --pf-color-on-accent: #000;
 
-    // Glass for layered surfaces: blur, faint light border, no heavy shadow
-    --pf-glass-background: rgba(245, 242, 236, 0.14);
-    --pf-glass-background-strong: rgba(245, 242, 236, 0.24);
-    --pf-glass-border: rgba(245, 242, 236, 0.18);
-    --pf-glass-blur: 24px;
+    // Quiet surfaces: a faint fill and a hairline, kept for what truly overlaps the content
+    --pf-quiet-background: rgba(245, 242, 236, 0.08);
+    --pf-quiet-background-strong: rgba(245, 242, 236, 0.16);
+    --pf-hairline: rgba(245, 242, 236, 0.22);
 
-    // Focus must be obvious from a couch three meters away
-    --pf-focus-ring: 0 0 0 4px var(--pf-color-text), 0 12px 40px rgba(245, 242, 236, 0.28);
-    --pf-focus-scale: 1.08;
+    // Glass only where a surface floats over art (top bar, player controls)
+    --pf-glass-background: rgba(0, 0, 0, 0.55);
+    --pf-glass-border: rgba(245, 242, 236, 0.12);
+    --pf-glass-background-strong: rgba(0, 0, 0, 0.75);
+    --pf-glass-blur: 20px;
 
-    // Motion: short, natural easing, no bounce
+    // Focus must be obvious from a couch three meters away: a black gap then a
+    // thick warm white ring, readable over any artwork. The one place that adds.
+    --pf-focus-ring: 0 0 0 3px var(--pf-color-background), 0 0 0 7px var(--pf-color-text), 0 10px 32px rgba(0, 0, 0, 0.6);
+    --pf-focus-scale: 1.05;
+
+    // Motion: appearance and focus moves only, short, no bounce
     --pf-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
-    --pf-duration: 220ms;
-    --pf-caption-shift: 0.5rem;
+    --pf-duration: 180ms;
+    --pf-caption-shift: 0.25rem;
     --pf-pulse-duration: 1.6s;
 
-    // Layout
+    // Layout: hierarchy comes from type and space
     --pf-gutter: clamp(1.5rem, 4vw, 4.5rem);
-    --pf-radius-card: 12px;
+    --pf-row-gap: 3rem;
+    --pf-radius-card: 10px;
 }

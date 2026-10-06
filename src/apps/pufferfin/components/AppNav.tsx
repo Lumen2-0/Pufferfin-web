@@ -11,16 +11,17 @@ import { useCapabilities } from '../api/useCapabilities';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { getDownloadsPath, getHomePath, getLibraryPath, getMenuPath, getSearchPath } from '../routes/paths';
+import CastButton from '../shell/CastButton';
+import SyncPlayButton from '../shell/SyncPlayButton';
 
+// Quiet at rest, the focus affirms; the current screen gets a firmer outline and a bar under its label
 const getClassName = ({ isActive }: { isActive: boolean }) =>
-    classNames('pf-button', 'pf-nav__link', isActive ? 'pf-button--primary' : 'pf-button--glass');
-
-// The menu sits apart, at the end of the bar (wins over the spacing between links)
-const getMenuClassName = (state: { isActive: boolean }) => classNames(getClassName(state), 'pf-nav__link--end');
+    classNames('pf-button', 'pf-button--quiet', 'pf-nav__link', { 'pf-button--selected': isActive });
 
 /**
- * Top bar of round glass buttons. The current screen gets a solid fill, a bar
- * under its label and `aria-current`, so it never relies on color alone.
+ * The one top bar of the interface, on the Pufferfin screens and on the
+ * upstream pages alike. The current screen gets a firmer outline, a bar under
+ * its label and `aria-current`, so it never relies on color alone.
  */
 const AppNav: FC = () => {
     const t = useTranslation();
@@ -48,11 +49,15 @@ const AppNav: FC = () => {
                     <span className='pf-button__label'>{t('NavDownloads')}</span>
                 </NavLink>
             )}
-            {/* Account, dashboard and the other Jellyfin sections: the upstream header is hidden here */}
-            <NavLink to={getMenuPath()} className={getMenuClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
-                <span className='pf-button__icon' aria-hidden='true'><MenuIcon /></span>
-                <span className='pf-button__label'>{t('NavMenu')}</span>
-            </NavLink>
+            {/* The upstream header entries: SyncPlay, cast, then account, dashboard and the other libraries */}
+            <span className='pf-nav__end'>
+                <SyncPlayButton />
+                <CastButton />
+                <NavLink to={getMenuPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+                    <span className='pf-button__icon' aria-hidden='true'><MenuIcon /></span>
+                    <span className='pf-button__label'>{t('NavMenu')}</span>
+                </NavLink>
+            </span>
         </nav>
     );
 };

@@ -40,7 +40,7 @@ const ChoicePicker: FC<ChoicePickerProps> = ({ label, options, selectedId, onSel
                     <button
                         key={option.id}
                         type='button'
-                        className={classNames('pf-button', isSelected ? 'pf-button--primary' : 'pf-button--glass')}
+                        className={classNames('pf-button', 'pf-button--quiet', { 'pf-button--selected': isSelected })}
                         aria-pressed={isSelected}
                         data-choice-id={option.id}
                         onClick={onClick}
