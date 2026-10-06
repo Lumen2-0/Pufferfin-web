@@ -26,7 +26,10 @@
         font-weight: 700;
     }
 
-    // Round glass buttons, the main one solid
+    // Round glass buttons, the main one solid.
+    // Every state restates its colors: the theme's hover, active and
+    // .show-focus:focus rules load later in the page and would put the blue
+    // back on a tie, so these selectors stay more specific than them.
 
     .videoOsdBottom .paper-icon-button-light {
         margin: 0 0.35em;
@@ -37,20 +40,27 @@
             transform var(--pf-duration) var(--pf-ease),
             box-shadow var(--pf-duration) var(--pf-ease);
         backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
-
-        &:hover {
-            background: var(--pf-glass-background-strong);
-        }
-
-        // Very visible focus for the remote: halo plus a slight scale
-        &:focus,
-        &.show-focus:focus {
-            transform: scale(var(--pf-focus-scale));
-            box-shadow: var(--pf-focus-ring);
-        }
     }
 
-    .videoOsdBottom .btnPause {
+    .videoOsdBottom .paper-icon-button-light:hover:not(:disabled),
+    .videoOsdBottom .paper-icon-button-light:active:not(:disabled) {
+        color: var(--pf-color-text);
+        background: var(--pf-glass-background-strong);
+    }
+
+    // Very visible focus for the remote: halo plus a slight scale
+    .videoOsdBottom .paper-icon-button-light:focus:not(:disabled),
+    .videoOsdBottom .paper-icon-button-light.show-focus:focus {
+        color: var(--pf-color-text);
+        transform: scale(var(--pf-focus-scale));
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .videoOsdBottom .paper-icon-button-light.btnPause,
+    .videoOsdBottom .paper-icon-button-light.btnPause:hover:not(:disabled),
+    .videoOsdBottom .paper-icon-button-light.btnPause:active:not(:disabled),
+    .videoOsdBottom .paper-icon-button-light.btnPause:focus:not(:disabled),
+    .videoOsdBottom .paper-icon-button-light.btnPause.show-focus:focus {
         color: var(--pf-color-on-accent);
         background: var(--pf-color-accent);
         border-color: transparent;
@@ -99,10 +109,14 @@
         border: 1px solid var(--pf-glass-border);
         border-radius: 999px;
         backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+    }
 
-        &:focus {
-            box-shadow: var(--pf-focus-ring);
-        }
+    // The theme paints .emby-button.show-focus:focus in its accent: stay above it
+    .skip-button:focus,
+    .skip-button.show-focus:focus {
+        color: var(--pf-color-text);
+        background: var(--pf-glass-background-strong);
+        box-shadow: var(--pf-focus-ring);
     }
 
     // SyncPlay pulse: warm white instead of blue
