@@ -5,8 +5,10 @@ import enUs from 'apps/pufferfin/i18n/strings/en-us.json';
 
 import { SETTINGS_GROUPS } from './groups';
 
-// The keys of the server contract (`Pufferfin.Server` SettingKeys) that belong to no service.
+// The keys of the server contract that belong to no service. Keep in sync with
+// `src/Pufferfin.Server/Configuration/SettingKeys.cs` in Pufferfin/Pufferfin.
 const GENERAL_KEYS = [
+    'TMDB_LANGUAGES',
     'PREFERRED_AUDIO_LANGUAGES',
     'AUDIBLE_MARKETS',
     'REJECT_SUBTITLED_ONLY',

@@ -49,7 +49,8 @@ export const loadPufferfinStrings = async (): Promise<void> => {
  * Falls back to the base language, then to the English source.
  */
 export const translate = (key: PufferfinStringKey, ...args: Array<string | number>): string => {
-    let value: string = enUs[key];
+    // A key missing from the source dictionary shows itself rather than nothing.
+    let value: string = enUs[key] ?? key;
 
     for (const locale of getLocales()) {
         const localized = dictionaries[locale]?.[key];

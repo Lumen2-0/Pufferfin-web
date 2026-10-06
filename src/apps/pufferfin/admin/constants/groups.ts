@@ -23,7 +23,7 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     {
         id: SettingsGroupId.Catalogs,
         services: [ PufferfinService.Tmdb ],
-        settings: [ 'AUDIBLE_MARKETS' ]
+        settings: [ 'TMDB_LANGUAGES', 'AUDIBLE_MARKETS' ]
     },
     {
         id: SettingsGroupId.Movies,

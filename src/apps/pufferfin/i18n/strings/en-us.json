@@ -112,6 +112,8 @@
     "Setting.SHELFMARK_URL.Help": "Address of Shelfmark, used to download audiobooks.",
     "Setting.TMDB_API_KEY": "TMDB API key",
     "Setting.TMDB_API_KEY.Help": "An API key or a read access token, from the API section of your TMDB account settings.",
+    "Setting.TMDB_LANGUAGES": "Catalog languages",
+    "Setting.TMDB_LANGUAGES.Help": "Languages of the titles, summaries and search results from TMDB, in order of preference, separated by commas, for example fr-FR, en-US. When empty, en-US is used.",
     "Setting.FLARESOLVERR_URL": "FlareSolverr URL",
     "Setting.FLARESOLVERR_URL.Help": "Address of FlareSolverr, for example http://flaresolverr:8191. Used by indexers protected by Cloudflare.",
     "Setting.PREFERRED_AUDIO_LANGUAGES": "Preferred audio languages",

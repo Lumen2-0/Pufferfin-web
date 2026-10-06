@@ -8,7 +8,7 @@ vi.mock('lib/globalize', () => ({
     normalizeLocaleName: (locale: string) => locale.toLowerCase()
 }));
 
-import { translate } from '.';
+import { type PufferfinStringKey, translate } from '.';
 import enUs from './strings/en-us.json';
 
 const STRINGS_DIR = join(__dirname, 'strings');
@@ -19,6 +19,10 @@ const sourceKeys = Object.keys(enUs).sort((a, b) => a.localeCompare(b));
 describe('translate', () => {
     it('returns the English source by default', () => {
         expect(translate('ButtonSave')).toBe('Save');
+    });
+
+    it('shows the key of a string missing from the source', () => {
+        expect(translate('Setting.FUTURE_KEY' as PufferfinStringKey)).toBe('Setting.FUTURE_KEY');
     });
 
     it('replaces the placeholders', () => {

@@ -93,6 +93,7 @@ const SettingsForm: FC<SettingsFormProps> = ({ group, configuration }) => {
             onSuccess: (saved) => {
                 const keys = settings.map(setting => setting.Key);
                 setDrafts(toDrafts(saved.Settings.filter(setting => keys.includes(setting.Key))));
+                setClearedSecrets([]);
                 setSaveResult('saved');
             },
             onError: (error) => {
@@ -104,9 +105,9 @@ const SettingsForm: FC<SettingsFormProps> = ({ group, configuration }) => {
                 }
             },
             onSettled: () => {
-                // A new secret must not outlive its submission, in the form or in the mutation state.
+                // A new secret must not outlive its submission, in the form or in the mutation state, even when the
+                // save fails. A pending clear holds no secret and is kept so that a rejected save does not drop it.
                 setDrafts(current => clearSecretDrafts(current, settings));
-                setClearedSecrets([]);
                 updateConfiguration.reset();
             }
         });
