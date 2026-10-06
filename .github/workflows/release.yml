@@ -1,9 +1,9 @@
-# PUFFERFIN: release côté client. L'image ghcr.io/pufferfin/pufferfin est
-# construite par le workflow `release.yml` de Pufferfin/Pufferfin, qui embarque
-# ce client compilé. Ici : vérifier que main compile et suit la même version
-# majeure de Jellyfin que le serveur, puis demander une nouvelle image.
-# Workflow propre à Pufferfin : aucun workflow Jellyfin n'est modifié.
-# Contrat : .github/pufferfin/README.md
+# PUFFERFIN: client-side release. The ghcr.io/pufferfin/pufferfin image is
+# built by the `release.yml` workflow of Pufferfin/Pufferfin, which embeds this
+# built client. Here: check that main builds and tracks the same Jellyfin major
+# version as the server, then request a new image.
+# Pufferfin-only workflow: no Jellyfin workflow is modified.
+# Contract: .github/pufferfin/README.md
 name: Pufferfin / Release
 
 on:
@@ -36,9 +36,9 @@ jobs:
           web="$(sed -n 's/^  "version": "\([^"]*\)".*/\1/p' package.json | head -n 1)"
           server="$(curl -fsSL --max-time 20 --retry 2 "https://raw.githubusercontent.com/${SERVER_REPO}/${SERVER_REF}/SharedVersion.cs" \
             | sed -n 's/.*AssemblyVersion("\([^"]*\)").*/\1/p' | head -n 1)"
-          echo "Client Jellyfin ${web}, serveur Jellyfin ${server}"
+          echo "Client on Jellyfin ${web}, server on Jellyfin ${server}"
           if [ -z "$server" ] || [ "${web%%.*}" != "${server%%.*}" ]; then
-            echo "::error::Release bloquée : client en Jellyfin ${web}, serveur en Jellyfin ${server:-inconnu}. Les deux dépôts doivent suivre la même version majeure."
+            echo "::error::Release blocked: client is on Jellyfin ${web}, server is on Jellyfin ${server:-unknown}. Both repositories must track the same major version."
             exit 1
           fi
 
@@ -63,7 +63,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PUFFERFIN_RELEASE_DISPATCH_TOKEN }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
-            echo "::notice::PUFFERFIN_RELEASE_DISPATCH_TOKEN absent : l'image sera reconstruite à la prochaine release serveur."
+            echo "::notice::PUFFERFIN_RELEASE_DISPATCH_TOKEN not set: the image will be rebuilt on the next server release."
             exit 0
           fi
           gh api "repos/${SERVER_REPO}/dispatches" \
