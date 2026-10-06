@@ -2,7 +2,7 @@ import Mic from '@mui/icons-material/Mic';
 import PlayArrow from '@mui/icons-material/PlayArrow';
 import Search from '@mui/icons-material/Search';
 import React, { type ChangeEvent, useCallback, useMemo, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useDebounceValue } from 'usehooks-ts';
 
 import { useApi } from 'hooks/useApi';
@@ -22,9 +22,8 @@ import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { getCardImageUrl } from '../utils/images';
 import { getDisplayTitle } from '../utils/items';
-import { useOpenItem } from '../utils/navigation';
+import { useOpenItem, useOpenPerson } from '../utils/navigation';
 import { playTitle } from '../utils/playback';
-import { getPersonPath } from './paths';
 
 /** Results follow the typing after a short pause, so each keystroke is not a request. */
 const DEBOUNCE_MS = 300;
@@ -35,8 +34,8 @@ const getKey = (item: ItemDto) => item.Id ?? '';
 export const Component = () => {
     const t = useTranslation();
     const { api, user } = useApi();
-    const navigate = useNavigate();
     const openItem = useOpenItem();
+    const openPerson = useOpenPerson();
     const pageRef = useRef<HTMLDivElement>(null);
 
     // The query lives in the URL, so Back from a result comes back to the same search
@@ -61,6 +60,12 @@ export const Component = () => {
         setQuery(event.target.value);
     }, [ setQuery ]);
 
+    const onPlayTitle = useCallback((item: ItemDto) => {
+        if (api && user?.Id) {
+            playTitle(api, user.Id, item).catch(() => undefined);
+        }
+    }, [ api, user?.Id ]);
+
     const renderTitle = useCallback((item: ItemDto) => {
         const title = getDisplayTitle(item);
         return (
@@ -70,22 +75,29 @@ export const Component = () => {
                     subtitle={item.ProductionYear ? String(item.ProductionYear) : undefined}
                     imageUrl={api ? getCardImageUrl(api, item, 'portrait') : undefined}
                     shape='portrait'
-                    onSelect={() => openItem(item)}
+                    value={item}
+                    onSelect={openItem}
                 />
                 <span className='pf-result__action'>
                     <RoundButton
                         icon={<PlayArrow />}
                         ariaLabel={t('ActionPlayTitle', title)}
-                        onClick={() => {
-                            if (api && user?.Id) {
-                                playTitle(api, user.Id, item).catch(() => undefined);
-                            }
-                        }}
+                        value={item}
+                        onClick={onPlayTitle}
                     />
                 </span>
             </div>
         );
-    }, [ api, openItem, t, user?.Id ]);
+    }, [ api, onPlayTitle, openItem, t ]);
+
+    const renderPerson = useCallback((person: ItemDto) => (
+        <PersonCard
+            name={person.Name ?? ''}
+            imageUrl={api ? getCardImageUrl(api, person, 'portrait') : undefined}
+            value={person.Id}
+            onSelect={openPerson}
+        />
+    ), [ api, openPerson ]);
 
     const isActive = isSearchable(debouncedQuery);
     const isLoading = isActive && (titles.isFetching || people.isFetching);
@@ -163,13 +175,7 @@ export const Component = () => {
                         isPending={people.isPending}
                         isError={people.isError}
                         getKey={getKey}
-                        renderItem={person => (
-                            <PersonCard
-                                name={person.Name ?? ''}
-                                imageUrl={api ? getCardImageUrl(api, person, 'portrait') : undefined}
-                                onSelect={() => person.Id && navigate(getPersonPath(person.Id))}
-                            />
-                        )}
+                        renderItem={renderPerson}
                     />
                 </>
             )}

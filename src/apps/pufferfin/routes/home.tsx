@@ -65,7 +65,8 @@ export const Component = () => {
                     shape={shape}
                     progress={progress}
                     progressLabel={progress ? t('WatchedPercent', progress) : undefined}
-                    onSelect={() => openItem(item)}
+                    value={item}
+                    onSelect={openItem}
                 />
             );
         };
@@ -86,12 +87,14 @@ export const Component = () => {
                                 variant='primary'
                                 icon={<PlayArrow />}
                                 label={isResumable(featured) ? t('ActionResume') : t('ActionPlay')}
-                                onClick={() => playItem(featured)}
+                                value={featured}
+                                onClick={playItem}
                             />
                             <RoundButton
                                 icon={<InfoOutlined />}
                                 label={t('ActionMoreInfo')}
-                                onClick={() => openItem(featured)}
+                                value={featured}
+                                onClick={openItem}
                             />
                         </>
                     }

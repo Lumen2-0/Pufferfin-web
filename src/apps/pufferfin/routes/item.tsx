@@ -1,9 +1,10 @@
+import type { BaseItemPerson } from '@jellyfin/sdk/lib/generated-client/models/base-item-person';
 import { PersonKind } from '@jellyfin/sdk/lib/generated-client/models/person-kind';
 import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import Movie from '@mui/icons-material/Movie';
 import PlayArrow from '@mui/icons-material/PlayArrow';
 import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
 import { useItem } from 'hooks/useItem';
@@ -22,20 +23,25 @@ import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { getBackdropUrl, getCardImageUrl, getPersonImageUrl } from '../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, getRuntime, isResumable } from '../utils/items';
-import { useOpenItem } from '../utils/navigation';
+import { useOpenItem, useOpenPerson } from '../utils/navigation';
 import { playItem as play, playTrailers } from '../utils/playback';
-import { getPersonPath } from './paths';
 
 const CAST_LIMIT = 24;
 const GENRE_LIMIT = 3;
 
 const getKey = (item: { Id?: string | null }) => item.Id ?? '';
+const getCastKey = (person: BaseItemPerson) => `${person.Id ?? ''}-${person.Role ?? ''}`;
+
+// Play is rendered before a series knows its next episode: it is then disabled and has nothing to play
+const playIfAny = (target: ItemDto | undefined) => {
+    if (target) play(target);
+};
 
 const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
     const t = useTranslation();
     const { api } = useApi();
     const openItem = useOpenItem();
-    const navigate = useNavigate();
+    const openPerson = useOpenPerson();
     const pageRef = useRef<HTMLDivElement>(null);
 
     const { data: item, isPending, isError } = useItem(itemId);
@@ -98,6 +104,42 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
         [ item ]
     );
 
+    const renderEpisode = useCallback((episode: ItemDto) => {
+        const progress = getPlayedPercentage(episode);
+        return (
+            <PosterCard
+                title={episode.Name ?? ''}
+                subtitle={formatEpisode(episode)}
+                imageUrl={api ? getCardImageUrl(api, episode, 'landscape') : undefined}
+                shape='landscape'
+                progress={progress}
+                progressLabel={progress ? t('WatchedPercent', progress) : undefined}
+                value={episode}
+                onSelect={play}
+            />
+        );
+    }, [ api, formatEpisode, t ]);
+
+    const renderPerson = useCallback((person: BaseItemPerson) => (
+        <PersonCard
+            name={person.Name ?? ''}
+            role={person.Role}
+            imageUrl={api ? getPersonImageUrl(api, person) : undefined}
+            value={person.Id}
+            onSelect={openPerson}
+        />
+    ), [ api, openPerson ]);
+
+    const renderSimilar = useCallback((similarItem: ItemDto) => (
+        <PosterCard
+            title={getDisplayTitle(similarItem)}
+            imageUrl={api ? getCardImageUrl(api, similarItem, 'portrait') : undefined}
+            shape='portrait'
+            value={similarItem}
+            onSelect={openItem}
+        />
+    ), [ api, openItem ]);
+
     if (isPending) {
         return (
             <div className='pf-status' aria-busy='true'>
@@ -136,13 +178,15 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                             icon={<PlayArrow />}
                             label={playLabel}
                             disabled={!playTarget || (!!seriesId && nextUp.isPending)}
-                            onClick={() => playTarget && play(playTarget)}
+                            value={playTarget}
+                            onClick={playIfAny}
                         />
                         {hasTrailer && (
                             <RoundButton
                                 icon={<Movie />}
                                 label={t('ActionTrailer')}
-                                onClick={() => playTrailers(item)}
+                                value={item}
+                                onClick={playTrailers}
                             />
                         )}
                     </>
@@ -165,20 +209,7 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                             isPending={!seasonId || episodes.isPending}
                             isError={episodes.isError}
                             getKey={getKey}
-                            renderItem={episode => {
-                                const progress = getPlayedPercentage(episode);
-                                return (
-                                    <PosterCard
-                                        title={episode.Name ?? ''}
-                                        subtitle={formatEpisode(episode)}
-                                        imageUrl={api ? getCardImageUrl(api, episode, 'landscape') : undefined}
-                                        shape='landscape'
-                                        progress={progress}
-                                        progressLabel={progress ? t('WatchedPercent', progress) : undefined}
-                                        onSelect={() => play(episode)}
-                                    />
-                                );
-                            }}
+                            renderItem={renderEpisode}
                         />
                     </section>
                 )}
@@ -189,15 +220,8 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                     items={cast}
                     isPending={false}
                     isError={false}
-                    getKey={person => `${person.Id ?? ''}-${person.Role ?? ''}`}
-                    renderItem={person => (
-                        <PersonCard
-                            name={person.Name ?? ''}
-                            role={person.Role}
-                            imageUrl={api ? getPersonImageUrl(api, person) : undefined}
-                            onSelect={() => person.Id && navigate(getPersonPath(person.Id))}
-                        />
-                    )}
+                    getKey={getCastKey}
+                    renderItem={renderPerson}
                 />
 
                 <MediaRow
@@ -207,14 +231,7 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                     isPending={similar.isPending}
                     isError={similar.isError}
                     getKey={getKey}
-                    renderItem={similarItem => (
-                        <PosterCard
-                            title={getDisplayTitle(similarItem)}
-                            imageUrl={api ? getCardImageUrl(api, similarItem, 'portrait') : undefined}
-                            shape='portrait'
-                            onSelect={() => openItem(similarItem)}
-                        />
-                    )}
+                    renderItem={renderSimilar}
                 />
 
                 {(item.Overview || !!item.Studios?.length) && (

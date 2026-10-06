@@ -85,7 +85,8 @@ const PersonDetails: FC<{ personId: string }> = ({ personId }) => {
                             subtitle={title.ProductionYear ? String(title.ProductionYear) : undefined}
                             imageUrl={api ? getCardImageUrl(api, title, 'portrait') : undefined}
                             shape='portrait'
-                            onSelect={() => openItem(title)}
+                            value={title}
+                            onSelect={openItem}
                         />
                     </li>
                 ))}

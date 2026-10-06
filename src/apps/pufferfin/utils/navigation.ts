@@ -5,7 +5,7 @@ import { appRouter } from 'components/router/appRouter';
 import type { ItemDto } from 'types/base/models/item-dto';
 import { ItemKind } from 'types/base/models/item-kind';
 
-import { getItemPath } from '../routes/paths';
+import { getItemPath, getPersonPath } from '../routes/paths';
 
 /**
  * Id of the Pufferfin detail page that shows this item: the item itself for a
@@ -36,5 +36,14 @@ export function useOpenItem() {
         } else {
             appRouter.showItem(item);
         }
+    }, [ navigate ]);
+}
+
+/** Opens the Pufferfin person page. Ignores a person without an id. */
+export function useOpenPerson() {
+    const navigate = useNavigate();
+
+    return useCallback((personId: string | null | undefined) => {
+        if (personId) navigate(getPersonPath(personId));
     }, [ navigate ]);
 }

@@ -1,10 +1,10 @@
 import classNames from 'classnames';
-import React, { type FC, type ReactNode } from 'react';
+import React, { type ReactNode, useCallback } from 'react';
 
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import type { CardShape } from '../utils/images';
 
-interface PosterCardProps {
+interface PosterCardProps<T> {
     title: string
     subtitle?: string
     imageUrl?: string
@@ -14,10 +14,12 @@ interface PosterCardProps {
     progressLabel?: string
     /** Discreet state on the art, such as a title missing from the library. Told by an icon and words, never by color alone. */
     badge?: { icon: ReactNode, label: string }
-    onSelect: () => void
+    /** Passed back to `onSelect`, so callers hand over a stable callback instead of a new closure per card. */
+    value: T
+    onSelect: (value: T) => void
 }
 
-const PosterCard: FC<PosterCardProps> = ({
+const PosterCard = <T, >({
     title,
     subtitle,
     imageUrl,
@@ -25,8 +27,10 @@ const PosterCard: FC<PosterCardProps> = ({
     progress,
     progressLabel,
     badge,
+    value,
     onSelect
-}) => {
+}: PosterCardProps<T>) => {
+    const onClick = useCallback(() => onSelect(value), [ onSelect, value ]);
     const accessibleName = [ title, subtitle, progressLabel, badge?.label ].filter(Boolean).join(', ');
 
     return (
@@ -34,7 +38,7 @@ const PosterCard: FC<PosterCardProps> = ({
             type='button'
             className={classNames('pf-card', `pf-card--${shape}`)}
             aria-label={accessibleName}
-            onClick={onSelect}
+            onClick={onClick}
             {...{ [FOCUSABLE_ATTRIBUTE]: true }}
         >
             <span className='pf-card__art'>
