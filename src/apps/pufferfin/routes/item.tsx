@@ -3,10 +3,9 @@ import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import Movie from '@mui/icons-material/Movie';
 import PlayArrow from '@mui/icons-material/PlayArrow';
 import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { playbackManager } from 'components/playback/playbackmanager';
-import { appRouter } from 'components/router/appRouter';
 import { useApi } from 'hooks/useApi';
 import { useItem } from 'hooks/useItem';
 import type { ItemDto } from 'types/base/models/item-dto';
@@ -25,6 +24,7 @@ import { useInitialFocus } from '../navigation/useInitialFocus';
 import { getBackdropUrl, getCardImageUrl, getPersonImageUrl } from '../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, getRuntime, isResumable } from '../utils/items';
 import { useOpenItem } from '../utils/navigation';
+import { getPersonPath } from './paths';
 
 const CAST_LIMIT = 24;
 const GENRE_LIMIT = 3;
@@ -50,6 +50,7 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
     const t = useTranslation();
     const { api } = useApi();
     const openItem = useOpenItem();
+    const navigate = useNavigate();
     const pageRef = useRef<HTMLDivElement>(null);
 
     const { data: item, isPending, isError } = useItem(itemId);
@@ -209,8 +210,7 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                             name={person.Name ?? ''}
                             role={person.Role}
                             imageUrl={api ? getPersonImageUrl(api, person) : undefined}
-                            // The Pufferfin person page comes next; until then the existing one opens
-                            onSelect={() => person.Id && appRouter.showItem(person.Id, item.ServerId)}
+                            onSelect={() => person.Id && navigate(getPersonPath(person.Id))}
                         />
                     )}
                 />

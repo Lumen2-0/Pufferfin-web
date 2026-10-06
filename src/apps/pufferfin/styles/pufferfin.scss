@@ -611,6 +611,74 @@
     }
 }
 
+// Person page: large round portrait, then a compact filmography grid
+
+.pf-person-page__header {
+    display: flex;
+    align-items: center;
+    padding: 6rem var(--pf-gutter) 1rem;
+}
+
+.pf-person-page__portrait {
+    flex: none;
+    width: 11rem;
+    height: 11rem;
+    margin-right: 2rem;
+    overflow: hidden;
+    background: var(--pf-color-surface);
+    border-radius: 50%;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 2rem;
+    }
+}
+
+.pf-person-page__name {
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.1;
+}
+
+.pf-person-page__fact {
+    margin: 0.25rem 0 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.1rem;
+}
+
+.pf-person-page__filmography {
+    margin-top: 2rem;
+}
+
+.pf-person-page__note {
+    margin: 0;
+    padding: 1rem var(--pf-gutter);
+    color: var(--pf-color-text-secondary);
+}
+
+// Wrapping grid built with margins: older TV engines lack flex gap
+
+.pf-grid {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 1.25rem var(--pf-gutter) 0;
+    list-style: none;
+}
+
+.pf-grid__item {
+    margin: 0 1.25rem 1.75rem 0;
+
+    [dir='rtl'] & {
+        margin: 0 0 1.75rem 1.25rem;
+    }
+}
+
+.pf-grid .pf-card--portrait {
+    width: clamp(8rem, 10vw, 10.5rem);
+}
+
 // Reduced motion: no scaling, no shifting, no smooth scroll, no pulsing.
 // The focus stays obvious through the halo, which does not move.
 

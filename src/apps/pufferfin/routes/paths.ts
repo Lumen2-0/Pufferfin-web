@@ -6,3 +6,6 @@ export const isPufferfinPath = (pathname: string) =>
 
 /** Detail page of a movie or a series. */
 export const getItemPath = (itemId: string) => `/${PUFFERFIN_APP_PATH}/item/${itemId}`;
+
+/** Person page: portrait, biography and filmography. */
+export const getPersonPath = (personId: string) => `/${PUFFERFIN_APP_PATH}/person/${personId}`;
