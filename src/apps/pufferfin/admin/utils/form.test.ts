@@ -48,6 +48,10 @@ const ratio = setting('SEED_TARGET_RATIO', SettingKind.Decimal);
 
 const ALL = [ radarrUrl, radarrKey, languages, rejectSubtitled, seedMinDays, seedMaxDays, ratio ];
 
+const mediaPath = setting('MEDIA_PATH', SettingKind.Path, { Value: '/media', IsSet: true, Source: SettingSource.Store });
+const warningPercent = setting('STORAGE_WARNING_PERCENT', SettingKind.Integer);
+const STORAGE = [ mediaPath, warningPercent ];
+
 describe('toDrafts', () => {
     it('never puts a secret value in the form', () => {
         const drafts = toDrafts([ { ...radarrKey, Value: 'leaked' } ]);
@@ -166,6 +170,27 @@ describe('validateUpdate', () => {
 
     it('rejects a maximum seeding time below the stored minimum', () => {
         expect(Object.keys(validateUpdate(ALL, { SEED_MAX_DAYS: 2 }))).toEqual([ 'SEED_MAX_DAYS' ]);
+    });
+
+    it('sends a path as text', () => {
+        expect(buildUpdate(STORAGE, { ...toDrafts(STORAGE), MEDIA_PATH: ' /data/media ' }, []))
+            .toEqual({ MEDIA_PATH: '/data/media' });
+    });
+
+    it.each([ '/media', '/data/media/', 'C:\\media', '\\\\nas\\media' ])('accepts the path %s', path => {
+        expect(validateUpdate(STORAGE, { MEDIA_PATH: path })).toEqual({});
+    });
+
+    it.each([ 'media', './media', '/data/../etc', 'C:media' ])('rejects the path %s', path => {
+        expect(Object.keys(validateUpdate(STORAGE, { MEDIA_PATH: path }))).toEqual([ 'MEDIA_PATH' ]);
+    });
+
+    it.each([ 0, 101 ])('rejects a disk usage warning of %d percent', percent => {
+        expect(Object.keys(validateUpdate(STORAGE, { STORAGE_WARNING_PERCENT: percent }))).toEqual([ 'STORAGE_WARNING_PERCENT' ]);
+    });
+
+    it('accepts a disk usage warning between 1 and 100 percent', () => {
+        expect(validateUpdate(STORAGE, { STORAGE_WARNING_PERCENT: 100 })).toEqual({});
     });
 });
 
