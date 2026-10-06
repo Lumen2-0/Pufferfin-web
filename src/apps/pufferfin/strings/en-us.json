@@ -13,6 +13,11 @@
     "LabelGenres": "Genres",
     "LabelStudios": "Studios",
     "Loading": "Loading",
+    "PersonBorn": "Born {0}",
+    "PersonBornIn": "Born {0} in {1}",
+    "PersonDied": "Died {0}",
+    "PersonLoadError": "This person could not be loaded.",
+    "PersonNoTitles": "No titles with this person in your library yet.",
     "RowCast": "Cast",
     "RowContinueWatching": "Continue Watching",
     "RowLoadError": "This row could not be loaded.",
@@ -21,5 +26,7 @@
     "RowRecentlyAdded": "Recently Added",
     "SeasonsLabel": "Seasons",
     "SectionAbout": "About",
+    "SectionBiography": "Biography",
+    "SectionFilmography": "Filmography",
     "WatchedPercent": "{0}% watched"
 }
