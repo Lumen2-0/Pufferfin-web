@@ -1,0 +1,149 @@
+// Pufferfin skin for the upstream video player, active only while the
+// document element carries .pf-player-skin (playback started from Pufferfin).
+// Full width, black veils, round glass buttons, no blue: the controls and
+// their logic stay upstream, only their look changes here.
+
+@use '../../styles/tokens' as *;
+
+.pf-player-skin {
+    @include pf-tokens;
+
+    // Black veils under the controls instead of the upstream grey ones
+
+    .videoOsdBottom {
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    .skinHeader-withBackground.osdHeader {
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    .osdControls {
+        padding: 0 var(--pf-gutter);
+    }
+
+    .osdTitle {
+        font-weight: 700;
+    }
+
+    // Round glass buttons, the main one solid
+
+    .videoOsdBottom .paper-icon-button-light {
+        margin: 0 0.35em;
+        color: var(--pf-color-text);
+        background: var(--pf-glass-background);
+        border: 1px solid var(--pf-glass-border);
+        transition:
+            transform var(--pf-duration) var(--pf-ease),
+            box-shadow var(--pf-duration) var(--pf-ease);
+        backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+
+        &:hover {
+            background: var(--pf-glass-background-strong);
+        }
+
+        // Very visible focus for the remote: halo plus a slight scale
+        &:focus,
+        &.show-focus:focus {
+            transform: scale(var(--pf-focus-scale));
+            box-shadow: var(--pf-focus-ring);
+        }
+    }
+
+    .videoOsdBottom .btnPause {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        border-color: transparent;
+    }
+
+    // Timeline: warm white instead of the upstream blue
+
+    .mdl-slider {
+        color: var(--pf-color-accent);
+    }
+
+    .mdl-slider-background-lower {
+        background-color: var(--pf-color-accent);
+    }
+
+    .mdl-slider::-webkit-slider-thumb {
+        background: var(--pf-color-accent);
+    }
+
+    .mdl-slider::-moz-range-thumb {
+        background: var(--pf-color-accent);
+    }
+
+    // Chapters: markers taller and brighter, so they read on any picture
+
+    .sliderMarker {
+        width: 3px;
+        height: 14px;
+        border-radius: 1px;
+    }
+
+    .sliderMarker.unwatched {
+        background-color: rgba(245, 242, 236, 0.55);
+    }
+
+    .sliderMarker.watched {
+        background-color: var(--pf-color-accent);
+    }
+
+    // Skip intro: a round glass pill with the focus halo
+
+    .skip-button {
+        padding: 0.8em 1.6em;
+        color: var(--pf-color-text);
+        background: var(--pf-glass-background);
+        border: 1px solid var(--pf-glass-border);
+        border-radius: 999px;
+        backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+
+        &:focus {
+            box-shadow: var(--pf-focus-ring);
+        }
+    }
+
+    // SyncPlay pulse: warm white instead of blue
+
+    .syncPlayIconCircle.oneShotPulse {
+        animation-name: pf-sync-pulse;
+    }
+
+    .syncPlayIconCircle.infinitePulse {
+        animation-name: pf-sync-pulse;
+    }
+}
+
+@keyframes pf-sync-pulse {
+    0% {
+        color: rgba(245, 242, 236, 0.7);
+        background: rgba(245, 242, 236, 0.2);
+        transform: scale(0.95);
+    }
+
+    70% {
+        color: rgba(245, 242, 236, 0);
+        background: rgba(245, 242, 236, 0);
+        transform: scale(1);
+    }
+
+    100% {
+        color: rgba(245, 242, 236, 0);
+        background: rgba(245, 242, 236, 0);
+        transform: scale(0.95);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-player-skin {
+        --pf-duration: 0ms;
+        --pf-focus-scale: 1;
+
+        .syncPlayIconCircle.oneShotPulse,
+        .syncPlayIconCircle.infinitePulse {
+            animation: none;
+        }
+    }
+}
