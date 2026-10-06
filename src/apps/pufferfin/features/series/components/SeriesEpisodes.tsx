@@ -19,7 +19,7 @@ import { isRequestStale } from '../../requests/utils/requests';
 import { getCreateErrorLabel } from '../../requests/utils/status';
 import { useNow } from '../../requests/utils/useNow';
 import { findEpisodeRequest, getDefaultSeasonNumber, getEpisodeKey } from '../utils/episodes';
-import EpisodeCard from './EpisodeCard';
+import EpisodeCard, { type EpisodeAction, useLibraryImageUrl } from './EpisodeCard';
 
 interface SeriesEpisodesProps {
     seriesTmdbId: number
@@ -89,7 +89,12 @@ const SeriesEpisodes: FC<SeriesEpisodesProps> = ({ seriesTmdbId, seasons, series
         }
     }, [ api, libraryById, user?.Id ]);
 
-    const openDownloads = useCallback(() => navigate(getDownloadsPath()), [ navigate ]);
+    const onEpisodeSelect = useCallback((episode: CatalogEpisode, action: EpisodeAction) => {
+        if (action === 'play') playEpisode(episode);
+        else if (action === 'request') requestEpisode(episode);
+        else navigate(getDownloadsPath());
+    }, [ navigate, playEpisode, requestEpisode ]);
+    const getLibraryImageUrl = useLibraryImageUrl();
 
     const renderEpisode = useCallback((episode: CatalogEpisode) => (
         <EpisodeCard
@@ -98,11 +103,10 @@ const SeriesEpisodes: FC<SeriesEpisodesProps> = ({ seriesTmdbId, seasons, series
             request={findEpisodeRequest(requests.data, seriesTmdbId, episode)}
             isStale={isStale}
             canRequest={canRequest}
-            onPlay={playEpisode}
-            onRequest={requestEpisode}
-            onOpenDownloads={openDownloads}
+            onSelect={onEpisodeSelect}
+            getLibraryImageUrl={getLibraryImageUrl}
         />
-    ), [ canRequest, isStale, libraryById, openDownloads, playEpisode, requestEpisode, requests.data, seriesTmdbId ]);
+    ), [ canRequest, getLibraryImageUrl, isStale, libraryById, onEpisodeSelect, requests.data, seriesTmdbId ]);
 
     if (!seasons.length) return null;
 

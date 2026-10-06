@@ -33,6 +33,12 @@ export function getDefaultSeasonNumber(seasons: CatalogSeason[] | undefined, nex
     return (withNextUp ?? seasons.find(season => season.SeasonNumber !== SPECIALS_SEASON) ?? seasons[0]).SeasonNumber;
 }
 
-/** A stable key for an episode: its number, else its library item for a file the library could not number. */
-export const getEpisodeKey = (episode: CatalogEpisode) =>
-    `${episode.SeasonNumber}-${episode.EpisodeNumber ?? 'x'}-${episode.EpisodeNumberEnd ?? ''}-${episode.LocalItemId ?? ''}`;
+/**
+ * A key that stays the same through the states of an episode: its numbers.
+ * The library item only names a file the library could not number. A key
+ * holding the library item would change at import and remount the card,
+ * dropping the focus.
+ */
+export const getEpisodeKey = (episode: CatalogEpisode) => (episode.EpisodeNumber != null ?
+    `${episode.SeasonNumber}-${episode.EpisodeNumber}-${episode.EpisodeNumberEnd ?? ''}` :
+    `${episode.SeasonNumber}-file-${episode.LocalItemId ?? ''}`);
