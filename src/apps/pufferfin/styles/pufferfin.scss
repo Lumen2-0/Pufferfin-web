@@ -1,0 +1,455 @@
+// Pufferfin interface: black background, no blue anywhere, light glass on
+// layered surfaces, round buttons, large art, soft motion.
+// Accents come from the artwork or from a warm neutral, never from a hue of blue.
+
+.pf-app {
+    // Palette: pure black and warm neutrals only
+    --pf-color-background: #000;
+    --pf-color-surface: #161412;
+    --pf-color-text: #f5f2ec;
+    --pf-color-text-secondary: rgba(245, 242, 236, 0.68);
+    --pf-color-accent: #f5f2ec;
+    --pf-color-on-accent: #000;
+
+    // Glass for layered surfaces: blur, faint light border, no heavy shadow
+    --pf-glass-background: rgba(245, 242, 236, 0.14);
+    --pf-glass-background-strong: rgba(245, 242, 236, 0.24);
+    --pf-glass-border: rgba(245, 242, 236, 0.18);
+    --pf-glass-blur: 24px;
+
+    // Focus must be obvious from a couch three meters away
+    --pf-focus-ring: 0 0 0 4px var(--pf-color-text), 0 12px 40px rgba(245, 242, 236, 0.28);
+    --pf-focus-scale: 1.08;
+
+    // Motion: short, natural easing, no bounce
+    --pf-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+    --pf-duration: 220ms;
+    --pf-caption-shift: 0.5rem;
+    --pf-pulse-duration: 1.6s;
+
+    // Layout
+    --pf-gutter: clamp(1.5rem, 4vw, 4.5rem);
+    --pf-radius-card: 12px;
+
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+    color: var(--pf-color-text);
+    font-family: inherit;
+    background: var(--pf-color-background);
+    scroll-behavior: smooth;
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+}
+
+.pf-app__main {
+    min-height: 100%;
+    padding-bottom: 4rem;
+}
+
+.pf-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip: rect(0 0 0 0);
+}
+
+// Buttons: fully round, primary is solid warm white, others are glass
+
+.pf-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.25rem;
+    margin: 0;
+    padding: 0 1.75rem;
+    color: var(--pf-color-text);
+    font-weight: 600;
+    font-size: 1.1rem;
+    font-family: inherit;
+    background: var(--pf-glass-background);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+    transition:
+        transform var(--pf-duration) var(--pf-ease),
+        background-color var(--pf-duration) var(--pf-ease),
+        box-shadow var(--pf-duration) var(--pf-ease);
+    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+    scroll-margin: 2rem;
+
+    &:hover {
+        background: var(--pf-glass-background-strong);
+    }
+
+    &:focus-visible,
+    &:focus {
+        transform: scale(var(--pf-focus-scale));
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    &:disabled {
+        cursor: default;
+        opacity: 0.4;
+    }
+}
+
+.pf-button--primary {
+    color: var(--pf-color-on-accent);
+    background: var(--pf-color-accent);
+    border-color: transparent;
+
+    &:hover {
+        background: var(--pf-color-text);
+    }
+}
+
+.pf-button--icon {
+    width: 3.25rem;
+    padding: 0;
+}
+
+.pf-button__icon {
+    display: inline-flex;
+
+    svg {
+        font-size: 1.6rem;
+    }
+}
+
+// Spacing uses margins rather than flex gap, which older TV engines lack
+
+.pf-button__icon + .pf-button__label {
+    margin-left: 0.5rem;
+
+    [dir='rtl'] & {
+        margin-right: 0.5rem;
+        margin-left: 0;
+    }
+}
+
+// Featured area: full screen art with a veil under the text
+
+.pf-hero {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: 85vh;
+    overflow: hidden;
+}
+
+.pf-hero__backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pf-hero__veil {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background:
+        linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.75) 30%, rgba(0, 0, 0, 0) 65%),
+        linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 60%);
+}
+
+.pf-hero__content {
+    position: relative;
+    max-width: 44rem;
+    padding: 0 var(--pf-gutter) 3rem;
+}
+
+.pf-hero__eyebrow {
+    margin: 0 0 0.5rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.pf-hero__title {
+    margin: 0;
+    font-weight: 700;
+    font-size: clamp(2.25rem, 5vw, 4.5rem);
+    line-height: 1.05;
+}
+
+.pf-hero__overview {
+    display: -webkit-box;
+    margin: 1rem 0 0;
+    overflow: hidden;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.15rem;
+    line-height: 1.5;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.pf-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 1.75rem;
+
+    .pf-button {
+        margin: 0 1rem 1rem 0;
+
+        [dir='rtl'] & {
+            margin: 0 0 1rem 1rem;
+        }
+    }
+}
+
+// Rows
+
+.pf-home__rows {
+    position: relative;
+    margin-top: -1rem;
+}
+
+.pf-home__empty {
+    padding: 30vh var(--pf-gutter) 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+.pf-row {
+    margin-top: 2rem;
+}
+
+.pf-row__title {
+    margin: 0 0 0.25rem;
+    padding: 0 var(--pf-gutter);
+    font-weight: 600;
+    font-size: 1.4rem;
+}
+
+.pf-row__list {
+    display: flex;
+    margin: 0;
+    // Room for the focus scale and halo, so they are never clipped
+    padding: 1.25rem var(--pf-gutter) 1.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    list-style: none;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.pf-row__list > * {
+    flex: none;
+}
+
+.pf-row__list > * + * {
+    margin-left: 1.25rem;
+
+    [dir='rtl'] & {
+        margin-right: 1.25rem;
+        margin-left: 0;
+    }
+}
+
+.pf-row__error {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 1rem var(--pf-gutter);
+    color: var(--pf-color-text-secondary);
+
+    svg {
+        margin-right: 0.5rem;
+
+        [dir='rtl'] & {
+            margin-right: 0;
+            margin-left: 0.5rem;
+        }
+    }
+}
+
+// Cards: a real button, the art is the content, the title shows on focus
+
+.pf-card {
+    display: block;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-color-text);
+    font-family: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    // Context margin: the neighbour card stays partly visible when the row scrolls
+    scroll-margin: 0 calc(var(--pf-gutter) + 4rem);
+}
+
+.pf-card--landscape {
+    width: clamp(15rem, 22vw, 22rem);
+}
+
+.pf-card--portrait {
+    width: clamp(9rem, 12vw, 13rem);
+}
+
+.pf-card__art {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background: var(--pf-color-surface);
+    border-radius: var(--pf-radius-card);
+    transition:
+        transform var(--pf-duration) var(--pf-ease),
+        box-shadow var(--pf-duration) var(--pf-ease);
+
+    // Ratio box through padding: aspect-ratio is missing on older TV engines
+    &::before {
+        display: block;
+        padding-top: 56.25%;
+        content: '';
+    }
+
+    .pf-card--portrait &::before {
+        padding-top: 150%;
+    }
+}
+
+.pf-card__image,
+.pf-card__placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.pf-card__image {
+    display: block;
+    object-fit: cover;
+}
+
+.pf-card__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    text-align: center;
+}
+
+.pf-card__progress {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    height: 0.3rem;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 999px;
+}
+
+.pf-card__progress-fill {
+    display: block;
+    height: 100%;
+    background: var(--pf-color-text);
+    border-radius: 999px;
+}
+
+.pf-card__caption {
+    display: block;
+    padding-top: 0.75rem;
+    opacity: 0.7;
+    transition:
+        opacity var(--pf-duration) var(--pf-ease),
+        transform var(--pf-duration) var(--pf-ease);
+}
+
+.pf-card__title,
+.pf-card__subtitle {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-card__title {
+    font-weight: 600;
+}
+
+.pf-card__subtitle {
+    color: var(--pf-color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.pf-card--skeleton {
+    cursor: default;
+
+    .pf-card__art {
+        animation: pf-pulse var(--pf-pulse-duration) var(--pf-ease) infinite alternate;
+    }
+}
+
+.pf-card:focus,
+.pf-card:focus-visible {
+    .pf-card__art {
+        transform: scale(var(--pf-focus-scale));
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .pf-card__caption {
+        opacity: 1;
+        transform: translateY(var(--pf-caption-shift));
+    }
+}
+
+.pf-card:hover .pf-card__caption {
+    opacity: 1;
+}
+
+@keyframes pf-pulse {
+    from {
+        opacity: 0.45;
+    }
+
+    to {
+        opacity: 0.9;
+    }
+}
+
+// Reduced motion: no scaling, no shifting, no smooth scroll, no pulsing.
+// The focus stays obvious through the halo, which does not move.
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-app {
+        --pf-duration: 0ms;
+        --pf-focus-scale: 1;
+        --pf-caption-shift: 0;
+        --pf-pulse-duration: 0s;
+
+        scroll-behavior: auto;
+    }
+
+    .pf-row__list {
+        scroll-behavior: auto;
+    }
+}

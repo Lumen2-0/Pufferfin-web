@@ -11,6 +11,9 @@ import { DASHBOARD_APP_PATHS, DASHBOARD_APP_ROUTES } from 'apps/dashboard/routes
 import { APP_ROUTES as MODERN_APP_ROUTES } from 'apps/modern/routes/routes';
 import { APP_ROUTES as LEGACY_APP_ROUTES } from 'apps/legacy/routes/routes';
 import { WIZARD_APP_ROUTES } from 'apps/wizard/routes/routes';
+// PUFFERFIN: Pufferfin interface routes
+import { PUFFERFIN_APP_ROUTES } from 'apps/pufferfin/routes/routes';
+import { isPufferfinPath } from 'apps/pufferfin/routes/paths';
 import AppHeader from 'components/AppHeader';
 import Backdrop from 'components/Backdrop';
 import layoutManager from 'components/layoutManager';
@@ -26,6 +29,7 @@ const router = createHashRouter([
             ...(layoutManager.modern ? MODERN_APP_ROUTES : LEGACY_APP_ROUTES),
             ...DASHBOARD_APP_ROUTES,
             ...WIZARD_APP_ROUTES,
+            ...PUFFERFIN_APP_ROUTES, // PUFFERFIN: mount the Pufferfin interface
             {
                 path: '!/*',
                 Component: BangRedirect
@@ -47,7 +51,8 @@ export default function RootAppRouter() {
 function RootAppLayout() {
     const location = useLocation();
     const isNewLayoutPath = Object.values(DASHBOARD_APP_PATHS)
-        .some(path => location.pathname.startsWith(`/${path}`));
+        .some(path => location.pathname.startsWith(`/${path}`))
+        || isPufferfinPath(location.pathname); // PUFFERFIN: the Pufferfin interface has no upstream header
 
     return (
         <ThemeProvider
