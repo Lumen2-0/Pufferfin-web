@@ -34,7 +34,7 @@ jobs:
       - name: Major-version guard
         run: |
           web="$(sed -n 's/^  "version": "\([^"]*\)".*/\1/p' package.json | head -n 1)"
-          server="$(curl -fsSL "https://raw.githubusercontent.com/${SERVER_REPO}/${SERVER_REF}/SharedVersion.cs" \
+          server="$(curl -fsSL --max-time 20 --retry 2 "https://raw.githubusercontent.com/${SERVER_REPO}/${SERVER_REF}/SharedVersion.cs" \
             | sed -n 's/.*AssemblyVersion("\([^"]*\)").*/\1/p' | head -n 1)"
           echo "Client Jellyfin ${web}, serveur Jellyfin ${server}"
           if [ -z "$server" ] || [ "${web%%.*}" != "${server%%.*}" ]; then
