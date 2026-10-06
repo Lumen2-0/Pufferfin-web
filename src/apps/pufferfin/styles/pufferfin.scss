@@ -379,6 +379,48 @@
     border-radius: 999px;
 }
 
+// Missing from the library: a discreet glass pill, an icon and a word, never color alone
+.pf-card__badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    display: flex;
+    align-items: center;
+    max-width: calc(100% - 1rem);
+    padding: 0.2rem 0.6rem 0.2rem 0.4rem;
+    color: var(--pf-color-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 999px;
+    backdrop-filter: blur(var(--pf-glass-blur));
+
+    [dir='rtl'] & {
+        right: 0.5rem;
+        left: auto;
+        padding: 0.2rem 0.4rem 0.2rem 0.6rem;
+    }
+}
+
+.pf-card__badge-icon {
+    display: flex;
+    margin-right: 0.3rem;
+
+    font-size: 1rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.3rem;
+    }
+}
+
+.pf-card__badge-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .pf-card__caption {
     display: block;
     padding-top: 0.75rem;
@@ -453,6 +495,26 @@
 
 .pf-seasons {
     padding: 0 var(--pf-gutter);
+}
+
+// Availability of a catalog title, in place of the actions it cannot offer yet
+.pf-availability {
+    display: flex;
+    align-items: center;
+    margin: 0 0 1rem;
+    color: var(--pf-color-text);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.pf-availability__icon {
+    margin-right: 0.5rem;
+    font-size: 1.5rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.5rem;
+    }
 }
 
 .pf-status {

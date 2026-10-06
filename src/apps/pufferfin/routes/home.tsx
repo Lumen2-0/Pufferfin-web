@@ -5,10 +5,14 @@ import React, { useCallback, useRef } from 'react';
 import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
 
+import CatalogCard from '../components/CatalogCard';
 import Hero from '../components/Hero';
 import MediaRow from '../components/MediaRow';
 import PosterCard from '../components/PosterCard';
 import RoundButton from '../components/RoundButton';
+import { CatalogItemKind, type CatalogItem } from '../features/catalog/api/types';
+import { useRecommendedForYou, useTrending } from '../features/catalog/api/useCatalog';
+import { getOpenableItems } from '../features/catalog/utils/catalog';
 import { useLatestItems, useNextUpItems, useResumeItems } from '../features/home/api/useHomeRows';
 import { useTranslation } from '../i18n/useTranslation';
 import { useInitialFocus } from '../navigation/useInitialFocus';
@@ -18,6 +22,8 @@ import { useOpenItem } from '../utils/navigation';
 import { playItem } from '../utils/playback';
 
 const getKey = (item: ItemDto) => item.Id ?? '';
+const getCatalogKey = (item: CatalogItem) => item.Key;
+const renderCatalogCard = (item: CatalogItem) => <CatalogCard item={item} />;
 
 export const Component = () => {
     const t = useTranslation();
@@ -28,11 +34,18 @@ export const Component = () => {
     const resume = useResumeItems();
     const nextUp = useNextUpItems();
     const latest = useLatestItems();
+    // Catalog rows mix titles on disk and missing ones; they are not needed to pick the featured title
+    const forYou = useRecommendedForYou();
+    const trendingMovies = useTrending(CatalogItemKind.Movie);
+    const trendingShows = useTrending(CatalogItemKind.Series);
 
     const featured = resume.data?.[0] ?? latest.data?.[0];
     const isLoaded = !resume.isPending && !nextUp.isPending && !latest.isPending;
+    const catalogRows = [ forYou, trendingMovies, trendingShows ];
     const isEmpty = isLoaded && !featured && !nextUp.data?.length
-        && !resume.isError && !nextUp.isError && !latest.isError;
+        && !resume.isError && !nextUp.isError && !latest.isError
+        // The library may be empty while the catalog still has titles to offer
+        && catalogRows.every(row => !row.isPending && !row.isError && !getOpenableItems(row.data)?.length);
 
     useInitialFocus(pageRef, [ featured, isLoaded ]);
 
@@ -103,6 +116,33 @@ export const Component = () => {
                     isError={nextUp.isError}
                     getKey={getKey}
                     renderItem={renderCard('landscape')}
+                />
+                <MediaRow
+                    title={t('RowRecommendedForYou')}
+                    shape='portrait'
+                    items={getOpenableItems(forYou.data)}
+                    isPending={forYou.isPending}
+                    isError={forYou.isError}
+                    getKey={getCatalogKey}
+                    renderItem={renderCatalogCard}
+                />
+                <MediaRow
+                    title={t('RowTrendingMovies')}
+                    shape='portrait'
+                    items={getOpenableItems(trendingMovies.data)}
+                    isPending={trendingMovies.isPending}
+                    isError={trendingMovies.isError}
+                    getKey={getCatalogKey}
+                    renderItem={renderCatalogCard}
+                />
+                <MediaRow
+                    title={t('RowTrendingShows')}
+                    shape='portrait'
+                    items={getOpenableItems(trendingShows.data)}
+                    isPending={trendingShows.isPending}
+                    isError={trendingShows.isError}
+                    getKey={getCatalogKey}
+                    renderItem={renderCatalogCard}
                 />
                 <MediaRow
                     title={t('RowRecentlyAdded')}
