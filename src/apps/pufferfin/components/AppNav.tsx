@@ -1,4 +1,5 @@
 import Home from '@mui/icons-material/Home';
+import VideoLibrary from '@mui/icons-material/VideoLibrary';
 import Search from '@mui/icons-material/Search';
 import classNames from 'classnames';
 import React, { type FC } from 'react';
@@ -6,7 +7,7 @@ import { NavLink } from 'react-router-dom';
 
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
-import { getSearchPath, PUFFERFIN_APP_PATH } from '../routes/paths';
+import { getLibraryPath, getSearchPath, PUFFERFIN_APP_PATH } from '../routes/paths';
 
 const getClassName = ({ isActive }: { isActive: boolean }) =>
     classNames('pf-button', 'pf-nav__link', isActive ? 'pf-button--primary' : 'pf-button--glass');
@@ -23,6 +24,10 @@ const AppNav: FC = () => {
             <NavLink to={`/${PUFFERFIN_APP_PATH}`} end className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
                 <span className='pf-button__icon' aria-hidden='true'><Home /></span>
                 <span className='pf-button__label'>{t('NavHome')}</span>
+            </NavLink>
+            <NavLink to={getLibraryPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+                <span className='pf-button__icon' aria-hidden='true'><VideoLibrary /></span>
+                <span className='pf-button__label'>{t('NavLibrary')}</span>
             </NavLink>
             <NavLink to={getSearchPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
                 <span className='pf-button__icon' aria-hidden='true'><Search /></span>

@@ -30,6 +30,10 @@ export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
                         lazy: () => import('./person')
                     },
                     {
+                        path: 'library',
+                        lazy: () => import('./library')
+                    },
+                    {
                         path: 'search',
                         lazy: () => import('./search')
                     }

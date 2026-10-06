@@ -16,7 +16,7 @@ import MediaRow from '../components/MediaRow';
 import PersonCard from '../components/PersonCard';
 import PosterCard from '../components/PosterCard';
 import RoundButton from '../components/RoundButton';
-import SeasonPicker from '../components/SeasonPicker';
+import ChoicePicker from '../components/ChoicePicker';
 import { useEpisodes, useSeasons, useSeriesNextUp, useSimilarItems } from '../features/details/api/useDetails';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
@@ -196,9 +196,9 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
             <div className='pf-details__sections'>
                 {seriesId && seasons.data && seasons.data.length > 0 && (
                     <section className='pf-details__episodes' aria-label={t('SeasonsLabel')}>
-                        <SeasonPicker
+                        <ChoicePicker
                             label={t('SeasonsLabel')}
-                            seasons={seasons.data.map(season => ({ id: season.Id ?? '', name: season.Name ?? '' }))}
+                            options={seasons.data.map(season => ({ id: season.Id ?? '', name: season.Name ?? '' }))}
                             selectedId={seasonId}
                             onSelect={setChosenSeasonId}
                         />
