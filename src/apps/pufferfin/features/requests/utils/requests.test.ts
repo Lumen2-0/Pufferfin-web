@@ -13,7 +13,16 @@ import {
     splitRequests,
     upsertRequest
 } from './requests';
-import { getCreateErrorLabel, getRequestProblemLabel, getRequestStateLabel } from './status';
+import {
+    getCreateErrorLabel,
+    getRequestPartText,
+    getRequestProblemLabel,
+    getRequestStateLabel,
+    getRequestStateText
+} from './status';
+
+// Echoes the key and its arguments, so the tests read which sentence was picked
+const echo = (key: string, ...args: Array<string | number>) => [ key, ...args ].join(' ');
 
 const makeRequest = (overrides: Partial<MediaRequest> = {}): MediaRequest => ({
     Id: 'request',
@@ -129,5 +138,20 @@ describe('Pufferfin: requests', () => {
         expect(isSameId('0A1B2C3D-0000-0000-0000-000000000001', '0a1b2c3d000000000000000000000001')).toBe(true);
         expect(isSameId('a', 'b')).toBe(false);
         expect(isSameId(undefined, undefined)).toBe(false);
+    });
+
+    it('words the state with the place in line or the percentage when there is one', () => {
+        expect(getRequestStateText(makeRequest({ QueuePosition: 3 }), echo)).toBe('RequestQueuedPosition 3');
+        expect(getRequestStateText(makeRequest({ QueuePosition: null }), echo)).toBe('RequestQueued');
+        expect(getRequestStateText(makeRequest({ State: RequestState.Downloading, Progress: 0.5 }), echo))
+            .toBe('RequestDownloadingPercent 50');
+        expect(getRequestStateText(makeRequest({ State: RequestState.Importing }), echo)).toBe('RequestImporting');
+    });
+
+    it('names the season or the episode of a series request, nothing for a movie', () => {
+        expect(getRequestPartText(makeRequest(), echo)).toBeUndefined();
+        expect(getRequestPartText(makeRequest({ Kind: RequestKind.Season, SeasonNumber: 2 }), echo)).toBe('SeasonNumber 2');
+        expect(getRequestPartText(makeRequest({ Kind: RequestKind.Episode, SeasonNumber: 1, EpisodeNumber: 4 }), echo))
+            .toBe('EpisodeNumber 1 4');
     });
 });
