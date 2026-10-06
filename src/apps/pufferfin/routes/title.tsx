@@ -4,12 +4,16 @@ import { isAxiosError } from 'axios';
 import React, { type FC, useMemo, useRef } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 
+import { useCapabilities } from '../api/useCapabilities';
 import CatalogCard from '../components/CatalogCard';
 import Hero from '../components/Hero';
 import MediaRow from '../components/MediaRow';
 import { CatalogAvailability, type CatalogItem, CatalogItemKind } from '../features/catalog/api/types';
 import { useCatalogTitle } from '../features/catalog/api/useCatalog';
 import { getOpenableItems } from '../features/catalog/utils/catalog';
+import MovieRequestActions from '../features/requests/components/MovieRequestActions';
+import { useMyRequests, useRequestPermissions } from '../features/requests/api/useRequests';
+import { findMovieRequest } from '../features/requests/utils/requests';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
@@ -23,17 +27,26 @@ const renderCard = (item: CatalogItem) => <CatalogCard item={item} />;
 
 /**
  * Sheet of a movie or a series that is not in the library, from the catalog.
- * Downloading it comes with the Requests module; until then the sheet tells
- * plainly that the title is not in the library.
+ * A movie can be downloaded from here when Radarr is enabled and the account
+ * may request; a series tells plainly that it is not in the library, its
+ * seasons and episodes come with the series download.
  */
 const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tmdbId }) => {
     const t = useTranslation();
     const pageRef = useRef<HTMLDivElement>(null);
 
     const { data: title, isPending, isError, error } = useCatalogTitle(kind, tmdbId);
+    const isMovie = kind === CatalogItemKind.Movie;
+    const capabilities = useCapabilities();
+    const permissions = useRequestPermissions();
+    const requests = useMyRequests();
+    // Buttons of services that are not configured never show: both answers are needed, a failure counts as no
+    const canRequest = isMovie && !!capabilities.data?.Radarr && !!permissions.data?.CanRequest;
+    const request = isMovie ? findMovieRequest(requests.data, tmdbId) : undefined;
+    const areActionsSettled = !isMovie || (!capabilities.isPending && !permissions.isPending && !requests.isPending);
 
-    // No action to start from: the full overview takes the focus first
-    useInitialFocus(pageRef, [ title ], !!title);
+    // The focus waits for the actions, so it lands on Download rather than on the overview
+    useInitialFocus(pageRef, [ title, areActionsSettled ], !!title && areActionsSettled);
 
     const meta = useMemo(() => {
         if (!title) return [];
@@ -92,13 +105,20 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                 )}
                 overview={title.Overview}
                 backdropUrl={title.BackdropUrl ?? title.PosterUrl ?? undefined}
-                actions={
+                actions={isMovie ? (
+                    <MovieRequestActions
+                        tmdbId={tmdbId}
+                        request={request}
+                        canRequest={canRequest}
+                        lastSyncAt={requests.dataUpdatedAt}
+                    />
+                ) : (
                     // A state, not a button: told by an icon and words, never by color alone
                     <p className='pf-availability'>
                         <CloudOutlined className='pf-availability__icon' fontSize='inherit' aria-hidden='true' />
                         {t('NotInLibrary')}
                     </p>
-                }
+                )}
             />
 
             <div className='pf-details__sections'>

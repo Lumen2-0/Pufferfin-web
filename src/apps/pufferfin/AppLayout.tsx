@@ -4,6 +4,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { clearBackdrop } from 'components/backdrop/backdrop';
 
 import AppNav from './components/AppNav';
+import { useLiveRequests } from './features/requests/api/useLiveRequests';
 import { TranslationProvider } from './i18n/useTranslation';
 import { useSpatialNavigation } from './navigation/useSpatialNavigation';
 import { getHomePath } from './routes/paths';
@@ -37,6 +38,9 @@ export const Component = () => {
     }, [ location.pathname, navigate ]);
 
     useSpatialNavigation(rootRef, onBack);
+
+    // Request progress is pushed while any Pufferfin screen is open
+    useLiveRequests();
 
     return (
         <TranslationProvider>

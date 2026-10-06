@@ -517,6 +517,46 @@
     }
 }
 
+// Request of a missing title: its state in words, a bar while downloading, then the buttons
+
+.pf-request {
+    flex-basis: 100%;
+}
+
+.pf-request__state .pf-availability {
+    margin-bottom: 0.5rem;
+}
+
+.pf-request__bar {
+    width: min(28rem, 100%);
+    height: 0.4rem;
+    overflow: hidden;
+    background: var(--pf-glass-background);
+    border-radius: 999px;
+}
+
+.pf-request__bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--pf-color-text);
+    border-radius: 999px;
+    transition: width var(--pf-duration) var(--pf-ease);
+}
+
+// No news for a while: the bar dims and the words say so, it never passes for live progress
+.pf-request__bar--stale .pf-request__bar-fill {
+    opacity: 0.45;
+}
+
+.pf-request__detail {
+    margin: 0.5rem 0 0;
+    color: var(--pf-color-text-secondary);
+}
+
+.pf-request .pf-button-row {
+    margin-top: 1rem;
+}
+
 .pf-status {
     display: flex;
     flex-direction: column;
