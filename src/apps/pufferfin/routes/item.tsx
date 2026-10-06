@@ -20,6 +20,7 @@ import RoundButton from '../components/RoundButton';
 import SeasonPicker from '../components/SeasonPicker';
 import { useEpisodes, useSeasons, useSeriesNextUp, useSimilarItems } from '../features/details/api/useDetails';
 import { useTranslation } from '../i18n/useTranslation';
+import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { getBackdropUrl, getCardImageUrl, getPersonImageUrl } from '../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, getRuntime, isResumable } from '../utils/items';
@@ -64,7 +65,9 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
     const seasonId = chosenSeasonId ?? defaultSeasonId;
     const episodes = useEpisodes(seriesId, seasonId);
 
-    useInitialFocus(pageRef, [ item ]);
+    // For a series, Play waits for the next episode: focusing before would land on a later button
+    const isPlayReady = !seriesId || !nextUp.isPending;
+    useInitialFocus(pageRef, [ item, isPlayReady ], !!item && isPlayReady);
 
     const formatEpisode = useCallback((episode: ItemDto) => {
         const numbers = getEpisodeNumbers(episode);
@@ -98,7 +101,10 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
             runtimeText,
             item.OfficialRating ?? undefined,
             item.Genres?.slice(0, GENRE_LIMIT).join(', ')
-        ].filter((value): value is string => !!value);
+        ]
+            .filter((value): value is string => !!value)
+            // Unique values: a rating equal to the year would otherwise repeat and collide as keys
+            .filter((value, index, values) => values.indexOf(value) === index);
     }, [ item, t ]);
 
     const cast = useMemo(
@@ -227,8 +233,15 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                 />
 
                 {(item.Overview || !!item.Studios?.length) && (
-                    <section className='pf-about' aria-labelledby='pf-about-title'>
-                        <h2 id='pf-about-title' className='pf-row__title'>{t('SectionAbout')}</h2>
+                    // Focusable as a whole: it holds no control, and the remote must still reach it
+                    <section
+                        className='pf-about'
+                        aria-labelledby='pf-about-title'
+                        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- remote users must reach a section that holds only text
+                        tabIndex={0}
+                        {...{ [FOCUSABLE_ATTRIBUTE]: true }}
+                    >
+                        <h2 id='pf-about-title' className='pf-row__title pf-about__title'>{t('SectionAbout')}</h2>
                         <div className='pf-about__body'>
                             {item.Overview && <p className='pf-about__overview'>{item.Overview}</p>}
                             <dl className='pf-about__facts'>
