@@ -16,7 +16,8 @@ interface PosterCardProps<T> {
     badge?: { icon: ReactNode, label: string }
     /** Passed back to `onSelect`, so callers hand over a stable callback instead of a new closure per card. */
     value: T
-    onSelect: (value: T) => void
+    /** Without it, the card is a plain tile: shown, read by screen readers, but not a focus stop with nothing to do. */
+    onSelect?: (value: T) => void
 }
 
 const PosterCard = <T, >({
@@ -30,17 +31,11 @@ const PosterCard = <T, >({
     value,
     onSelect
 }: PosterCardProps<T>) => {
-    const onClick = useCallback(() => onSelect(value), [ onSelect, value ]);
+    const onClick = useCallback(() => onSelect?.(value), [ onSelect, value ]);
     const accessibleName = [ title, subtitle, progressLabel, badge?.label ].filter(Boolean).join(', ');
 
-    return (
-        <button
-            type='button'
-            className={classNames('pf-card', `pf-card--${shape}`)}
-            aria-label={accessibleName}
-            onClick={onClick}
-            {...{ [FOCUSABLE_ATTRIBUTE]: true }}
-        >
+    const content = (
+        <>
             <span className='pf-card__art'>
                 {imageUrl ? (
                     <img className='pf-card__image' src={imageUrl} alt='' loading='lazy' />
@@ -64,6 +59,26 @@ const PosterCard = <T, >({
                 <span className='pf-card__title'>{title}</span>
                 {subtitle && <span className='pf-card__subtitle'>{subtitle}</span>}
             </span>
+        </>
+    );
+
+    if (!onSelect) {
+        return (
+            <span className={classNames('pf-card', `pf-card--${shape}`, 'pf-card--static')} role='img' aria-label={accessibleName}>
+                {content}
+            </span>
+        );
+    }
+
+    return (
+        <button
+            type='button'
+            className={classNames('pf-card', `pf-card--${shape}`)}
+            aria-label={accessibleName}
+            onClick={onClick}
+            {...{ [FOCUSABLE_ATTRIBUTE]: true }}
+        >
+            {content}
         </button>
     );
 };

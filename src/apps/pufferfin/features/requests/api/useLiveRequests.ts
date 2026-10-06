@@ -30,8 +30,10 @@ export const useLiveRequests = () => {
             storeRequest(userId, request, isSameId(request.UserId, userId));
 
             if (request.State === RequestState.Available) {
-                // The title is in the library now: catalog entries switch from Download to Play
+                // The title is in the library now: catalog entries switch from Download to Play,
+                // and a series page reads its library seasons and episodes again
                 void queryClient.invalidateQueries({ queryKey: [ 'Pufferfin', 'Catalog' ] });
+                void queryClient.invalidateQueries({ queryKey: [ 'Pufferfin', 'Details' ] });
             }
         });
     }, [ api, userId ]);

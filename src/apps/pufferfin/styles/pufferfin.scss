@@ -307,6 +307,11 @@
     scroll-margin: 0 calc(var(--pf-gutter) + 4rem);
 }
 
+// A tile with nothing to do, such as a missing episode that cannot be requested: no pointer, no focus
+.pf-card--static {
+    cursor: default;
+}
+
 .pf-card--landscape {
     width: clamp(15rem, 22vw, 22rem);
 }
