@@ -755,6 +755,15 @@
     }
 }
 
+.pf-nav__link.pf-nav__link--end {
+    margin-left: auto;
+
+    [dir='rtl'] & {
+        margin-right: auto;
+        margin-left: 0;
+    }
+}
+
 // Search: a round glass field, the voice button, then rows of results
 
 .pf-search {
@@ -854,6 +863,33 @@
 
 .pf-library__more {
     padding: 0.5rem var(--pf-gutter) 0;
+}
+
+// Menu: sections of round buttons, wrapping on narrow screens
+
+.pf-menu__section + .pf-menu__section {
+    margin-top: 2rem;
+}
+
+.pf-menu__list {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0.75rem var(--pf-gutter) 0;
+    list-style: none;
+}
+
+// Margins rather than flex gap, which older TV browsers do not support
+.pf-menu__item {
+    margin: 0 0.75rem 0.75rem 0;
+
+    [dir='rtl'] & {
+        margin: 0 0 0.75rem 0.75rem;
+    }
+}
+
+.pf-menu__link {
+    text-decoration: none;
 }
 
 // A search result: the card, and its Play button under it
