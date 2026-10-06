@@ -932,6 +932,66 @@
     text-decoration: none;
 }
 
+// Downloads panel: one glass card per request, its state, then its buttons
+
+.pf-downloads__section + .pf-downloads__section {
+    margin-top: 2.5rem;
+}
+
+.pf-downloads__list {
+    margin: 0;
+    padding: 0.75rem var(--pf-gutter) 0;
+    list-style: none;
+}
+
+.pf-download {
+    max-width: 56rem;
+    margin-bottom: 1rem;
+    padding: 1.25rem 1.5rem 0.25rem;
+    background: var(--pf-glass-background);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: var(--pf-radius-card);
+}
+
+.pf-download__heading {
+    margin-bottom: 0.75rem;
+}
+
+.pf-download__title {
+    color: var(--pf-color-text);
+    font-weight: 600;
+    font-size: 1.3rem;
+    text-decoration: none;
+    border-radius: 6px;
+    outline: none;
+    transition: box-shadow var(--pf-duration) var(--pf-ease);
+
+    &:focus,
+    &:focus-visible {
+        box-shadow: var(--pf-focus-ring);
+    }
+}
+
+.pf-download__part {
+    margin-left: 0.75rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 400;
+
+    [dir='rtl'] & {
+        margin-right: 0.75rem;
+        margin-left: 0;
+    }
+}
+
+.pf-download__owner {
+    margin: 0.25rem 0 0;
+    color: var(--pf-color-text-secondary);
+}
+
+.pf-download__actions {
+    margin-top: 1rem;
+}
+
 // A search result: the card, and its Play button under it
 
 .pf-result {

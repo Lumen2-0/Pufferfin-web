@@ -49,3 +49,41 @@ export const REQUEST_STALE_MS = 30000;
 
 /** Whether the last news is too old to present a moving bar as live. */
 export const isRequestStale = (lastSyncAt: number, now: number) => now - lastSyncAt > REQUEST_STALE_MS;
+
+// The server writes ids without dashes, the SDK user may carry them
+export const normalizeId = (id: string) => id.replace(/-/g, '').toLowerCase();
+
+/** Whether two Jellyfin ids name the same user, whatever their formatting. */
+export const isSameId = (a: string | undefined, b: string | undefined) => !!a && !!b && normalizeId(a) === normalizeId(b);
+
+/** States in the queue an administrator can order: waiting for approval or for a slot. */
+const isWaiting = (request: MediaRequest) =>
+    request.State === RequestState.PendingApproval || request.State === RequestState.Queued;
+
+export type MoveDirection = 'up' | 'down';
+
+/**
+ * The zero based place to send a waiting request to, one step up or down
+ * among the waiting requests of the list, in the server's terms. Undefined
+ * when it is not waiting or already at that end.
+ */
+export function getMoveIndex(requests: MediaRequest[], requestId: string, direction: MoveDirection): number | undefined {
+    const waiting = requests.filter(isWaiting);
+    const index = waiting.findIndex(request => request.Id === requestId);
+    if (index < 0) return undefined;
+    const target = direction === 'up' ? index - 1 : index + 1;
+    return target >= 0 && target < waiting.length ? target : undefined;
+}
+
+/**
+ * Splits a list for the downloads panel: what is still on its way or needs
+ * attention (failed) in queue order, then what is finished, latest first.
+ */
+export function splitRequests(requests: MediaRequest[] | undefined) {
+    const list = requests ?? [];
+    const current = list.filter(request => isRequestActive(request) || request.State === RequestState.Failed);
+    const finished = list
+        .filter(request => !current.includes(request))
+        .sort((a, b) => Date.parse(b.UpdatedAt) - Date.parse(a.UpdatedAt));
+    return { current, finished };
+}

@@ -1,3 +1,4 @@
+import Download from '@mui/icons-material/Download';
 import Home from '@mui/icons-material/Home';
 import MenuIcon from '@mui/icons-material/Menu';
 import VideoLibrary from '@mui/icons-material/VideoLibrary';
@@ -6,9 +7,10 @@ import classNames from 'classnames';
 import React, { type FC } from 'react';
 import { NavLink } from 'react-router-dom';
 
+import { useCapabilities } from '../api/useCapabilities';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
-import { getHomePath, getLibraryPath, getMenuPath, getSearchPath } from '../routes/paths';
+import { getDownloadsPath, getHomePath, getLibraryPath, getMenuPath, getSearchPath } from '../routes/paths';
 
 const getClassName = ({ isActive }: { isActive: boolean }) =>
     classNames('pf-button', 'pf-nav__link', isActive ? 'pf-button--primary' : 'pf-button--glass');
@@ -22,6 +24,9 @@ const getMenuClassName = (state: { isActive: boolean }) => classNames(getClassNa
  */
 const AppNav: FC = () => {
     const t = useTranslation();
+    const { data: capabilities } = useCapabilities();
+    // No download service configured: no Downloads button, rather than an empty panel
+    const hasDownloads = !!capabilities?.Radarr || !!capabilities?.Sonarr;
 
     return (
         <nav className='pf-nav' aria-label={t('NavLabel')} {...{ [FOCUS_GROUP_ATTRIBUTE]: true }}>
@@ -37,6 +42,12 @@ const AppNav: FC = () => {
                 <span className='pf-button__icon' aria-hidden='true'><Search /></span>
                 <span className='pf-button__label'>{t('NavSearch')}</span>
             </NavLink>
+            {hasDownloads && (
+                <NavLink to={getDownloadsPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+                    <span className='pf-button__icon' aria-hidden='true'><Download /></span>
+                    <span className='pf-button__label'>{t('NavDownloads')}</span>
+                </NavLink>
+            )}
             {/* Account, dashboard and the other Jellyfin sections: the upstream header is hidden here */}
             <NavLink to={getMenuPath()} className={getMenuClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
                 <span className='pf-button__icon' aria-hidden='true'><MenuIcon /></span>

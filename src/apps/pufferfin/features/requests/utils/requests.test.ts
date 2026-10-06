@@ -3,11 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { type MediaRequest, RequestKind, RequestProblemCode, RequestState } from '../api/types';
 import {
     findMovieRequest,
+    getMoveIndex,
     getProgressPercent,
     isRequestActive,
     isRequestCancellable,
     isRequestStale,
+    isSameId,
     REQUEST_STALE_MS,
+    splitRequests,
     upsertRequest
 } from './requests';
 import { getCreateErrorLabel, getRequestProblemLabel, getRequestStateLabel } from './status';
@@ -94,5 +97,37 @@ describe('Pufferfin: requests', () => {
         expect(getCreateErrorLabel(429)).toBe('RequestErrorQuota');
         expect(getCreateErrorLabel(409)).toBe('RequestErrorServiceDisabled');
         expect(getCreateErrorLabel(undefined)).toBe('RequestErrorGeneric');
+    });
+
+    it('moves a waiting request one step among the waiting ones only', () => {
+        const downloading = makeRequest({ Id: 'downloading', State: RequestState.Downloading });
+        const pending = makeRequest({ Id: 'pending', State: RequestState.PendingApproval });
+        const failed = makeRequest({ Id: 'failed', State: RequestState.Failed });
+        const queued = makeRequest({ Id: 'queued', State: RequestState.Queued });
+        const list = [ downloading, pending, failed, queued ];
+
+        expect(getMoveIndex(list, 'queued', 'up')).toBe(0);
+        expect(getMoveIndex(list, 'pending', 'down')).toBe(1);
+        expect(getMoveIndex(list, 'pending', 'up')).toBeUndefined();
+        expect(getMoveIndex(list, 'queued', 'down')).toBeUndefined();
+        expect(getMoveIndex(list, 'downloading', 'up')).toBeUndefined();
+    });
+
+    it('splits the panel into current requests in queue order and finished ones, latest first', () => {
+        const queued = makeRequest({ Id: 'queued', State: RequestState.Queued });
+        const failed = makeRequest({ Id: 'failed', State: RequestState.Failed });
+        const olderDone = makeRequest({ Id: 'older', State: RequestState.Available, UpdatedAt: '2026-10-05T10:00:00Z' });
+        const newerDone = makeRequest({ Id: 'newer', State: RequestState.Cancelled, UpdatedAt: '2026-10-06T10:00:00Z' });
+
+        const { current, finished } = splitRequests([ olderDone, queued, newerDone, failed ]);
+        expect(current.map(item => item.Id)).toEqual([ 'queued', 'failed' ]);
+        expect(finished.map(item => item.Id)).toEqual([ 'newer', 'older' ]);
+        expect(splitRequests(undefined)).toEqual({ current: [], finished: [] });
+    });
+
+    it('compares user ids whatever their dashes and case', () => {
+        expect(isSameId('0A1B2C3D-0000-0000-0000-000000000001', '0a1b2c3d000000000000000000000001')).toBe(true);
+        expect(isSameId('a', 'b')).toBe(false);
+        expect(isSameId(undefined, undefined)).toBe(false);
     });
 });
