@@ -1,0 +1,71 @@
+# PUFFERFIN: release côté client. L'image ghcr.io/pufferfin/pufferfin est
+# construite par le workflow `release.yml` de Pufferfin/Pufferfin, qui embarque
+# ce client compilé. Ici : vérifier que main compile et suit la même version
+# majeure de Jellyfin que le serveur, puis demander une nouvelle image.
+# Workflow propre à Pufferfin : aucun workflow Jellyfin n'est modifié.
+# Contrat : .github/pufferfin/README.md
+name: Pufferfin / Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pufferfin-release
+  cancel-in-progress: false
+
+env:
+  SERVER_REPO: Pufferfin/Pufferfin
+  SERVER_REF: main
+
+jobs:
+  build:
+    if: github.repository == 'Pufferfin/Pufferfin-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Major-version guard
+        run: |
+          web="$(sed -n 's/^  "version": "\([^"]*\)".*/\1/p' package.json | head -n 1)"
+          server="$(curl -fsSL "https://raw.githubusercontent.com/${SERVER_REPO}/${SERVER_REF}/SharedVersion.cs" \
+            | sed -n 's/.*AssemblyVersion("\([^"]*\)").*/\1/p' | head -n 1)"
+          echo "Client Jellyfin ${web}, serveur Jellyfin ${server}"
+          if [ -z "$server" ] || [ "${web%%.*}" != "${server%%.*}" ]; then
+            echo "::error::Release bloquée : client en Jellyfin ${web}, serveur en Jellyfin ${server:-inconnu}. Les deux dépôts doivent suivre la même version majeure."
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Build and test
+        run: |
+          npm ci --no-audit
+          npm run build:production
+          npm test
+
+  request-image:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the image build in Pufferfin/Pufferfin
+        env:
+          GH_TOKEN: ${{ secrets.PUFFERFIN_RELEASE_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::notice::PUFFERFIN_RELEASE_DISPATCH_TOKEN absent : l'image sera reconstruite à la prochaine release serveur."
+            exit 0
+          fi
+          gh api "repos/${SERVER_REPO}/dispatches" \
+            -f event_type=pufferfin-web-updated \
+            -f "client_payload[web_sha]=${GITHUB_SHA}"
