@@ -1,0 +1,32 @@
+// Design tokens shared by the Pufferfin screens and the Pufferfin player skin.
+// Pure black and warm neutrals only: no hue of blue anywhere.
+
+@mixin pf-tokens {
+    // Palette: pure black and warm neutrals only
+    --pf-color-background: #000;
+    --pf-color-surface: #161412;
+    --pf-color-text: #f5f2ec;
+    --pf-color-text-secondary: rgba(245, 242, 236, 0.68);
+    --pf-color-accent: #f5f2ec;
+    --pf-color-on-accent: #000;
+
+    // Glass for layered surfaces: blur, faint light border, no heavy shadow
+    --pf-glass-background: rgba(245, 242, 236, 0.14);
+    --pf-glass-background-strong: rgba(245, 242, 236, 0.24);
+    --pf-glass-border: rgba(245, 242, 236, 0.18);
+    --pf-glass-blur: 24px;
+
+    // Focus must be obvious from a couch three meters away
+    --pf-focus-ring: 0 0 0 4px var(--pf-color-text), 0 12px 40px rgba(245, 242, 236, 0.28);
+    --pf-focus-scale: 1.08;
+
+    // Motion: short, natural easing, no bounce
+    --pf-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+    --pf-duration: 220ms;
+    --pf-caption-shift: 0.5rem;
+    --pf-pulse-duration: 1.6s;
+
+    // Layout
+    --pf-gutter: clamp(1.5rem, 4vw, 4.5rem);
+    --pf-radius-card: 12px;
+}

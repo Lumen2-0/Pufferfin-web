@@ -1,0 +1,862 @@
+// Pufferfin interface: black background, no blue anywhere, light glass on
+// layered surfaces, round buttons, large art, soft motion.
+// Accents come from the artwork or from a warm neutral, never from a hue of blue.
+
+@use 'tokens' as *;
+
+.pf-app {
+    @include pf-tokens;
+
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+    color: var(--pf-color-text);
+    font-family: inherit;
+    background: var(--pf-color-background);
+    scroll-behavior: smooth;
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+}
+
+.pf-app__main {
+    min-height: 100%;
+    padding-bottom: 4rem;
+}
+
+.pf-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip: rect(0 0 0 0);
+}
+
+// Buttons: fully round, primary is solid warm white, others are glass
+
+.pf-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.25rem;
+    margin: 0;
+    padding: 0 1.75rem;
+    color: var(--pf-color-text);
+    font-weight: 600;
+    font-size: 1.1rem;
+    font-family: inherit;
+    background: var(--pf-glass-background);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+    transition:
+        transform var(--pf-duration) var(--pf-ease),
+        background-color var(--pf-duration) var(--pf-ease),
+        box-shadow var(--pf-duration) var(--pf-ease);
+    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+    scroll-margin: 2rem;
+
+    &:hover {
+        background: var(--pf-glass-background-strong);
+    }
+
+    &:focus-visible,
+    &:focus {
+        transform: scale(var(--pf-focus-scale));
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    &:disabled {
+        cursor: default;
+        opacity: 0.4;
+    }
+}
+
+.pf-button--primary {
+    color: var(--pf-color-on-accent);
+    background: var(--pf-color-accent);
+    border-color: transparent;
+
+    &:hover {
+        background: var(--pf-color-text);
+    }
+}
+
+.pf-button--icon {
+    width: 3.25rem;
+    padding: 0;
+}
+
+.pf-button__icon {
+    display: inline-flex;
+
+    svg {
+        font-size: 1.6rem;
+    }
+}
+
+// Spacing uses margins rather than flex gap, which older TV engines lack
+
+.pf-button__icon + .pf-button__label {
+    margin-left: 0.5rem;
+
+    [dir='rtl'] & {
+        margin-right: 0.5rem;
+        margin-left: 0;
+    }
+}
+
+// Featured area: full screen art with a veil under the text
+
+.pf-hero {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: 85vh;
+    overflow: hidden;
+}
+
+.pf-hero__backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pf-hero__veil {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background:
+        linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.75) 30%, rgba(0, 0, 0, 0) 65%),
+        linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 60%);
+}
+
+.pf-hero__content {
+    position: relative;
+    max-width: 44rem;
+    padding: 0 var(--pf-gutter) 3rem;
+}
+
+.pf-hero__eyebrow {
+    margin: 0 0 0.5rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.pf-hero__title {
+    margin: 0;
+    font-weight: 700;
+    font-size: clamp(2.25rem, 5vw, 4.5rem);
+    line-height: 1.05;
+}
+
+.pf-hero__overview {
+    display: -webkit-box;
+    margin: 1rem 0 0;
+    overflow: hidden;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.15rem;
+    line-height: 1.5;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.pf-hero__meta {
+    margin-top: 0.75rem;
+}
+
+.pf-hero__actions {
+    margin-top: 1.75rem;
+}
+
+// Facts line: year, runtime, rating, genres, separated by a dot
+
+.pf-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 1.05rem;
+    list-style: none;
+}
+
+.pf-meta__item + .pf-meta__item::before {
+    margin: 0 0.6rem;
+    content: '\00b7';
+}
+
+// Wrapping row of round buttons: hero actions, season picker
+
+.pf-button-row {
+    display: flex;
+    flex-wrap: wrap;
+
+    .pf-button {
+        margin: 0 1rem 1rem 0;
+
+        [dir='rtl'] & {
+            margin: 0 0 1rem 1rem;
+        }
+    }
+}
+
+// Rows
+
+.pf-home__rows {
+    position: relative;
+    margin-top: -1rem;
+}
+
+.pf-home__empty {
+    padding: 30vh var(--pf-gutter) 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+.pf-row {
+    margin-top: 2rem;
+}
+
+.pf-row__title {
+    margin: 0 0 0.25rem;
+    padding: 0 var(--pf-gutter);
+    font-weight: 600;
+    font-size: 1.4rem;
+}
+
+.pf-row__list {
+    display: flex;
+    margin: 0;
+    // Room for the focus scale and halo, so they are never clipped
+    padding: 1.25rem var(--pf-gutter) 1.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    list-style: none;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.pf-row__list > * {
+    flex: none;
+}
+
+.pf-row__list > * + * {
+    margin-left: 1.25rem;
+
+    [dir='rtl'] & {
+        margin-right: 1.25rem;
+        margin-left: 0;
+    }
+}
+
+.pf-row__error {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 1rem var(--pf-gutter);
+    color: var(--pf-color-text-secondary);
+
+    svg {
+        margin-right: 0.5rem;
+
+        [dir='rtl'] & {
+            margin-right: 0;
+            margin-left: 0.5rem;
+        }
+    }
+}
+
+// Cards: a real button, the art is the content, the title shows on focus
+
+.pf-card {
+    display: block;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-color-text);
+    font-family: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    // Context margin: the neighbour card stays partly visible when the row scrolls
+    scroll-margin: 0 calc(var(--pf-gutter) + 4rem);
+}
+
+.pf-card--landscape {
+    width: clamp(15rem, 22vw, 22rem);
+}
+
+.pf-card--portrait {
+    width: clamp(9rem, 12vw, 13rem);
+}
+
+.pf-card__art {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background: var(--pf-color-surface);
+    border-radius: var(--pf-radius-card);
+    transition:
+        transform var(--pf-duration) var(--pf-ease),
+        box-shadow var(--pf-duration) var(--pf-ease);
+
+    // Ratio box through padding: aspect-ratio is missing on older TV engines
+    &::before {
+        display: block;
+        padding-top: 56.25%;
+        content: '';
+    }
+
+    .pf-card--portrait &::before {
+        padding-top: 150%;
+    }
+}
+
+.pf-card__image,
+.pf-card__placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.pf-card__image {
+    display: block;
+    object-fit: cover;
+}
+
+.pf-card__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    text-align: center;
+}
+
+.pf-card__progress {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    height: 0.3rem;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 999px;
+}
+
+.pf-card__progress-fill {
+    display: block;
+    height: 100%;
+    background: var(--pf-color-text);
+    border-radius: 999px;
+}
+
+// Missing from the library: a discreet glass pill, an icon and a word, never color alone
+.pf-card__badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    display: flex;
+    align-items: center;
+    max-width: calc(100% - 1rem);
+    padding: 0.2rem 0.6rem 0.2rem 0.4rem;
+    color: var(--pf-color-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 999px;
+    backdrop-filter: blur(var(--pf-glass-blur));
+
+    [dir='rtl'] & {
+        right: 0.5rem;
+        left: auto;
+        padding: 0.2rem 0.4rem 0.2rem 0.6rem;
+    }
+}
+
+.pf-card__badge-icon {
+    display: flex;
+    margin-right: 0.3rem;
+
+    font-size: 1rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.3rem;
+    }
+}
+
+.pf-card__badge-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pf-card__caption {
+    display: block;
+    padding-top: 0.75rem;
+    opacity: 0.7;
+    transition:
+        opacity var(--pf-duration) var(--pf-ease),
+        transform var(--pf-duration) var(--pf-ease);
+}
+
+.pf-card__title,
+.pf-card__subtitle {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-card__title {
+    font-weight: 600;
+}
+
+.pf-card__subtitle {
+    color: var(--pf-color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.pf-card--skeleton {
+    cursor: default;
+
+    .pf-card__art {
+        animation: pf-pulse var(--pf-pulse-duration) var(--pf-ease) infinite alternate;
+    }
+}
+
+.pf-card:focus,
+.pf-card:focus-visible {
+    .pf-card__art {
+        transform: scale(var(--pf-focus-scale));
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .pf-card__caption {
+        opacity: 1;
+        transform: translateY(var(--pf-caption-shift));
+    }
+}
+
+.pf-card:hover .pf-card__caption {
+    opacity: 1;
+}
+
+@keyframes pf-pulse {
+    from {
+        opacity: 0.45;
+    }
+
+    to {
+        opacity: 0.9;
+    }
+}
+
+// Detail page
+
+.pf-details__sections {
+    position: relative;
+    margin-top: -1rem;
+}
+
+.pf-details__episodes {
+    margin-top: 2rem;
+}
+
+.pf-seasons {
+    padding: 0 var(--pf-gutter);
+}
+
+// Availability of a catalog title, in place of the actions it cannot offer yet
+.pf-availability {
+    display: flex;
+    align-items: center;
+    margin: 0 0 1rem;
+    color: var(--pf-color-text);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.pf-availability__icon {
+    margin-right: 0.5rem;
+    font-size: 1.5rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.5rem;
+    }
+}
+
+.pf-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 35vh var(--pf-gutter) 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+// Cast: round portraits, the name under them
+
+.pf-person {
+    display: block;
+    width: 8.5rem;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-color-text);
+    font-family: inherit;
+    text-align: center;
+    background: none;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    scroll-margin: 0 calc(var(--pf-gutter) + 4rem);
+}
+
+.pf-person__portrait {
+    position: relative;
+    display: block;
+    width: 8.5rem;
+    height: 8.5rem;
+    overflow: hidden;
+    background: var(--pf-color-surface);
+    border-radius: 50%;
+    transition:
+        transform var(--pf-duration) var(--pf-ease),
+        box-shadow var(--pf-duration) var(--pf-ease);
+}
+
+.pf-person__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pf-person__initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 2rem;
+}
+
+.pf-person__caption {
+    display: block;
+    padding-top: 0.75rem;
+}
+
+.pf-person__name,
+.pf-person__role {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-person__name {
+    font-weight: 600;
+}
+
+.pf-person__role {
+    color: var(--pf-color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.pf-person:focus .pf-person__portrait,
+.pf-person:focus-visible .pf-person__portrait {
+    transform: scale(var(--pf-focus-scale));
+    box-shadow: var(--pf-focus-ring);
+}
+
+// About: the full overview and the remaining facts
+
+.pf-about {
+    margin: 2.5rem var(--pf-gutter) 0;
+    padding: 1.25rem 0;
+    border-radius: var(--pf-radius-card);
+    outline: none;
+    transition: box-shadow var(--pf-duration) var(--pf-ease);
+    scroll-margin: 2rem;
+
+    // A text section has no control to scale: the halo alone shows the focus
+    &:focus,
+    &:focus-visible {
+        box-shadow: var(--pf-focus-ring);
+    }
+}
+
+.pf-about__title {
+    padding: 0 1.25rem;
+}
+
+.pf-about__body {
+    max-width: 52rem;
+    padding: 0.75rem 1.25rem 0;
+}
+
+.pf-about__overview {
+    margin: 0 0 1.5rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.pf-about__facts {
+    margin: 0;
+
+    dt {
+        color: var(--pf-color-text-secondary);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    dd {
+        margin: 0.25rem 0 1rem;
+    }
+}
+
+// Person page: large round portrait, then a compact filmography grid
+
+.pf-person-page__header {
+    display: flex;
+    align-items: center;
+    padding: 6rem var(--pf-gutter) 1rem;
+}
+
+.pf-person-page__portrait {
+    flex: none;
+    width: 11rem;
+    height: 11rem;
+    margin-right: 2rem;
+    overflow: hidden;
+    background: var(--pf-color-surface);
+    border-radius: 50%;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 2rem;
+    }
+}
+
+.pf-person-page__name {
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.1;
+}
+
+.pf-person-page__fact {
+    margin: 0.25rem 0 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.1rem;
+}
+
+.pf-person-page__filmography {
+    margin-top: 2rem;
+}
+
+.pf-person-page__note {
+    margin: 0;
+    padding: 1rem var(--pf-gutter);
+    color: var(--pf-color-text-secondary);
+}
+
+// Wrapping grid built with margins: older TV engines lack flex gap
+
+.pf-grid {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 1.25rem var(--pf-gutter) 0;
+    list-style: none;
+}
+
+.pf-grid__item {
+    margin: 0 1.25rem 1.75rem 0;
+
+    [dir='rtl'] & {
+        margin: 0 0 1.75rem 1.25rem;
+    }
+}
+
+.pf-grid .pf-card--portrait {
+    width: clamp(8rem, 10vw, 10.5rem);
+}
+
+// Top bar: round glass buttons over the screen content
+
+.pf-nav {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 2;
+    display: flex;
+    padding: 1.5rem var(--pf-gutter) 0;
+}
+
+.pf-nav__link {
+    position: relative;
+    text-decoration: none;
+}
+
+// The current screen also gets a bar under its label: never told by fill alone
+.pf-nav__link[aria-current='page']::after {
+    position: absolute;
+    right: 1.75rem;
+    bottom: 0.45rem;
+    left: 1.75rem;
+    height: 2px;
+    background: currentcolor;
+    border-radius: 1px;
+    content: '';
+}
+
+.pf-nav__link + .pf-nav__link {
+    margin-left: 0.75rem;
+
+    [dir='rtl'] & {
+        margin-right: 0.75rem;
+        margin-left: 0;
+    }
+}
+
+// Search: a round glass field, the voice button, then rows of results
+
+.pf-search {
+    padding-top: 7rem;
+}
+
+.pf-search__bar {
+    display: flex;
+    align-items: center;
+    padding: 0 var(--pf-gutter);
+}
+
+.pf-search__voice {
+    flex: none;
+    margin-left: 1rem;
+
+    [dir='rtl'] & {
+        margin-right: 1rem;
+        margin-left: 0;
+    }
+}
+
+.pf-search__field {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    max-width: 48rem;
+    min-height: 3.75rem;
+    padding: 0 1.5rem;
+    background: var(--pf-glass-background);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 999px;
+    transition: box-shadow var(--pf-duration) var(--pf-ease);
+    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+
+    // The halo goes on the whole field: the caret alone is too small to see from a couch
+    &:focus-within {
+        box-shadow: var(--pf-focus-ring);
+    }
+}
+
+.pf-search__icon {
+    flex: none;
+    margin-right: 0.75rem;
+    color: var(--pf-color-text-secondary);
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.75rem;
+    }
+}
+
+.pf-search__input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    color: var(--pf-color-text);
+    font-size: 1.3rem;
+    font-family: inherit;
+    background: transparent;
+    border: 0;
+    outline: none;
+    scroll-margin: 8rem;
+
+    &::placeholder {
+        color: var(--pf-color-text-secondary);
+    }
+}
+
+.pf-search__status {
+    min-height: 1.5rem;
+    margin: 1rem 0 0;
+    padding: 0 var(--pf-gutter);
+    color: var(--pf-color-text-secondary);
+}
+
+// A search result: the card, and its Play button under it
+
+.pf-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pf-result__action {
+    margin-top: 1rem;
+}
+
+// Reduced motion: no scaling, no shifting, no smooth scroll, no pulsing.
+// The focus stays obvious through the halo, which does not move.
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-app {
+        --pf-duration: 0ms;
+        --pf-focus-scale: 1;
+        --pf-caption-shift: 0;
+        --pf-pulse-duration: 0s;
+
+        scroll-behavior: auto;
+    }
+
+    .pf-row__list {
+        scroll-behavior: auto;
+    }
+}
