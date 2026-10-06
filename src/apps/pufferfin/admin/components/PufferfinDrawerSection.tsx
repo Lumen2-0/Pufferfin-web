@@ -1,7 +1,10 @@
 import Download from '@mui/icons-material/Download';
 import Extension from '@mui/icons-material/Extension';
 import Hub from '@mui/icons-material/Hub';
+import ManageAccounts from '@mui/icons-material/ManageAccounts';
 import Movie from '@mui/icons-material/Movie';
+import Queue from '@mui/icons-material/Queue';
+import Storage from '@mui/icons-material/Storage';
 import Translate from '@mui/icons-material/Translate';
 import TravelExplore from '@mui/icons-material/TravelExplore';
 import Tune from '@mui/icons-material/Tune';
@@ -17,6 +20,19 @@ import { translate, usePufferfinStrings } from 'apps/pufferfin/i18n';
 import ListItemLink from 'components/ListItemLink';
 
 import { getGroupPath, OVERVIEW_PATH, SETTINGS_GROUPS, SettingsGroupId } from '../constants/groups';
+import { ADMIN_PAGES, AdminPageId, getAdminPagePath } from '../constants/pages';
+
+const PAGE_ICONS: Record<AdminPageId, React.ReactElement> = {
+    [AdminPageId.Requests]: <Queue />,
+    [AdminPageId.Users]: <ManageAccounts />,
+    [AdminPageId.Storage]: <Storage />
+};
+
+const PAGE_TITLES = {
+    [AdminPageId.Requests]: 'AdminRequests',
+    [AdminPageId.Users]: 'AdminUsers',
+    [AdminPageId.Storage]: 'AdminStorage'
+} as const;
 
 const GROUP_ICONS: Record<SettingsGroupId, React.ReactElement> = {
     [SettingsGroupId.Catalogs]: <TravelExplore />,
@@ -50,6 +66,16 @@ const PufferfinDrawerSection = () => {
                     <ListItemText primary={translate('AdminOverview')} />
                 </ListItemLink>
             </ListItem>
+            {ADMIN_PAGES.map(page => (
+                <ListItem key={page} disablePadding>
+                    <ListItemLink to={getAdminPagePath(page)}>
+                        <ListItemIcon>
+                            {PAGE_ICONS[page]}
+                        </ListItemIcon>
+                        <ListItemText primary={translate(PAGE_TITLES[page])} />
+                    </ListItemLink>
+                </ListItem>
+            ))}
             {SETTINGS_GROUPS.map(group => (
                 <ListItem key={group.id} disablePadding>
                     <ListItemLink to={getGroupPath(group.id)}>
