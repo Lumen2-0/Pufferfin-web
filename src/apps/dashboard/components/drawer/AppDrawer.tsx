@@ -10,6 +10,8 @@ import DevicesDrawerSection from './sections/DevicesDrawerSection';
 import LiveTvDrawerSection from './sections/LiveTvDrawerSection';
 import AdvancedDrawerSection from './sections/AdvancedDrawerSection';
 import PluginDrawerSection from './sections/PluginDrawerSection';
+// PUFFERFIN: the Pufferfin menu section lives in apps/pufferfin.
+import PufferfinDrawerSection from 'apps/pufferfin/admin/components/PufferfinDrawerSection';
 
 const AppDrawer: FC<ResponsiveDrawerProps> = ({
     open = false,
@@ -30,6 +32,8 @@ const AppDrawer: FC<ResponsiveDrawerProps> = ({
         <DevicesDrawerSection />
         <LiveTvDrawerSection />
         <PluginDrawerSection />
+        {/* PUFFERFIN: Pufferfin admin section. */}
+        <PufferfinDrawerSection />
         <AdvancedDrawerSection />
     </ResponsiveDrawer>
 );
