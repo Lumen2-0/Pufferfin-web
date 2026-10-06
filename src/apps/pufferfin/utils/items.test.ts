@@ -5,7 +5,7 @@ import type { UserItemDataDto } from '@jellyfin/sdk/lib/generated-client/models/
 import type { ItemDto } from 'types/base/models/item-dto';
 import { ItemKind } from 'types/base/models/item-kind';
 
-import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, isResumable } from './items';
+import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, getRuntime, isResumable } from './items';
 
 const withUserData = (userData: Partial<UserItemDataDto>) => ({ UserData: userData }) as ItemDto;
 
@@ -41,5 +41,18 @@ describe('Pufferfin: item helpers', () => {
         expect(isResumable(withUserData({ PlaybackPositionTicks: 10 }))).toBe(true);
         expect(isResumable(withUserData({ PlaybackPositionTicks: 0 }))).toBe(false);
         expect(isResumable({})).toBe(false);
+    });
+});
+
+describe('Pufferfin: runtime', () => {
+    it('splits ticks into hours and minutes', () => {
+        expect(getRuntime(8_400_000_000 * 10)).toEqual({ hours: 2, minutes: 20 });
+        expect(getRuntime(45 * 600_000_000)).toEqual({ hours: 0, minutes: 45 });
+    });
+
+    it('is undefined when unknown or shorter than a minute', () => {
+        expect(getRuntime(undefined)).toBeUndefined();
+        expect(getRuntime(0)).toBeUndefined();
+        expect(getRuntime(100)).toBeUndefined();
     });
 });

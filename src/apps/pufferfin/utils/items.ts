@@ -25,3 +25,12 @@ export function getPlayedPercentage(item: ItemDto) {
 export function isResumable(item: ItemDto) {
     return (item.UserData?.PlaybackPositionTicks ?? 0) > 0;
 }
+
+const TICKS_PER_MINUTE = 600_000_000;
+
+/** Runtime split into whole hours and minutes, or undefined when unknown or under a minute. */
+export function getRuntime(ticks: number | null | undefined): { hours: number, minutes: number } | undefined {
+    if (!ticks || ticks < TICKS_PER_MINUTE) return undefined;
+    const total = Math.round(ticks / TICKS_PER_MINUTE);
+    return { hours: Math.floor(total / 60), minutes: total % 60 };
+}
