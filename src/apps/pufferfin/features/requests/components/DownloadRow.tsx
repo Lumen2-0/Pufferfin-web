@@ -10,11 +10,9 @@ import { Link } from 'react-router-dom';
 import RoundButton from '../../../components/RoundButton';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../../../navigation/focus';
-import { getCatalogTitlePath } from '../../../routes/paths';
-import { CatalogItemKind } from '../../catalog/api/types';
-import { type MediaRequest, RequestKind, RequestState } from '../api/types';
+import { type MediaRequest, RequestState } from '../api/types';
 import { isRequestCancellable } from '../utils/requests';
-import { getRequestPartText } from '../utils/status';
+import { getRequestPartText, getRequestTitlePath } from '../utils/status';
 import RequestStatus from './RequestStatus';
 
 /** Attribute naming the request of a row, so the focus can find the row again after it moved. */
@@ -55,8 +53,7 @@ const DownloadRow: FC<DownloadRowProps> = ({
     actions
 }) => {
     const t = useTranslation();
-    const isMovie = request.Kind === RequestKind.Movie;
-    const titlePath = getCatalogTitlePath(isMovie ? CatalogItemKind.Movie : CatalogItemKind.Series, request.TmdbId);
+    const titlePath = getRequestTitlePath(request);
 
     const part = getRequestPartText(request, t);
     const isPendingApproval = request.State === RequestState.PendingApproval;
@@ -67,10 +64,14 @@ const DownloadRow: FC<DownloadRowProps> = ({
             {...{ [REQUEST_ROW_ATTRIBUTE]: request.Id, [FOCUS_GROUP_ATTRIBUTE]: true }}
         >
             <div className='pf-download__heading'>
-                <Link to={titlePath} className='pf-download__title' {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
-                    {request.Title}
-                    {part && <span className='pf-download__part'>{part}</span>}
-                </Link>
+                {titlePath ? (
+                    <Link to={titlePath} className='pf-download__title' {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+                        {request.Title}
+                        {part && <span className='pf-download__part'>{part}</span>}
+                    </Link>
+                ) : (
+                    <p className='pf-download__title'>{request.Title}</p>
+                )}
                 {ownerName && <p className='pf-download__owner'>{t('DownloadsRequestedBy', ownerName)}</p>}
             </div>
             <RequestStatus request={request} lastSyncAt={lastSyncAt} />

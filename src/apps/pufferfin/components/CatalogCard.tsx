@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
 
-import type { CatalogItem } from '../features/catalog/api/types';
+import { getAudiobookCaption } from '../features/audiobooks/utils/audiobooks';
+import { type CatalogItem, CatalogItemKind } from '../features/catalog/api/types';
 import { getCatalogItemPath, isMissing } from '../features/catalog/utils/catalog';
 import { useTranslation } from '../i18n/useTranslation';
 import { getItemPosterUrl } from '../utils/images';
@@ -24,13 +25,14 @@ const CatalogCard: FC<{ item: CatalogItem }> = ({ item }) => {
     const openPath = useCallback((target: string | undefined) => {
         if (target) navigate(target);
     }, [ navigate ]);
+    const yearText = item.Year ? String(item.Year) : undefined;
     let imageUrl = item.ImageUrl ?? undefined;
     if (!imageUrl && item.LocalItemId && api) imageUrl = getItemPosterUrl(api, item.LocalItemId);
 
     return (
         <PosterCard
             title={item.Title}
-            subtitle={item.Year ? String(item.Year) : undefined}
+            subtitle={item.Kind === CatalogItemKind.Audiobook ? getAudiobookCaption(item, t) : yearText}
             imageUrl={imageUrl}
             shape='portrait'
             badge={isMissing(item) ? { icon: <CloudOutlined fontSize='inherit' />, label: t('NotInLibrary') } : undefined}

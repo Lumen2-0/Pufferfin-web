@@ -1,5 +1,7 @@
 import type { StringKey } from '../../../i18n/translate';
 import { type MediaRequest, RequestKind, RequestProblemCode, RequestState } from '../api/types';
+import { getCatalogAudiobookPath, getCatalogTitlePath } from '../../../routes/paths';
+import { CatalogItemKind } from '../../catalog/api/types';
 import { getProgressPercent } from './requests';
 
 type Translate = (key: StringKey, ...args: Array<string | number>) => string;
@@ -31,7 +33,9 @@ const PROBLEM_LABELS: Record<RequestProblemCode, StringKey> = {
     [RequestProblemCode.NoAcceptableLanguage]: 'RequestProblemNoAcceptableLanguage',
     [RequestProblemCode.DownloadFailed]: 'RequestProblemDownloadFailed',
     [RequestProblemCode.ImportBlocked]: 'RequestProblemImportBlocked',
-    [RequestProblemCode.DownloadWarning]: 'RequestProblemDownloadWarning'
+    [RequestProblemCode.DownloadWarning]: 'RequestProblemDownloadWarning',
+    [RequestProblemCode.OnlyCompleteEditions]: 'RequestProblemOnlyCompleteEditions',
+    [RequestProblemCode.FilesNotWritable]: 'RequestProblemFilesNotWritable'
 };
 
 /** Label of the state of a request. */
@@ -78,4 +82,10 @@ export function getCreateErrorLabel(status: number | undefined): StringKey {
         default:
             return 'RequestErrorGeneric';
     }
+}
+
+/** The catalog sheet a request opens: its movie, its series, or its audiobook. Undefined for an audiobook without an ASIN. */
+export function getRequestTitlePath(item: MediaRequest): string | undefined {
+    if (item.Kind === RequestKind.Audiobook) return item.Asin ? getCatalogAudiobookPath(item.Asin) : undefined;
+    return getCatalogTitlePath(item.Kind === RequestKind.Movie ? CatalogItemKind.Movie : CatalogItemKind.Series, item.TmdbId);
 }

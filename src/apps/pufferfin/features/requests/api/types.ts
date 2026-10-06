@@ -4,7 +4,8 @@
 export enum RequestKind {
     Movie = 'Movie',
     Season = 'Season',
-    Episode = 'Episode'
+    Episode = 'Episode',
+    Audiobook = 'Audiobook'
 }
 
 /** Where a request stands. The usual path is Queued, Searching, Downloading, Importing, Available. */
@@ -36,7 +37,10 @@ export enum RequestProblemCode {
     NoAcceptableLanguage = 'NoAcceptableLanguage',
     DownloadFailed = 'DownloadFailed',
     ImportBlocked = 'ImportBlocked',
-    DownloadWarning = 'DownloadWarning'
+    DownloadWarning = 'DownloadWarning',
+    /** The volume exists only inside a complete edition: a complete edition is never taken for one volume. */
+    OnlyCompleteEditions = 'OnlyCompleteEditions',
+    FilesNotWritable = 'FilesNotWritable'
 }
 
 export interface RequestProblem {
@@ -52,7 +56,10 @@ export interface MediaRequest {
     Id: string;
     UserId: string;
     Kind: RequestKind;
+    /** Zero for an audiobook. */
     TmdbId: number;
+    /** Audible ASIN of an audiobook. */
+    Asin?: string | null;
     SeasonNumber?: number | null;
     EpisodeNumber?: number | null;
     Title: string;
@@ -76,7 +83,11 @@ export interface MediaRequest {
 
 export interface CreateMediaRequest {
     Kind: RequestKind;
-    TmdbId: number;
+    /** Omitted for an audiobook. */
+    TmdbId?: number;
+    /** Audible ASIN and market of an audiobook. */
+    Asin?: string;
+    Market?: string;
     SeasonNumber?: number;
     EpisodeNumber?: number;
     AirDate?: string;

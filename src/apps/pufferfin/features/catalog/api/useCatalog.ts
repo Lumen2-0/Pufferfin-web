@@ -1,11 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { useApi } from 'hooks/useApi';
 
 import { getPufferfin } from '../../../api/client';
 import type { CatalogTitleKind } from '../../../routes/paths';
+import { isSearchable, normalizeQuery } from '../../search/utils/query';
 import { getCatalogListFailure } from '../utils/catalog';
 import {
+    type CatalogAudiobookDetails,
     CatalogItemKind,
     type CatalogListResponse,
     type CatalogSeasonDetails,
@@ -94,5 +96,40 @@ export const useSeasonEpisodes = (tmdbId: number | undefined, seasonNumber: numb
             { signal }
         ),
         enabled: !!api && !!user?.Id && !!tmdbId && seasonNumber !== undefined
+    });
+};
+
+/**
+ * Audiobooks matching a search, in the configured Audible markets and
+ * languages, each marked on disk or missing. Complete editions come next to
+ * the volumes, marked as such.
+ */
+export const useAudiobookSearch = (query: string) => {
+    const { api, user } = useApi();
+    const keywords = normalizeQuery(query);
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Catalog', 'Audiobooks', keywords, user?.Id ],
+        queryFn: async ({ signal }) => toItems(await getPufferfin<CatalogListResponse>(
+            api!,
+            '/Pufferfin/Catalog/Audiobooks',
+            { params: { keywords, limit: ROW_LIMIT }, signal }
+        )),
+        enabled: !!api && !!user?.Id && isSearchable(keywords),
+        // Results stay on screen while the next query loads, instead of flashing empty
+        placeholderData: keepPreviousData
+    });
+};
+
+/** The sheet of an audiobook, read first in the market it was found in. */
+export const useAudiobook = (asin: string, market: string | undefined) => {
+    const { api, user } = useApi();
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Catalog', 'Audiobook', asin, market, user?.Id ],
+        queryFn: ({ signal }) => getPufferfin<CatalogAudiobookDetails>(
+            api!,
+            `/Pufferfin/Catalog/Audiobooks/${asin}`,
+            { params: market ? { market } : undefined, signal }
+        ),
+        enabled: !!api && !!user?.Id
     });
 };

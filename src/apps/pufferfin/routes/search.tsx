@@ -10,10 +10,14 @@ import globalize from 'lib/globalize';
 import type { ItemDto } from 'types/base/models/item-dto';
 import { ItemKind } from 'types/base/models/item-kind';
 
+import CatalogCard from '../components/CatalogCard';
 import MediaRow from '../components/MediaRow';
 import PersonCard from '../components/PersonCard';
 import PosterCard from '../components/PosterCard';
 import RoundButton from '../components/RoundButton';
+import type { CatalogItem } from '../features/catalog/api/types';
+import { useAudiobookSearch } from '../features/catalog/api/useCatalog';
+import { getOpenableItems } from '../features/catalog/utils/catalog';
 import { usePeopleSearch, useTitleSearch } from '../features/search/api/useSearch';
 import { useVoiceSearch } from '../features/search/hooks/useVoiceSearch';
 import { isSearchable, normalizeQuery } from '../features/search/utils/query';
@@ -30,6 +34,8 @@ const DEBOUNCE_MS = 300;
 const QUERY_PARAM = 'q';
 
 const getKey = (item: ItemDto) => item.Id ?? '';
+const getCatalogKey = (item: CatalogItem) => item.Key;
+const renderCatalogCard = (item: CatalogItem) => <CatalogCard item={item} />;
 
 export const Component = () => {
     const t = useTranslation();
@@ -48,6 +54,8 @@ export const Component = () => {
     const [ debouncedQuery ] = useDebounceValue(query, DEBOUNCE_MS);
     const titles = useTitleSearch(debouncedQuery);
     const people = usePeopleSearch(debouncedQuery);
+    // Audible, in the configured markets and languages: on disk or missing, complete editions next to the volumes
+    const audiobooks = useAudiobookSearch(debouncedQuery);
 
     const voice = useVoiceSearch(globalize.getCurrentLocale() || 'en-us', setQuery);
 
@@ -100,8 +108,8 @@ export const Component = () => {
     ), [ api, openPerson ]);
 
     const isActive = isSearchable(debouncedQuery);
-    const isLoading = isActive && (titles.isFetching || people.isFetching);
-    const hasResults = !!titles.data?.length || !!people.data?.length;
+    const isLoading = isActive && (titles.isFetching || people.isFetching || audiobooks.isFetching);
+    const hasResults = !!titles.data?.length || !!people.data?.length || !!audiobooks.data?.length;
 
     // One live message for screen readers; it never carries a state by itself visually either
     let status: string | undefined;
@@ -113,7 +121,7 @@ export const Component = () => {
         status = t('SearchHint');
     } else if (isLoading && !hasResults) {
         status = t('Loading');
-    } else if (isActive && !isLoading && !hasResults && !titles.isError && !people.isError) {
+    } else if (isActive && !isLoading && !hasResults && !titles.isError && !people.isError && !audiobooks.isError) {
         status = t('SearchNoResults', normalizeQuery(debouncedQuery));
     }
 
@@ -176,6 +184,15 @@ export const Component = () => {
                         isError={people.isError}
                         getKey={getKey}
                         renderItem={renderPerson}
+                    />
+                    <MediaRow
+                        title={t('RowAudiobooks')}
+                        shape='portrait'
+                        items={getOpenableItems(audiobooks.data)}
+                        isPending={audiobooks.isPending}
+                        isError={audiobooks.isError}
+                        getKey={getCatalogKey}
+                        renderItem={renderCatalogCard}
                     />
                 </>
             )}

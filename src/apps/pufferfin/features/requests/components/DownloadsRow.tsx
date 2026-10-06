@@ -6,12 +6,10 @@ import { useCapabilities } from '../../../api/useCapabilities';
 import MediaRow from '../../../components/MediaRow';
 import PosterCard from '../../../components/PosterCard';
 import { useTranslation } from '../../../i18n/useTranslation';
-import { getCatalogTitlePath } from '../../../routes/paths';
-import { CatalogItemKind } from '../../catalog/api/types';
-import { type MediaRequest, RequestKind, RequestState } from '../api/types';
+import { type MediaRequest, RequestState } from '../api/types';
 import { useMyRequests } from '../api/useRequests';
 import { getProgressPercent, isRequestStale, splitRequests } from '../utils/requests';
-import { getRequestPartText, getRequestStateText } from '../utils/status';
+import { getRequestPartText, getRequestStateText, getRequestTitlePath } from '../utils/status';
 import { useNow } from '../utils/useNow';
 
 const getKey = (item: MediaRequest) => item.Id;
@@ -35,8 +33,8 @@ const DownloadsRow: FC = () => {
     const isStale = isRequestStale(requests.dataUpdatedAt, now);
 
     const openTitle = useCallback((item: MediaRequest) => {
-        const kind = item.Kind === RequestKind.Movie ? CatalogItemKind.Movie : CatalogItemKind.Series;
-        navigate(getCatalogTitlePath(kind, item.TmdbId));
+        const path = getRequestTitlePath(item);
+        if (path) navigate(path);
     }, [ navigate ]);
 
     const renderCard = useCallback((item: MediaRequest) => {

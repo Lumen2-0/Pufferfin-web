@@ -11,7 +11,7 @@ import { queryClient } from 'utils/query/queryClient';
 import RoundButton from '../../../components/RoundButton';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { focusFirst } from '../../../navigation/focus';
-import { type MediaRequest, RequestKind, RequestState } from '../api/types';
+import { type CreateMediaRequest, type MediaRequest, RequestState } from '../api/types';
 import { useChangeRequest, useCreateRequest } from '../api/useRequests';
 import { isRequestCancellable } from '../utils/requests';
 import { getCreateErrorLabel } from '../utils/status';
@@ -22,7 +22,7 @@ import RequestStatus from './RequestStatus';
  * as when Download turns into Cancel: the focus moves to the first button
  * left instead of dropping to the page.
  */
-const useFocusFollowsButtons = () => {
+export const useFocusFollowsButtons = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const hadFocus = useRef(false);
 
@@ -46,23 +46,23 @@ const useFocusFollowsButtons = () => {
     return { containerRef, onFocus, onBlur };
 };
 
-interface MovieRequestActionsProps {
-    tmdbId: number
-    /** The current request of the movie, if any: see `findMovieRequest`. */
+interface RequestActionsProps {
+    /** What Download asks for: a movie by TMDB id, an audiobook by ASIN. */
+    requestInput: CreateMediaRequest
+    /** The current request of the title, if any: see `findMovieRequest` and `findAudiobookRequest`. */
     request?: MediaRequest
-    /** Radarr is enabled and the account may request: otherwise no Download button is shown. */
+    /** The download service is enabled and the account may request: otherwise no Download button is shown. */
     canRequest: boolean
     /** When the request list was last read or pushed, to tell an old state from a live one. */
     lastSyncAt: number
 }
 
 /**
- * Download button of a movie that is not in the library, then the state of
+ * Download button of a title that is not in the library, then the state of
  * its request with Cancel or Try Again. When the request becomes available,
- * the catalog is read again and the sheet sends to the library page, where
- * Play is.
+ * the catalog is read again and the sheet shows what plays it.
  */
-const MovieRequestActions: FC<MovieRequestActionsProps> = ({ tmdbId, request, canRequest, lastSyncAt }) => {
+const RequestActions: FC<RequestActionsProps> = ({ requestInput, request, canRequest, lastSyncAt }) => {
     const t = useTranslation();
     const { containerRef, onFocus, onBlur } = useFocusFollowsButtons();
     const createRequest = useCreateRequest();
@@ -79,8 +79,8 @@ const MovieRequestActions: FC<MovieRequestActionsProps> = ({ tmdbId, request, ca
     const { isPending: isCreating, mutate: create } = createRequest;
     const onDownload = useCallback(() => {
         // Not disabled while sending: a disabled button would drop the focus
-        if (!isCreating) create({ Kind: RequestKind.Movie, TmdbId: tmdbId });
-    }, [ create, isCreating, tmdbId ]);
+        if (!isCreating) create(requestInput);
+    }, [ create, isCreating, requestInput ]);
 
     const { isPending: isChanging, mutate: change } = changeRequest;
     const onCancel = useCallback((requestId: string) => {
@@ -147,4 +147,4 @@ const MovieRequestActions: FC<MovieRequestActionsProps> = ({ tmdbId, request, ca
     );
 };
 
-export default MovieRequestActions;
+export default RequestActions;

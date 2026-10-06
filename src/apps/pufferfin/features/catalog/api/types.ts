@@ -45,6 +45,16 @@ export interface CatalogItem {
     /** Id of the library item, when the entry is on disk. */
     LocalItemId?: string | null;
     TmdbId?: number | null;
+    /** Audible ASIN of an audiobook. */
+    Asin?: string | null;
+    Authors?: string[];
+    Narrators?: string[];
+    SeriesName?: string | null;
+    Language?: string | null;
+    /** Audible market the audiobook was found in. */
+    Market?: string | null;
+    /** Several books of a series in one: shown next to the volumes, never their fallback. */
+    IsCompleteEdition?: boolean;
 }
 
 export interface CatalogListResponse {
@@ -146,4 +156,30 @@ export interface CatalogSeasonDetails {
     LocalItemId?: string | null;
     Sources: CatalogSource[];
     Episodes: CatalogEpisode[];
+}
+
+/** The sheet of an audiobook, from Audible, with its availability in the library. */
+export interface CatalogAudiobookDetails {
+    Asin: string;
+    Title: string;
+    Subtitle?: string | null;
+    Authors: string[];
+    Narrators: string[];
+    SeriesName?: string | null;
+    /** Position in its series as Audible gives it, such as `1` or `2.5`. */
+    SeriesPosition?: string | null;
+    RuntimeMinutes?: number | null;
+    ImageUrl?: string | null;
+    Overview?: string | null;
+    /** Language as Audible names it, such as `french`. */
+    Language?: string | null;
+    LanguageCode?: string | null;
+    /** Audible market the sheet was read from. */
+    Market: string;
+    /** Several books of a series in one: shown next to the volumes, never their fallback. */
+    IsCompleteEdition: boolean;
+    ReleaseDate?: string | null;
+    Year?: number | null;
+    Availability: CatalogAvailability;
+    LocalItemId?: string | null;
 }
