@@ -3,27 +3,15 @@ import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import HourglassEmpty from '@mui/icons-material/HourglassEmpty';
 import LibraryAddCheck from '@mui/icons-material/LibraryAddCheck';
 import classNames from 'classnames';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC } from 'react';
 
 import { useTranslation } from '../../../i18n/useTranslation';
 import { type MediaRequest, RequestState } from '../api/types';
 import { getProgressPercent, isRequestStale } from '../utils/requests';
-import { getRequestProblemLabel, getRequestStateLabel } from '../utils/status';
+import { getRequestProblemLabel, getRequestStateText } from '../utils/status';
+import { useNow } from '../utils/useNow';
 
 const SECONDS_PER_MINUTE = 60;
-const CLOCK_TICK_MS = 5000;
-
-/** Re-renders on a slow tick while asked to, so an old state gets marked as such without new data. */
-const useNow = (isTicking: boolean) => {
-    const [ now, setNow ] = useState(() => Date.now());
-    useEffect(() => {
-        if (!isTicking) return;
-        setNow(Date.now());
-        const timer = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
-        return () => clearInterval(timer);
-    }, [ isTicking ]);
-    return now;
-};
 
 const StateIcon: FC<{ state: RequestState }> = ({ state }) => {
     switch (state) {
@@ -58,12 +46,7 @@ const RequestStatus: FC<RequestStatusProps> = ({ request, lastSyncAt }) => {
     const percent = getProgressPercent(request);
     const problem = getRequestProblemLabel(request);
 
-    let stateText = t(getRequestStateLabel(request));
-    if (request.State === RequestState.Queued && request.QueuePosition) {
-        stateText = t('RequestQueuedPosition', request.QueuePosition);
-    } else if (isDownloading) {
-        stateText = t('RequestDownloadingPercent', percent);
-    }
+    const stateText = getRequestStateText(request, t);
 
     let detail: string | undefined;
     if (isStale) {

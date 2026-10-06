@@ -14,6 +14,7 @@ import { getCatalogTitlePath } from '../../../routes/paths';
 import { CatalogItemKind } from '../../catalog/api/types';
 import { type MediaRequest, RequestKind, RequestState } from '../api/types';
 import { isRequestCancellable } from '../utils/requests';
+import { getRequestPartText } from '../utils/status';
 import RequestStatus from './RequestStatus';
 
 /** Attribute naming the request of a row, so the focus can find the row again after it moved. */
@@ -57,12 +58,7 @@ const DownloadRow: FC<DownloadRowProps> = ({
     const isMovie = request.Kind === RequestKind.Movie;
     const titlePath = getCatalogTitlePath(isMovie ? CatalogItemKind.Movie : CatalogItemKind.Series, request.TmdbId);
 
-    let part: string | undefined;
-    if (request.Kind === RequestKind.Episode && request.SeasonNumber != null && request.EpisodeNumber != null) {
-        part = t('EpisodeNumber', request.SeasonNumber, request.EpisodeNumber);
-    } else if (request.Kind === RequestKind.Season && request.SeasonNumber != null) {
-        part = t('SeasonNumber', request.SeasonNumber);
-    }
+    const part = getRequestPartText(request, t);
     const isPendingApproval = request.State === RequestState.PendingApproval;
 
     return (

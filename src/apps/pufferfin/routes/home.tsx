@@ -14,6 +14,7 @@ import { CatalogItemKind, type CatalogItem } from '../features/catalog/api/types
 import { useRecommendedForYou, useTrending } from '../features/catalog/api/useCatalog';
 import { getOpenableItems } from '../features/catalog/utils/catalog';
 import { useLatestItems, useNextUpItems, useResumeItems } from '../features/home/api/useHomeRows';
+import DownloadsRow from '../features/requests/components/DownloadsRow';
 import { useTranslation } from '../i18n/useTranslation';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { type CardShape, getBackdropUrl, getCardImageUrl } from '../utils/images';
@@ -156,6 +157,7 @@ export const Component = () => {
                     getKey={getKey}
                     renderItem={renderCard('portrait')}
                 />
+                <DownloadsRow />
 
                 {isEmpty && <p className='pf-home__empty'>{t('HomeEmpty')}</p>}
             </div>
