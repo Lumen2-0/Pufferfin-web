@@ -15,6 +15,7 @@ import Loading from 'components/loading/LoadingComponent';
 
 import { useConfiguration } from '../api/useConfiguration';
 import AutoConfigPanel from '../components/AutoConfigPanel';
+import DashboardSummary from '../components/DashboardSummary';
 import ServiceStatus from '../components/ServiceStatus';
 import { getGroupPath, getServiceGroup } from '../constants/groups';
 
@@ -67,6 +68,8 @@ export const Component = () => {
                             })}
                         </List>
                     )}
+
+                    <DashboardSummary />
 
                     <AutoConfigPanel />
                 </Stack>

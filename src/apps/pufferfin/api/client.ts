@@ -21,3 +21,8 @@ export const postPufferfin = async <T>(api: Api, path: string, body?: unknown, o
     const response = await api.axiosInstance.post<T>(api.getUri(path), body, withAuthorization(api, options));
     return response.data;
 };
+
+export const deletePufferfin = async <T>(api: Api, path: string, options?: AxiosRequestConfig) => {
+    const response = await api.axiosInstance.delete<T>(api.getUri(path), withAuthorization(api, options));
+    return response.data;
+};
