@@ -87,3 +87,13 @@ export function splitRequests(requests: MediaRequest[] | undefined) {
         .sort((a, b) => Date.parse(b.UpdatedAt) - Date.parse(a.UpdatedAt));
     return { current, finished };
 }
+
+/** The request that speaks for an audiobook, the same way as for a movie: active first, never a cancelled one. */
+export function findAudiobookRequest(requests: MediaRequest[] | undefined, asin: string): MediaRequest | undefined {
+    const candidates = (requests ?? [])
+        .filter(request => request.Kind === RequestKind.Audiobook
+            && request.Asin?.toUpperCase() === asin.toUpperCase()
+            && request.State !== RequestState.Cancelled)
+        .sort((a, b) => Date.parse(b.UpdatedAt) - Date.parse(a.UpdatedAt));
+    return candidates.find(isRequestActive) ?? candidates[0];
+}

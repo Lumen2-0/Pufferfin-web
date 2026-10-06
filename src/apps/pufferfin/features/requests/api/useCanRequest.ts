@@ -7,7 +7,7 @@ import { useRequestPermissions } from './useRequests';
  * counts as no, so no button shows for a service that is not there. The
  * server checks it all again on every request.
  */
-export const useCanRequest = (service: 'Radarr' | 'Sonarr') => {
+export const useCanRequest = (service: 'Radarr' | 'Sonarr' | 'Shelfmark') => {
     const capabilities = useCapabilities();
     const permissions = useRequestPermissions();
     return {

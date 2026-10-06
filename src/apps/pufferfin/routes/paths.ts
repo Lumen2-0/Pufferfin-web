@@ -21,10 +21,22 @@ export type CatalogTitleKind = CatalogItemKind.Movie | CatalogItemKind.Series;
 
 const MOVIE_SEGMENT = 'movie';
 const SERIES_SEGMENT = 'series';
+/** Audiobooks share the catalog sheet route: `title/audiobook/{asin}`. */
+export const AUDIOBOOK_SEGMENT = 'audiobook';
+const MARKET_PARAM = 'market';
 
 /** Catalog sheet of a movie or a series that is not in the library, by TMDB id. */
 export const getCatalogTitlePath = (kind: CatalogTitleKind, tmdbId: number) =>
     `/${PUFFERFIN_APP_PATH}/title/${kind === CatalogItemKind.Series ? SERIES_SEGMENT : MOVIE_SEGMENT}/${tmdbId}`;
+
+/** Catalog sheet of an audiobook, by Audible ASIN, read first in the market it was found in. */
+export const getCatalogAudiobookPath = (asin: string, market?: string | null) => {
+    const path = `/${PUFFERFIN_APP_PATH}/title/${AUDIOBOOK_SEGMENT}/${asin}`;
+    return market ? `${path}?${MARKET_PARAM}=${encodeURIComponent(market)}` : path;
+};
+
+/** Reads the Audible market of an audiobook sheet path. */
+export const getMarketParam = (searchParams: URLSearchParams) => searchParams.get(MARKET_PARAM) ?? undefined;
 
 /** Reads the kind segment of a catalog sheet path; undefined when it names no known kind. */
 export function parseCatalogTitleKind(segment: string | undefined): CatalogTitleKind | undefined {

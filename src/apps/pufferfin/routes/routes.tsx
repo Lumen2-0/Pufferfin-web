@@ -36,7 +36,7 @@ export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
                                 lazy: () => import('./item')
                             },
                             {
-                                path: 'title/:kind/:tmdbId',
+                                path: 'title/:kind/:id',
                                 lazy: () => import('./title')
                             },
                             {

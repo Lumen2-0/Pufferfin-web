@@ -2,23 +2,26 @@ import CloudOutlined from '@mui/icons-material/CloudOutlined';
 import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import { isAxiosError } from 'axios';
 import React, { type FC, useMemo, useRef } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 
 import CatalogCard from '../components/CatalogCard';
+import AudiobookSheet from '../features/audiobooks/components/AudiobookSheet';
+import { isAsin } from '../features/audiobooks/utils/audiobooks';
 import Hero from '../components/Hero';
 import MediaRow from '../components/MediaRow';
 import { CatalogAvailability, type CatalogItem, CatalogItemKind, type CatalogTitleDetails } from '../features/catalog/api/types';
 import { useCatalogTitle, useSeriesSeasons } from '../features/catalog/api/useCatalog';
 import { getOpenableItems } from '../features/catalog/utils/catalog';
-import MovieRequestActions from '../features/requests/components/MovieRequestActions';
+import RequestActions from '../features/requests/components/RequestActions';
 import { useCanRequest } from '../features/requests/api/useCanRequest';
 import { useMyRequests } from '../features/requests/api/useRequests';
+import { RequestKind } from '../features/requests/api/types';
 import { findMovieRequest } from '../features/requests/utils/requests';
 import SeriesEpisodes from '../features/series/components/SeriesEpisodes';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
-import { type CatalogTitleKind, getItemPath, parseCatalogTitleKind } from './paths';
+import { AUDIOBOOK_SEGMENT, type CatalogTitleKind, getItemPath, getMarketParam, parseCatalogTitleKind } from './paths';
 
 const GENRE_LIMIT = 3;
 const HTTP_SERVICE_UNAVAILABLE = 503;
@@ -61,6 +64,7 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
     // Buttons of services that are not configured never show: Radarr for a movie, Sonarr for the episodes of a series
     const rights = useCanRequest(isMovie ? 'Radarr' : 'Sonarr');
     const request = isMovie ? findMovieRequest(requests.data, tmdbId) : undefined;
+    const movieRequestInput = useMemo(() => ({ Kind: RequestKind.Movie, TmdbId: tmdbId }), [ tmdbId ]);
     // A series lists its seasons and episodes from TMDB, each missing episode downloadable on its own
     const seriesSeasons = useSeriesSeasons(isMovie ? undefined : tmdbId);
     const isContentSettled = isMovie ? !requests.isPending : !seriesSeasons.isPending;
@@ -110,8 +114,8 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                 overview={title.Overview}
                 backdropUrl={title.BackdropUrl ?? title.PosterUrl ?? undefined}
                 actions={isMovie ? (
-                    <MovieRequestActions
-                        tmdbId={tmdbId}
+                    <RequestActions
+                        requestInput={movieRequestInput}
                         request={request}
                         canRequest={rights.canRequest}
                         lastSyncAt={requests.dataUpdatedAt}
@@ -190,9 +194,16 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
 
 export const Component = () => {
     const params = useParams();
+    const [ searchParams ] = useSearchParams();
     const kind = parseCatalogTitleKind(params.kind);
-    const tmdbId = Number(params.tmdbId);
+    const tmdbId = Number(params.id);
     const t = useTranslation();
+
+    // Audiobooks share this route, by Audible ASIN: no separate sheet route
+    if (params.kind === AUDIOBOOK_SEGMENT && isAsin(params.id)) {
+        const asin = params.id;
+        return <AudiobookSheet key={asin} asin={asin} market={getMarketParam(searchParams)} />;
+    }
 
     if (!kind || !Number.isInteger(tmdbId) || tmdbId <= 0) {
         return (

@@ -1,4 +1,4 @@
-import { getCatalogTitlePath, getItemPath } from '../../../routes/paths';
+import { getCatalogAudiobookPath, getCatalogTitlePath, getItemPath } from '../../../routes/paths';
 import {
     CatalogAvailability,
     type CatalogItem,
@@ -29,6 +29,10 @@ export function isMissing(item: { Availability: CatalogAvailability }) {
  * Pufferfin has no catalog screen for yet.
  */
 export function getCatalogItemPath(item: CatalogItem): string | undefined {
+    // An audiobook has one sheet, on disk or not: Listen or Download is there
+    if (item.Kind === CatalogItemKind.Audiobook) {
+        return item.Asin ? getCatalogAudiobookPath(item.Asin, item.Market) : undefined;
+    }
     if (item.Availability === CatalogAvailability.OnDisk && item.LocalItemId) {
         return getItemPath(item.LocalItemId);
     }
