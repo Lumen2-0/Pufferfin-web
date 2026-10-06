@@ -7,7 +7,7 @@ import { NavLink } from 'react-router-dom';
 
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
-import { getLibraryPath, getSearchPath, PUFFERFIN_APP_PATH } from '../routes/paths';
+import { getHomePath, getLibraryPath, getSearchPath } from '../routes/paths';
 
 const getClassName = ({ isActive }: { isActive: boolean }) =>
     classNames('pf-button', 'pf-nav__link', isActive ? 'pf-button--primary' : 'pf-button--glass');
@@ -21,7 +21,7 @@ const AppNav: FC = () => {
 
     return (
         <nav className='pf-nav' aria-label={t('NavLabel')} {...{ [FOCUS_GROUP_ATTRIBUTE]: true }}>
-            <NavLink to={`/${PUFFERFIN_APP_PATH}`} end className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+            <NavLink to={getHomePath()} end className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
                 <span className='pf-button__icon' aria-hidden='true'><Home /></span>
                 <span className='pf-button__label'>{t('NavHome')}</span>
             </NavLink>
