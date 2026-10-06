@@ -2,7 +2,6 @@ import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import PlayArrow from '@mui/icons-material/PlayArrow';
 import React, { useCallback, useRef } from 'react';
 
-import { playbackManager } from 'components/playback/playbackmanager';
 import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
 
@@ -16,15 +15,7 @@ import { useInitialFocus } from '../navigation/useInitialFocus';
 import { type CardShape, getBackdropUrl, getCardImageUrl } from '../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, isResumable } from '../utils/items';
 import { useOpenItem } from '../utils/navigation';
-
-const playItem = (item: ItemDto) => {
-    playbackManager.play({
-        items: [ item ],
-        startPositionTicks: isResumable(item) ? item.UserData?.PlaybackPositionTicks : 0
-    }).catch((err: unknown) => {
-        console.error('[Pufferfin] Failed to start playback', err);
-    });
-};
+import { playItem } from '../utils/playback';
 
 const getKey = (item: ItemDto) => item.Id ?? '';
 

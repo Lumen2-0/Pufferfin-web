@@ -24,6 +24,10 @@ export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
                     {
                         path: 'person/:personId',
                         lazy: () => import('./person')
+                    },
+                    {
+                        path: 'search',
+                        lazy: () => import('./search')
                     }
                 ],
                 ErrorBoundary

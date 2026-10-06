@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { clearBackdrop } from 'components/backdrop/backdrop';
 
+import AppNav from './components/AppNav';
 import { TranslationProvider } from './i18n/useTranslation';
 import { useSpatialNavigation } from './navigation/useSpatialNavigation';
 import { PUFFERFIN_APP_PATH } from './routes/paths';
@@ -40,6 +41,7 @@ export const Component = () => {
     return (
         <TranslationProvider>
             <div ref={rootRef} className='pf-app'>
+                <AppNav />
                 <main className='pf-app__main'>
                     <Outlet />
                 </main>

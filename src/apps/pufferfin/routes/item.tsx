@@ -5,7 +5,6 @@ import PlayArrow from '@mui/icons-material/PlayArrow';
 import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { playbackManager } from 'components/playback/playbackmanager';
 import { useApi } from 'hooks/useApi';
 import { useItem } from 'hooks/useItem';
 import type { ItemDto } from 'types/base/models/item-dto';
@@ -24,25 +23,11 @@ import { useInitialFocus } from '../navigation/useInitialFocus';
 import { getBackdropUrl, getCardImageUrl, getPersonImageUrl } from '../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, getRuntime, isResumable } from '../utils/items';
 import { useOpenItem } from '../utils/navigation';
+import { playItem as play, playTrailers } from '../utils/playback';
 import { getPersonPath } from './paths';
 
 const CAST_LIMIT = 24;
 const GENRE_LIMIT = 3;
-
-const play = (item: ItemDto) => {
-    playbackManager.play({
-        items: [ item ],
-        startPositionTicks: isResumable(item) ? item.UserData?.PlaybackPositionTicks : 0
-    }).catch((err: unknown) => {
-        console.error('[Pufferfin] Failed to start playback', err);
-    });
-};
-
-const playTrailers = (item: ItemDto) => {
-    playbackManager.playTrailers(item).catch((err: unknown) => {
-        console.error('[Pufferfin] Failed to play trailers', err);
-    });
-};
 
 const getKey = (item: { Id?: string | null }) => item.Id ?? '';
 
