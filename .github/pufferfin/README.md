@@ -2,7 +2,8 @@
 
 This directory is Pufferfin-only and identical in `Pufferfin/Pufferfin` and
 `Pufferfin/Pufferfin-web`. No Jellyfin workflow is modified: the Pufferfin
-workflows are new files (`sync-upstream.yml`, `release.yml`).
+workflows are new files (`sync-upstream.yml`, `release.yml`, and on the client
+`pufferfin-pull-request.yml`).
 
 ## Branches
 
@@ -85,6 +86,14 @@ server and client.
 
 **Nothing is published until the `PUFFERFIN_PUBLISH` variable is `true`**: the
 image is then a dry-run build.
+
+## `pufferfin-pull-request.yml` (client)
+
+Jellyfin's `pull_request.yml` only triggers on `master` and `release*`. This
+workflow gives every PR to `main` the same checks (production build, quality
+checks including `Vulnerable dependencies`, CodeQL) by calling the unchanged
+Jellyfin reusable workflows. It has no `paths-ignore`: a PR to `main` always
+reports checks.
 
 ## Repository configuration (owner decision)
 
