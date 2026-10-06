@@ -679,6 +679,132 @@
     width: clamp(8rem, 10vw, 10.5rem);
 }
 
+// Top bar: round glass buttons over the screen content
+
+.pf-nav {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 2;
+    display: flex;
+    padding: 1.5rem var(--pf-gutter) 0;
+}
+
+.pf-nav__link {
+    position: relative;
+    text-decoration: none;
+}
+
+// The current screen also gets a bar under its label: never told by fill alone
+.pf-nav__link[aria-current='page']::after {
+    position: absolute;
+    right: 1.75rem;
+    bottom: 0.45rem;
+    left: 1.75rem;
+    height: 2px;
+    background: currentcolor;
+    border-radius: 1px;
+    content: '';
+}
+
+.pf-nav__link + .pf-nav__link {
+    margin-left: 0.75rem;
+
+    [dir='rtl'] & {
+        margin-right: 0.75rem;
+        margin-left: 0;
+    }
+}
+
+// Search: a round glass field, the voice button, then rows of results
+
+.pf-search {
+    padding-top: 7rem;
+}
+
+.pf-search__bar {
+    display: flex;
+    align-items: center;
+    padding: 0 var(--pf-gutter);
+}
+
+.pf-search__voice {
+    flex: none;
+    margin-left: 1rem;
+
+    [dir='rtl'] & {
+        margin-right: 1rem;
+        margin-left: 0;
+    }
+}
+
+.pf-search__field {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    max-width: 48rem;
+    min-height: 3.75rem;
+    padding: 0 1.5rem;
+    background: var(--pf-glass-background);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 999px;
+    transition: box-shadow var(--pf-duration) var(--pf-ease);
+    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+
+    // The halo goes on the whole field: the caret alone is too small to see from a couch
+    &:focus-within {
+        box-shadow: var(--pf-focus-ring);
+    }
+}
+
+.pf-search__icon {
+    flex: none;
+    margin-right: 0.75rem;
+    color: var(--pf-color-text-secondary);
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.75rem;
+    }
+}
+
+.pf-search__input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    color: var(--pf-color-text);
+    font-size: 1.3rem;
+    font-family: inherit;
+    background: transparent;
+    border: 0;
+    outline: none;
+    scroll-margin: 8rem;
+
+    &::placeholder {
+        color: var(--pf-color-text-secondary);
+    }
+}
+
+.pf-search__status {
+    min-height: 1.5rem;
+    margin: 1rem 0 0;
+    padding: 0 var(--pf-gutter);
+    color: var(--pf-color-text-secondary);
+}
+
+// A search result: the card, and its Play button under it
+
+.pf-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pf-result__action {
+    margin-top: 1rem;
+}
+
 // Reduced motion: no scaling, no shifting, no smooth scroll, no pulsing.
 // The focus stays obvious through the halo, which does not move.
 
