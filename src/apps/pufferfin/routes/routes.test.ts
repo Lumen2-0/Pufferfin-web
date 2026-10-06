@@ -44,6 +44,10 @@ describe('Pufferfin: routes', () => {
         expect(leaf?.element).toBeDefined();
     });
 
+    it('serves the menu that replaces the upstream header', () => {
+        expect(matchLeaf(PUFFERFIN_APP_ROUTES, '/pufferfin/menu')?.lazy).toBeDefined();
+    });
+
     it('hides the upstream header on the home and the Pufferfin screens only', () => {
         expect(isPufferfinPath('/home')).toBe(true);
         expect(isPufferfinPath('/pufferfin')).toBe(true);

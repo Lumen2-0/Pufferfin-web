@@ -36,6 +36,9 @@ export function parseCatalogTitleKind(segment: string | undefined): CatalogTitle
 /** Library tab: only the titles on disk. */
 export const getLibraryPath = () => `/${PUFFERFIN_APP_PATH}/library`;
 
+/** Menu: account, administration and the other Jellyfin libraries. */
+export const getMenuPath = () => `/${PUFFERFIN_APP_PATH}/menu`;
+
 /** Universal search. */
 export const getSearchPath = () => `/${PUFFERFIN_APP_PATH}/search`;
 

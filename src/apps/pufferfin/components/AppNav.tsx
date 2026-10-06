@@ -1,4 +1,5 @@
 import Home from '@mui/icons-material/Home';
+import MenuIcon from '@mui/icons-material/Menu';
 import VideoLibrary from '@mui/icons-material/VideoLibrary';
 import Search from '@mui/icons-material/Search';
 import classNames from 'classnames';
@@ -7,10 +8,13 @@ import { NavLink } from 'react-router-dom';
 
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
-import { getHomePath, getLibraryPath, getSearchPath } from '../routes/paths';
+import { getHomePath, getLibraryPath, getMenuPath, getSearchPath } from '../routes/paths';
 
 const getClassName = ({ isActive }: { isActive: boolean }) =>
     classNames('pf-button', 'pf-nav__link', isActive ? 'pf-button--primary' : 'pf-button--glass');
+
+// The menu sits apart, at the end of the bar (wins over the spacing between links)
+const getMenuClassName = (state: { isActive: boolean }) => classNames(getClassName(state), 'pf-nav__link--end');
 
 /**
  * Top bar of round glass buttons. The current screen gets a solid fill, a bar
@@ -32,6 +36,11 @@ const AppNav: FC = () => {
             <NavLink to={getSearchPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
                 <span className='pf-button__icon' aria-hidden='true'><Search /></span>
                 <span className='pf-button__label'>{t('NavSearch')}</span>
+            </NavLink>
+            {/* Account, dashboard and the other Jellyfin sections: the upstream header is hidden here */}
+            <NavLink to={getMenuPath()} className={getMenuClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+                <span className='pf-button__icon' aria-hidden='true'><MenuIcon /></span>
+                <span className='pf-button__label'>{t('NavMenu')}</span>
             </NavLink>
         </nav>
     );
