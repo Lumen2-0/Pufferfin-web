@@ -81,3 +81,69 @@ export interface CatalogTitleDetails {
     Availability: CatalogAvailability;
     LocalItemId?: string | null;
 }
+
+/** A source that knows a catalog entry. `Library` alone marks an entry on disk that TMDB does not list. */
+export enum CatalogSource {
+    Library = 'Library',
+    Tmdb = 'Tmdb',
+    Audible = 'Audible',
+    Letterboxd = 'Letterboxd'
+}
+
+/** A season of a series, TMDB merged with the local library. */
+export interface CatalogSeason {
+    /** 0 for specials. */
+    SeasonNumber: number;
+    Name?: string | null;
+    Overview?: string | null;
+    /** Episodes announced by TMDB, null for a season TMDB does not know. */
+    EpisodeCount?: number | null;
+    /** Distinct episodes on disk. */
+    LocalEpisodeCount: number;
+    AirDate?: string | null;
+    PosterUrl?: string | null;
+    Availability: CatalogAvailability;
+    /** Library item of the season, when its folder exists. */
+    LocalItemId?: string | null;
+    Sources: CatalogSource[];
+}
+
+/** The seasons of a series, specials first, one entry per number. */
+export interface CatalogSeriesSeasons {
+    TmdbId: number;
+    Availability: CatalogAvailability;
+    LocalItemId?: string | null;
+    Seasons: CatalogSeason[];
+}
+
+/** An episode, TMDB merged with the local library: one entry, never a duplicate. */
+export interface CatalogEpisode {
+    SeasonNumber: number;
+    /** Null for a file on disk the library could not number. */
+    EpisodeNumber?: number | null;
+    /** Last number of a file on disk holding several episodes that TMDB does not list. */
+    EpisodeNumberEnd?: number | null;
+    Title?: string | null;
+    Overview?: string | null;
+    AirDate?: string | null;
+    StillUrl?: string | null;
+    RuntimeMinutes?: number | null;
+    Availability: CatalogAvailability;
+    /** Library item, when on disk. Two episodes held by one file share it. */
+    LocalItemId?: string | null;
+    Sources: CatalogSource[];
+}
+
+/** A season with its episodes, by number, episodes without a number last. */
+export interface CatalogSeasonDetails {
+    SeriesTmdbId: number;
+    SeasonNumber: number;
+    Name?: string | null;
+    Overview?: string | null;
+    AirDate?: string | null;
+    PosterUrl?: string | null;
+    Availability: CatalogAvailability;
+    LocalItemId?: string | null;
+    Sources: CatalogSource[];
+    Episodes: CatalogEpisode[];
+}

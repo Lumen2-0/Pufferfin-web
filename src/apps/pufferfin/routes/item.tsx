@@ -18,6 +18,9 @@ import PosterCard from '../components/PosterCard';
 import RoundButton from '../components/RoundButton';
 import ChoicePicker from '../components/ChoicePicker';
 import { useEpisodes, useSeasons, useSeriesNextUp, useSimilarItems } from '../features/details/api/useDetails';
+import { useCanRequest } from '../features/requests/api/useCanRequest';
+import { useMergedSeasons } from '../features/series/api/useMergedSeasons';
+import SeriesEpisodes from '../features/series/components/SeriesEpisodes';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
@@ -56,6 +59,10 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
     const defaultSeasonId = nextUp.isPending ? undefined : nextUp.data?.SeasonId ?? seasons.data?.[0]?.Id ?? undefined;
     const seasonId = chosenSeasonId ?? defaultSeasonId;
     const episodes = useEpisodes(seriesId, seasonId);
+
+    // With a TMDB id, the episodes come merged with TMDB: the missing ones show and can be downloaded one by one
+    const { tmdbId, seasons: mergedSeasons, showLibrarySeasons } = useMergedSeasons(seriesId, item?.ProviderIds?.Tmdb);
+    const { canRequest: canRequestEpisodes } = useCanRequest('Sonarr');
 
     // For a series, Play waits for the next episode: focusing before would land on a later button
     const isPlayReady = !seriesId || !nextUp.isPending;
@@ -194,7 +201,17 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
             />
 
             <div className='pf-details__sections'>
-                {seriesId && seasons.data && seasons.data.length > 0 && (
+                {tmdbId && mergedSeasons ? (
+                    <SeriesEpisodes
+                        seriesTmdbId={tmdbId}
+                        seasons={mergedSeasons}
+                        seriesItemId={seriesId}
+                        nextUpSeasonItemId={nextUp.data?.SeasonId}
+                        canRequest={canRequestEpisodes}
+                    />
+                ) : null}
+
+                {showLibrarySeasons && seasons.data && seasons.data.length > 0 && (
                     <section className='pf-details__episodes' aria-label={t('SeasonsLabel')}>
                         <ChoicePicker
                             label={t('SeasonsLabel')}

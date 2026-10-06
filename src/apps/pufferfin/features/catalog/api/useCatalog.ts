@@ -5,7 +5,13 @@ import { useApi } from 'hooks/useApi';
 import { getPufferfin } from '../../../api/client';
 import type { CatalogTitleKind } from '../../../routes/paths';
 import { getCatalogListFailure } from '../utils/catalog';
-import { CatalogItemKind, type CatalogListResponse, type CatalogTitleDetails } from './types';
+import {
+    CatalogItemKind,
+    type CatalogListResponse,
+    type CatalogSeasonDetails,
+    type CatalogSeriesSeasons,
+    type CatalogTitleDetails
+} from './types';
 
 const ROW_LIMIT = 20;
 
@@ -60,5 +66,33 @@ export const useCatalogTitle = (kind: CatalogTitleKind, tmdbId: number) => {
             { signal }
         ),
         enabled: !!api && !!user?.Id
+    });
+};
+
+/** The seasons of a series, TMDB merged with the library of the current user. */
+export const useSeriesSeasons = (tmdbId: number | undefined) => {
+    const { api, user } = useApi();
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Catalog', 'Seasons', tmdbId, user?.Id ],
+        queryFn: ({ signal }) => getPufferfin<CatalogSeriesSeasons>(
+            api!,
+            `/Pufferfin/Catalog/Series/${tmdbId}/Seasons`,
+            { signal }
+        ),
+        enabled: !!api && !!user?.Id && !!tmdbId
+    });
+};
+
+/** The episodes of one season, each once: on disk with its library item, or missing. */
+export const useSeasonEpisodes = (tmdbId: number | undefined, seasonNumber: number | undefined) => {
+    const { api, user } = useApi();
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Catalog', 'Season', tmdbId, seasonNumber, user?.Id ],
+        queryFn: ({ signal }) => getPufferfin<CatalogSeasonDetails>(
+            api!,
+            `/Pufferfin/Catalog/Series/${tmdbId}/Seasons/${seasonNumber}`,
+            { signal }
+        ),
+        enabled: !!api && !!user?.Id && !!tmdbId && seasonNumber !== undefined
     });
 };

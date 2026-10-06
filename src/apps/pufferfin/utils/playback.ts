@@ -1,5 +1,6 @@
 import type { Api } from '@jellyfin/sdk';
 import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
+import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 
 import { playbackManager } from 'components/playback/playbackmanager';
 import type { ItemDto } from 'types/base/models/item-dto';
@@ -18,6 +19,16 @@ export function playItem(item: ItemDto) {
         console.error('[Pufferfin] Failed to start playback', err);
         disablePlayerSkin();
     });
+}
+
+/** Plays a library item known only by its id, reading it first for the saved position. */
+export async function playItemById(api: Api, userId: string, itemId: string) {
+    try {
+        const response = await getLibraryApi(api).getItem({ userId, itemId });
+        playItem(response.data as ItemDto);
+    } catch (err) {
+        console.error('[Pufferfin] Failed to read the item to play', err);
+    }
 }
 
 export function playTrailers(item: ItemDto) {

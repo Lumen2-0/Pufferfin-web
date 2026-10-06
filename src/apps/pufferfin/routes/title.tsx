@@ -4,16 +4,17 @@ import { isAxiosError } from 'axios';
 import React, { type FC, useMemo, useRef } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 
-import { useCapabilities } from '../api/useCapabilities';
 import CatalogCard from '../components/CatalogCard';
 import Hero from '../components/Hero';
 import MediaRow from '../components/MediaRow';
-import { CatalogAvailability, type CatalogItem, CatalogItemKind } from '../features/catalog/api/types';
-import { useCatalogTitle } from '../features/catalog/api/useCatalog';
+import { CatalogAvailability, type CatalogItem, CatalogItemKind, type CatalogTitleDetails } from '../features/catalog/api/types';
+import { useCatalogTitle, useSeriesSeasons } from '../features/catalog/api/useCatalog';
 import { getOpenableItems } from '../features/catalog/utils/catalog';
 import MovieRequestActions from '../features/requests/components/MovieRequestActions';
-import { useMyRequests, useRequestPermissions } from '../features/requests/api/useRequests';
+import { useCanRequest } from '../features/requests/api/useCanRequest';
+import { useMyRequests } from '../features/requests/api/useRequests';
 import { findMovieRequest } from '../features/requests/utils/requests';
+import SeriesEpisodes from '../features/series/components/SeriesEpisodes';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
@@ -24,6 +25,25 @@ const HTTP_SERVICE_UNAVAILABLE = 503;
 
 const getKey = (item: CatalogItem) => item.Key;
 const renderCard = (item: CatalogItem) => <CatalogCard item={item} />;
+
+/** Facts line of the sheet: year, runtime or number of seasons, first genres; each value once. */
+function getTitleMeta(kind: CatalogTitleKind, title: CatalogTitleDetails, t: ReturnType<typeof useTranslation>): string[] {
+    let lengthText: string | undefined;
+    if (kind === CatalogItemKind.Series && title.NumberOfSeasons) {
+        lengthText = title.NumberOfSeasons === 1 ? t('SeasonCountOne') : t('SeasonCount', title.NumberOfSeasons);
+    } else if (kind === CatalogItemKind.Movie && title.RuntimeMinutes) {
+        const hours = Math.floor(title.RuntimeMinutes / 60);
+        const minutes = title.RuntimeMinutes % 60;
+        lengthText = hours ? t('DurationHoursMinutes', hours, minutes) : t('DurationMinutes', minutes);
+    }
+    return [
+        title.Year ? String(title.Year) : undefined,
+        lengthText,
+        title.Genres.slice(0, GENRE_LIMIT).map(genre => genre.Name).join(', ')
+    ]
+        .filter((value): value is string => !!value)
+        .filter((value, index, values) => values.indexOf(value) === index);
+}
 
 /**
  * Sheet of a movie or a series that is not in the library, from the catalog.
@@ -37,35 +57,19 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
 
     const { data: title, isPending, isError, error } = useCatalogTitle(kind, tmdbId);
     const isMovie = kind === CatalogItemKind.Movie;
-    const capabilities = useCapabilities();
-    const permissions = useRequestPermissions();
     const requests = useMyRequests();
-    // Buttons of services that are not configured never show: both answers are needed, a failure counts as no
-    const canRequest = isMovie && !!capabilities.data?.Radarr && !!permissions.data?.CanRequest;
+    // Buttons of services that are not configured never show: Radarr for a movie, Sonarr for the episodes of a series
+    const rights = useCanRequest(isMovie ? 'Radarr' : 'Sonarr');
     const request = isMovie ? findMovieRequest(requests.data, tmdbId) : undefined;
-    const areActionsSettled = !isMovie || (!capabilities.isPending && !permissions.isPending && !requests.isPending);
+    // A series lists its seasons and episodes from TMDB, each missing episode downloadable on its own
+    const seriesSeasons = useSeriesSeasons(isMovie ? undefined : tmdbId);
+    const isContentSettled = isMovie ? !requests.isPending : !seriesSeasons.isPending;
+    const areActionsSettled = rights.isSettled && isContentSettled;
 
     // The focus waits for the actions, so it lands on Download rather than on the overview
     useInitialFocus(pageRef, [ title, areActionsSettled ], !!title && areActionsSettled);
 
-    const meta = useMemo(() => {
-        if (!title) return [];
-        let lengthText: string | undefined;
-        if (kind === CatalogItemKind.Series && title.NumberOfSeasons) {
-            lengthText = title.NumberOfSeasons === 1 ? t('SeasonCountOne') : t('SeasonCount', title.NumberOfSeasons);
-        } else if (kind === CatalogItemKind.Movie && title.RuntimeMinutes) {
-            const hours = Math.floor(title.RuntimeMinutes / 60);
-            const minutes = title.RuntimeMinutes % 60;
-            lengthText = hours ? t('DurationHoursMinutes', hours, minutes) : t('DurationMinutes', minutes);
-        }
-        return [
-            title.Year ? String(title.Year) : undefined,
-            lengthText,
-            title.Genres.slice(0, GENRE_LIMIT).map(genre => genre.Name).join(', ')
-        ]
-            .filter((value): value is string => !!value)
-            .filter((value, index, values) => values.indexOf(value) === index);
-    }, [ kind, t, title ]);
+    const meta = useMemo(() => (title ? getTitleMeta(kind, title, t) : []), [ kind, t, title ]);
 
     if (isPending) {
         return (
@@ -109,7 +113,7 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                     <MovieRequestActions
                         tmdbId={tmdbId}
                         request={request}
-                        canRequest={canRequest}
+                        canRequest={rights.canRequest}
                         lastSyncAt={requests.dataUpdatedAt}
                     />
                 ) : (
@@ -122,6 +126,21 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
             />
 
             <div className='pf-details__sections'>
+                {!isMovie && seriesSeasons.data && (
+                    <SeriesEpisodes
+                        seriesTmdbId={tmdbId}
+                        seasons={seriesSeasons.data.Seasons}
+                        canRequest={rights.canRequest}
+                    />
+                )}
+                {!isMovie && seriesSeasons.isError && (
+                    // Failure is told with an icon and words, never with color alone
+                    <p className='pf-row__error' role='status'>
+                        <ErrorOutline aria-hidden='true' />
+                        {t('RowLoadError')}
+                    </p>
+                )}
+
                 <section
                     className='pf-about'
                     aria-labelledby='pf-about-title'
