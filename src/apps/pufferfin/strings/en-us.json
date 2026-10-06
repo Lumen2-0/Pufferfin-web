@@ -1,0 +1,14 @@
+{
+    "ActionMoreInfo": "More Info",
+    "ActionPlay": "Play",
+    "ActionResume": "Resume",
+    "EpisodeNumber": "S{0}, E{1}",
+    "HomeEmpty": "Nothing to show yet. Add a library to get started.",
+    "HomeLabel": "Home",
+    "Loading": "Loading",
+    "RowContinueWatching": "Continue Watching",
+    "RowLoadError": "This row could not be loaded.",
+    "RowNextUp": "Up Next",
+    "RowRecentlyAdded": "Recently Added",
+    "WatchedPercent": "{0}% watched"
+}
