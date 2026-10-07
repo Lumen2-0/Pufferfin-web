@@ -479,7 +479,19 @@ export default function () {
 
             const itemsContainer = context.querySelector('.playlist');
             let focusedItemPlaylistId = itemsContainer.querySelector('button:focus');
+            // PUFFERFIN: remember the focused row, the list is rebuilt on every queue change
+            const focusedRowPlaylistId = itemsContainer.querySelector('.listItemBody:focus')?.closest('.listItem')?.getAttribute('data-playlistitemid');
             itemsContainer.innerHTML = html;
+            // PUFFERFIN: outside the TV layout a row plays on click but takes no focus; make it a keyboard target too
+            if (!layoutManager.tv) {
+                for (const body of itemsContainer.querySelectorAll('.listItemBody.itemAction')) {
+                    body.setAttribute('tabindex', '0');
+                    body.setAttribute('role', 'button');
+                }
+                if (focusedRowPlaylistId) {
+                    itemsContainer.querySelector(`.listItem[data-playlistitemid="${focusedRowPlaylistId}"] .listItemBody`)?.focus();
+                }
+            }
             if (focusedItemPlaylistId !== null) {
                 focusedItemPlaylistId = focusedItemPlaylistId.getAttribute('data-playlistitemid');
                 const newFocusedItem = itemsContainer.querySelector(`button[data-playlistitemid="${focusedItemPlaylistId}"]`);
@@ -804,6 +816,13 @@ export default function () {
         const playlistContainer = context.querySelector('.playlist');
         playlistContainer.addEventListener('action-remove', function (e) {
             playbackManager.removeFromPlaylist([e.detail.playlistItemId], currentPlayer);
+        });
+        // PUFFERFIN: Enter or Space on a focused row plays it, like a click
+        playlistContainer.addEventListener('keydown', function (e) {
+            if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.listItemBody[role="button"]')) {
+                e.preventDefault();
+                e.target.click();
+            }
         });
         playlistContainer.addEventListener('itemdrop', function (e) {
             const newIndex = e.detail.newIndex;

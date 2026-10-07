@@ -1,0 +1,32 @@
+// Pufferfin style on the upstream now playing bar (music, lyrics, queue
+// entry point). Its logic stays upstream; dark glass with a hairline, round
+// buttons with the focus halo, no blue.
+
+@use '../dialogs/palette' as *;
+
+.pf-player-skin .nowPlayingBar {
+    @include pf-overlay-palette;
+
+    color: var(--pf-color-text);
+    background: var(--pf-glass-background-strong);
+    border-top: 1px solid var(--pf-glass-border);
+    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+
+    .paper-icon-button-light {
+        color: var(--pf-color-text);
+        border-radius: 50%;
+    }
+
+    .paper-icon-button-light:focus:not(:disabled),
+    .paper-icon-button-light.show-focus:focus {
+        color: var(--pf-color-text);
+        background: var(--pf-glass-background-strong);
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .nowPlayingImage,
+    .cardImageContainer {
+        background-color: var(--pf-color-surface);
+        border-radius: 6px;
+    }
+}

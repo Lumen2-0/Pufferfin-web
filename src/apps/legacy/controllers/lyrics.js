@@ -24,7 +24,8 @@ let isDynamicLyric = false;
 let autoScroll = AutoScroll.Instant;
 
 function lyricHtmlReducer(htmlAccumulator, lyric, index) {
-    const elem = layoutManager.tv ? 'button' : 'div';
+    // PUFFERFIN: a line that seeks is a button in every layout, so a keyboard reaches it outside the TV layout too
+    const elem = layoutManager.tv || isDynamicLyric ? 'button' : 'div';
     const classes = [];
     if (isDynamicLyric) classes.push('dynamicLyric');
     if (layoutManager.tv) classes.push('listItem', 'show-focus');
@@ -73,7 +74,8 @@ export default function (view) {
             if (autoScroll !== AutoScroll.NoScroll) {
                 // instant scroll is used when the view is first loaded
                 scrollManager.scrollToElement(lyric, autoScroll === AutoScroll.Smooth);
-                focusManager.focus(lyric);
+                // PUFFERFIN: only the TV layout moves the focus along with the song; elsewhere the focus stays where the user put it
+                if (layoutManager.tv) focusManager.focus(lyric);
                 autoScroll = AutoScroll.Smooth;
             }
         }
@@ -239,7 +241,8 @@ export default function (view) {
 
     function onKeyDown(e) {
         const key = keyboardNavigation.getKeyName(e);
-        if (key === 'ArrowUp' || key === 'ArrowDown') {
+        // PUFFERFIN: moving through the lines with Tab also stops the auto scroll
+        if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'Tab') {
             autoScroll = AutoScroll.NoScroll;
         }
     }

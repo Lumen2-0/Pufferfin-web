@@ -16,6 +16,8 @@ import { PUFFERFIN_APP_ROUTES } from 'apps/pufferfin/routes/routes';
 import { isPufferfinPath } from 'apps/pufferfin/routes/paths';
 // PUFFERFIN: account, settings, public pages and wizard in the Pufferfin style
 import FormSkin from 'apps/pufferfin/forms/FormSkin';
+// PUFFERFIN: every playback screen and shared dialog in the Pufferfin style
+import PlaybackSkin from 'apps/pufferfin/features/player/PlaybackSkin';
 import AppHeader from 'components/AppHeader';
 import Backdrop from 'components/Backdrop';
 import layoutManager from 'components/layoutManager';
@@ -64,6 +66,7 @@ function RootAppLayout() {
         >
             <Backdrop />
             <FormSkin /> {/* PUFFERFIN: Pufferfin style on the upstream form pages */}
+            <PlaybackSkin /> {/* PUFFERFIN: the player skin applies to any playback, whatever its origin */}
             <AppHeader isHidden={layoutManager.modern || isNewLayoutPath} />
 
             <Outlet />

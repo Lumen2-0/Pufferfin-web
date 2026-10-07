@@ -1,92 +1,29 @@
-import { playbackManager } from 'components/playback/playbackmanager';
-import Events from 'utils/events';
-
-import './player.scss';
+import { DASHBOARD_APP_PATHS } from 'apps/dashboard/routes/routes';
 
 /**
- * The player keeps the upstream video screen and its logic (tracks, subtitles,
- * skip intro, chapters, SyncPlay) and gets the Pufferfin look through a class
- * on the document element, only for playback started from a Pufferfin screen.
- * A playback started from the upstream interface keeps the upstream look.
+ * Class on the document element giving the upstream playback screens the
+ * Pufferfin look: the video player and its overlays (subtitle offset, stats,
+ * up next), the queue and the lyrics. Every playback gets it, whatever screen
+ * started it: a Pufferfin screen, an upstream page, a resume, Live TV,
+ * SyncPlay or a direct link. The screens keep their upstream logic.
  */
 export const PLAYER_SKIN_CLASS = 'pf-player-skin';
 
 /**
- * How long a Pufferfin play request waits for its playback to start. Past it,
- * the request is considered lost (a start that failed without an error), and
- * the next playback to start, which may come from the upstream interface, does
- * not get the skin.
+ * Class on the document element giving the shared upstream dialogs the
+ * Pufferfin look: action sheets (audio, subtitles, quality, speed), confirm
+ * and form dialogs, the SyncPlay and cast menus, toasts.
  */
-export const PENDING_TIMEOUT_MS = 60_000;
+export const DIALOG_SKIN_CLASS = 'pf-dialog-skin';
 
-export type SkinSession =
-    | { phase: 'idle' }
-    | { phase: 'pending', since: number }
-    | { phase: 'active' };
+/** Whether a pathname belongs to the admin dashboard, which has its own desktop theme. */
+export const isDashboardPathname = (pathname: string) =>
+    Object.values(DASHBOARD_APP_PATHS).some(path => pathname === `/${path}` || pathname.startsWith(`/${path}/`));
 
-export type SkinEvent =
-    /** Pufferfin asked the playback manager to play. */
-    | { type: 'request', now: number }
-    /** Some playback started, from Pufferfin or not. */
-    | { type: 'start', now: number }
-    /** A playback stopped; `endOfSession` is false when a next item follows. */
-    | { type: 'stop', endOfSession: boolean }
-    /** The Pufferfin play request failed with an error. */
-    | { type: 'fail' };
-
-const IDLE: SkinSession = { phase: 'idle' };
-
-export function nextSession(session: SkinSession, event: SkinEvent): SkinSession {
-    switch (event.type) {
-        case 'request':
-            return { phase: 'pending', since: event.now };
-        case 'start':
-            if (session.phase === 'active') return session;
-            if (session.phase === 'pending' && event.now - session.since <= PENDING_TIMEOUT_MS) {
-                return { phase: 'active' };
-            }
-            return IDLE;
-        case 'stop':
-            // While pending, a stop belongs to the playback being replaced, not to ours
-            return session.phase === 'active' && event.endOfSession ? IDLE : session;
-        case 'fail':
-            return IDLE;
-    }
-}
-
-interface PlaybackStopInfo {
-    nextItem?: unknown
-}
-
-/** A stop that hands over to a next item (next episode, playlist) keeps the session going. */
-export function isEndOfSession(info?: PlaybackStopInfo | null) {
-    return !info?.nextItem;
-}
-
-let session: SkinSession = IDLE;
-let isSubscribed = false;
-
-function dispatch(event: SkinEvent) {
-    session = nextSession(session, event);
-    document.documentElement.classList.toggle(PLAYER_SKIN_CLASS, session.phase !== 'idle');
-}
-
-function subscribe() {
-    if (isSubscribed) return;
-    isSubscribed = true;
-    Events.on(playbackManager, 'playbackstart', () => dispatch({ type: 'start', now: Date.now() }));
-    Events.on(playbackManager, 'playbackstop', (_e: unknown, info?: PlaybackStopInfo) => {
-        dispatch({ type: 'stop', endOfSession: isEndOfSession(info) });
-    });
-}
-
-/** Called right before a Pufferfin screen starts playback. */
-export function enablePlayerSkin() {
-    subscribe();
-    dispatch({ type: 'request', now: Date.now() });
-}
-
-/** Called when a Pufferfin play request fails. */
-export function disablePlayerSkin() {
-    dispatch({ type: 'fail' });
-}
+/**
+ * The playback and dialog skin classes for a page. The player skin is
+ * unconditional; the dialog skin covers every page but the admin dashboard,
+ * whose dialogs keep the dense desktop grammar of its own theme.
+ */
+export const getPlaybackSkinClasses = (pathname: string) =>
+    isDashboardPathname(pathname) ? [ PLAYER_SKIN_CLASS ] : [ PLAYER_SKIN_CLASS, DIALOG_SKIN_CLASS ];
