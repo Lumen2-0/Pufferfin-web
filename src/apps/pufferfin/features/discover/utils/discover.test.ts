@@ -6,6 +6,8 @@ import {
     DISCOVER_TYPES,
     DiscoverRow,
     DiscoverType,
+    DOCUMENTARY_GENRE_ID,
+    TV_SHOW_TYPES,
     getDiscoverRows,
     getDiskItemTypes,
     hasFeatured,
@@ -17,9 +19,10 @@ describe('Pufferfin: Discover types', () => {
     it('reads the type of the address', () => {
         expect(parseDiscoverType('movies')).toBe(DiscoverType.Movies);
         expect(parseDiscoverType('books')).toBe(DiscoverType.Books);
+        expect(parseDiscoverType('documentaries')).toBe(DiscoverType.Documentaries);
     });
 
-    it.each([ null, undefined, '', 'unknown', 'documentaries' ])('falls back to All for %s', value => {
+    it.each([ null, undefined, '', 'unknown' ])('falls back to All for %s', value => {
         expect(parseDiscoverType(value)).toBe(DiscoverType.All);
     });
 
@@ -62,5 +65,17 @@ describe('Pufferfin: Discover types', () => {
         expect(getDiskItemTypes(DiscoverType.Movies)).toEqual([ BaseItemKind.Movie ]);
         expect(getDiskItemTypes(DiscoverType.Series)).toEqual([ BaseItemKind.Episode ]);
         expect(getDiskItemTypes(DiscoverType.Audiobooks)).toEqual([ BaseItemKind.AudioBook ]);
+    });
+
+    it('lists unscripted TMDB shows in TV Shows and keeps fiction out of it', () => {
+        expect(getDiscoverRows(DiscoverType.TvShows)).toContain(DiscoverRow.PopularTvShows);
+        expect(TV_SHOW_TYPES).not.toContain('Scripted');
+        expect(getDiscoverRows(DiscoverType.Series)).not.toContain(DiscoverRow.PopularTvShows);
+    });
+
+    it('offers documentaries, films and series, by their TMDB genre', () => {
+        expect(DISCOVER_TYPES).toContain(DiscoverType.Documentaries);
+        expect(getDiscoverRows(DiscoverType.Documentaries)).toEqual([ DiscoverRow.DocumentaryMovies, DiscoverRow.DocumentarySeries ]);
+        expect(DOCUMENTARY_GENRE_ID).toBe(99);
     });
 });

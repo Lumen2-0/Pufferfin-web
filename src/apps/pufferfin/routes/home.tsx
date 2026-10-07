@@ -12,7 +12,7 @@ import MediaRow from '../components/MediaRow';
 import PosterCard from '../components/PosterCard';
 import RoundButton from '../components/RoundButton';
 import { CatalogItemKind, type CatalogItem } from '../features/catalog/api/types';
-import { useRecommendedForYou, useTrending } from '../features/catalog/api/useCatalog';
+import { type CatalogDiscoverFilter, useCatalogDiscover, useRecommendedForYou, useTrending } from '../features/catalog/api/useCatalog';
 import { getOpenableItems } from '../features/catalog/utils/catalog';
 import { useBookItems, useLiveTvOnNow, useRecordings } from '../features/discover/api/useDiscoverRows';
 import TypePicker from '../features/discover/components/TypePicker';
@@ -21,13 +21,16 @@ import {
     DISCOVER_TYPE_PARAM,
     DiscoverRow,
     DiscoverType,
+    DOCUMENTARY_GENRE_ID,
     getDiscoverRows,
     getDiskItemTypes,
     hasFeatured,
-    parseDiscoverType
+    parseDiscoverType,
+    TV_SHOW_TYPES
 } from '../features/discover/utils/discover';
 import { useAudiobookItems, useLatestItems, useNextUpItems, useResumeItems } from '../features/home/api/useHomeRows';
 import DownloadsRow from '../features/requests/components/DownloadsRow';
+import type { StringKey } from '../i18n/translate';
 import { useTranslation } from '../i18n/useTranslation';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { type CardShape, getBackdropUrl, getCardImageUrl } from '../utils/images';
@@ -172,6 +175,32 @@ const TrendingRow: FC<{ kind: CatalogItemKind.Movie | CatalogItemKind.Series }> 
     );
 };
 
+interface CatalogDiscoverRowProps {
+    title: StringKey
+    kind: CatalogItemKind.Movie | CatalogItemKind.Series
+    filter: CatalogDiscoverFilter
+}
+
+/** Popular catalog titles matching a filter (a genre, a kind of series), on disk and missing mixed. */
+const CatalogDiscoverRow: FC<CatalogDiscoverRowProps> = ({ title, kind, filter }) => {
+    const t = useTranslation();
+    const titles = useCatalogDiscover(kind, filter);
+    return (
+        <MediaRow
+            title={t(title)}
+            shape='portrait'
+            items={getOpenableItems(titles.data)}
+            isPending={titles.isPending}
+            isError={titles.isError}
+            getKey={getCatalogKey}
+            renderItem={renderCatalogCard}
+        />
+    );
+};
+
+const DOCUMENTARY_FILTER: CatalogDiscoverFilter = { genreId: DOCUMENTARY_GENRE_ID };
+const TV_SHOW_FILTER: CatalogDiscoverFilter = { tvTypes: TV_SHOW_TYPES };
+
 const RecentlyAddedRow: FC<RowProps> = ({ type }) => {
     const t = useTranslation();
     const { renderCard, renderAudiobook } = useCardRenderers();
@@ -290,6 +319,12 @@ const DiscoverRowView: FC<RowProps> = ({ row, type }) => {
             return <RecordingsRow />;
         case DiscoverRow.Books:
             return <BooksRow />;
+        case DiscoverRow.DocumentaryMovies:
+            return <CatalogDiscoverRow title='RowDocumentaryMovies' kind={CatalogItemKind.Movie} filter={DOCUMENTARY_FILTER} />;
+        case DiscoverRow.DocumentarySeries:
+            return <CatalogDiscoverRow title='RowDocumentarySeries' kind={CatalogItemKind.Series} filter={DOCUMENTARY_FILTER} />;
+        case DiscoverRow.PopularTvShows:
+            return <CatalogDiscoverRow title='RowPopularTvShows' kind={CatalogItemKind.Series} filter={TV_SHOW_FILTER} />;
     }
 };
 
