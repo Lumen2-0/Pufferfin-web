@@ -28,20 +28,30 @@ export enum DiscoverRow {
     Audiobooks = 'audiobooks',
     LiveTvOnNow = 'liveTvOnNow',
     Recordings = 'recordings',
-    Books = 'books'
+    Books = 'books',
+    DocumentaryMovies = 'documentaryMovies',
+    DocumentarySeries = 'documentarySeries',
+    PopularTvShows = 'popularTvShows'
 }
 
 export const DISCOVER_TYPE_PARAM = 'type';
 
+/** TMDB genre of documentaries, for films and series alike. */
+export const DOCUMENTARY_GENRE_ID = 99;
+
 /**
- * Types with at least one source today. Documentaries need a catalog list by
- * TMDB genre, which the server does not offer yet: the entry comes with it.
+ * TMDB series types of TV Shows: the unscripted ones. Fiction, including
+ * episodic series, goes to Series (owner's decision on PUFF-12).
  */
+export const TV_SHOW_TYPES = [ 'Reality', 'TalkShow', 'News' ];
+
+/** The types offered by the picker, in their order on screen. */
 export const DISCOVER_TYPES: DiscoverType[] = [
     DiscoverType.All,
     DiscoverType.Movies,
     DiscoverType.Series,
     DiscoverType.TvShows,
+    DiscoverType.Documentaries,
     DiscoverType.Audiobooks,
     DiscoverType.Books
 ];
@@ -79,12 +89,16 @@ const ROWS: Record<DiscoverType, DiscoverRow[]> = {
         DiscoverRow.TrendingShows,
         DiscoverRow.RecentlyAdded
     ],
-    // Fiction goes to Series; unscripted TMDB shows come with a catalog list by type
+    // Fiction goes to Series; here the unscripted shows, then live TV
     [DiscoverType.TvShows]: [
+        DiscoverRow.PopularTvShows,
         DiscoverRow.LiveTvOnNow,
         DiscoverRow.Recordings
     ],
-    [DiscoverType.Documentaries]: [],
+    [DiscoverType.Documentaries]: [
+        DiscoverRow.DocumentaryMovies,
+        DiscoverRow.DocumentarySeries
+    ],
     [DiscoverType.Audiobooks]: [
         DiscoverRow.Audiobooks,
         DiscoverRow.RecentlyAdded

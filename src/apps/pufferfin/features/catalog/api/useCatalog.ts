@@ -42,6 +42,29 @@ export const useTrending = (kind: CatalogTitleKind) => {
     });
 };
 
+/** Filters of a catalog list by genre or by kind of series (the TMDB discover endpoint). */
+export interface CatalogDiscoverFilter {
+    /** TMDB genre id, such as 99 for documentaries. */
+    genreId?: number
+    /** TMDB series types, for series only: Documentary, News, Miniseries, Reality, Scripted, TalkShow, Video. */
+    tvTypes?: string[]
+}
+
+/** The most popular films or series matching the filter, each marked on disk or missing. */
+export const useCatalogDiscover = (kind: CatalogTitleKind, filter: CatalogDiscoverFilter) => {
+    const { api, user } = useApi();
+    const tvTypes = filter.tvTypes?.join(',');
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Catalog', 'Discover', kind, filter.genreId, tvTypes, user?.Id ],
+        queryFn: async ({ signal }) => toItems(await getPufferfin<CatalogListResponse>(
+            api!,
+            '/Pufferfin/Catalog/Discover',
+            { params: { kind, genreId: filter.genreId, tvTypes, limit: ROW_LIMIT }, signal }
+        )),
+        enabled: !!api && !!user?.Id
+    });
+};
+
 /** Films recommended from the user's Letterboxd diary, without the ones already seen. */
 export const useRecommendedForYou = () => {
     const { api, user } = useApi();
