@@ -29,11 +29,15 @@ const audiobook: CatalogItem = {
 };
 
 describe('Pufferfin: catalog helpers', () => {
-    it('opens a title on disk on its library page, a missing one on its catalog sheet', () => {
+    it('opens every title on the one title sheet: by library id when on disk, by TMDB id when missing', () => {
         expect(getCatalogItemPath(seriesOnDisk)).toBe(getItemPath('abc123'));
         expect(getCatalogItemPath(missingMovie)).toBe(getCatalogTitlePath(CatalogItemKind.Movie, 603));
         expect(getCatalogItemPath({ ...seriesOnDisk, Availability: CatalogAvailability.Missing, LocalItemId: null }))
             .toBe(getCatalogTitlePath(CatalogItemKind.Series, 1399));
+    });
+
+    it('opens a title on disk that TMDB does not know by its library id', () => {
+        expect(getCatalogItemPath({ ...seriesOnDisk, TmdbId: null })).toBe(getItemPath('abc123'));
     });
 
     it('keeps only the entries with a screen to open', () => {

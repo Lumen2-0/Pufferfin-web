@@ -14,10 +14,20 @@ export const isPufferfinPath = (pathname: string) =>
     || pathname === `/${PUFFERFIN_APP_PATH}`
     || pathname.startsWith(`/${PUFFERFIN_APP_PATH}/`);
 
-/** Detail page of a movie or a series. */
-export const getItemPath = (itemId: string) => `/${PUFFERFIN_APP_PATH}/item/${itemId}`;
-
 export type CatalogTitleKind = CatalogItemKind.Movie | CatalogItemKind.Series;
+
+/** Segment of the title sheet opened by the library id of the title: `title/item/{id}`. */
+export const ITEM_SEGMENT = 'item';
+
+/**
+ * The one title sheet, opened by the library id of a title on disk. The same
+ * sheet opens by TMDB id (`getCatalogTitlePath`): a title on disk shows Play
+ * there too, a missing one Download.
+ */
+export const getItemPath = (itemId: string) => `/${PUFFERFIN_APP_PATH}/title/${ITEM_SEGMENT}/${itemId}`;
+
+/** Former address of the sheet of a title on disk; it now redirects to `getItemPath`. */
+export const LEGACY_ITEM_ROUTE = 'item/:itemId';
 
 const MOVIE_SEGMENT = 'movie';
 const SERIES_SEGMENT = 'series';
@@ -25,7 +35,7 @@ const SERIES_SEGMENT = 'series';
 export const AUDIOBOOK_SEGMENT = 'audiobook';
 const MARKET_PARAM = 'market';
 
-/** Catalog sheet of a movie or a series that is not in the library, by TMDB id. */
+/** The title sheet of a movie or a series by TMDB id, on disk or not: the server tells which. */
 export const getCatalogTitlePath = (kind: CatalogTitleKind, tmdbId: number) =>
     `/${PUFFERFIN_APP_PATH}/title/${kind === CatalogItemKind.Series ? SERIES_SEGMENT : MOVIE_SEGMENT}/${tmdbId}`;
 
@@ -62,3 +72,24 @@ export const getSearchPath = () => `/${PUFFERFIN_APP_PATH}/search`;
 
 /** Person page: portrait, biography and filmography. */
 export const getPersonPath = (personId: string) => `/${PUFFERFIN_APP_PATH}/person/${personId}`;
+
+/** What a title sheet address points to. */
+export type SheetTarget =
+    | { kind: 'item', itemId: string }
+    | { kind: 'catalog', titleKind: CatalogTitleKind, tmdbId: number }
+    | { kind: 'audiobook', asin: string };
+
+/**
+ * Reads a title sheet address (`title/{segment}/{id}`): a library item, a
+ * film or series by TMDB id, or an audiobook by ASIN. Undefined for an
+ * address that names nothing.
+ */
+export function parseSheetTarget(segment: string | undefined, id: string | undefined, isAsin: (value: string) => boolean): SheetTarget | undefined {
+    if (!segment || !id) return undefined;
+    if (segment === ITEM_SEGMENT) return { kind: 'item', itemId: id };
+    if (segment === AUDIOBOOK_SEGMENT) return isAsin(id) ? { kind: 'audiobook', asin: id } : undefined;
+    const titleKind = parseCatalogTitleKind(segment);
+    const tmdbId = Number(id);
+    if (!titleKind || !Number.isInteger(tmdbId) || tmdbId <= 0) return undefined;
+    return { kind: 'catalog', titleKind, tmdbId };
+}

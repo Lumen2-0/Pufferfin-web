@@ -4,7 +4,7 @@ import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import Movie from '@mui/icons-material/Movie';
 import PlayArrow from '@mui/icons-material/PlayArrow';
 import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
 import { useItem } from 'hooks/useItem';
@@ -28,6 +28,7 @@ import { getBackdropUrl, getCardImageUrl, getPersonImageUrl } from '../utils/ima
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, getRuntime, isResumable } from '../utils/items';
 import { useOpenItem, useOpenPerson } from '../utils/navigation';
 import { playItem as play, playTrailers } from '../utils/playback';
+import { getItemPath } from './paths';
 
 const CAST_LIMIT = 24;
 const GENRE_LIMIT = 3;
@@ -40,7 +41,11 @@ const playIfAny = (target: ItemDto | undefined) => {
     if (target) play(target);
 };
 
-const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
+/**
+ * Sheet of a title on disk: Play or Resume, cast, seasons and episodes merged
+ * with TMDB. It is the body of the one title sheet when the title is on disk.
+ */
+export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
     const t = useTranslation();
     const { api } = useApi();
     const openItem = useOpenItem();
@@ -285,10 +290,10 @@ const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
     );
 };
 
+/** Former address of the sheet of a title on disk: it moves to the one title sheet, without a step in the history. */
 export const Component = () => {
     const { itemId } = useParams();
-    // Keyed by id: opening a similar title starts from a clean page state
-    return itemId ? <ItemDetails key={itemId} itemId={itemId} /> : null;
+    return itemId ? <Navigate to={getItemPath(itemId)} replace /> : null;
 };
 
-Component.displayName = 'PufferfinItemPage';
+Component.displayName = 'PufferfinLegacyItemRedirect';

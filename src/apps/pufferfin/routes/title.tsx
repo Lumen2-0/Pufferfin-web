@@ -2,7 +2,7 @@ import CloudOutlined from '@mui/icons-material/CloudOutlined';
 import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import { isAxiosError } from 'axios';
 import React, { type FC, useMemo, useRef } from 'react';
-import { Navigate, useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import CatalogCard from '../components/CatalogCard';
 import AudiobookSheet from '../features/audiobooks/components/AudiobookSheet';
@@ -21,7 +21,8 @@ import SeriesEpisodes from '../features/series/components/SeriesEpisodes';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
-import { AUDIOBOOK_SEGMENT, type CatalogTitleKind, getItemPath, getMarketParam, parseCatalogTitleKind } from './paths';
+import { ItemDetails } from './item';
+import { type CatalogTitleKind, getMarketParam, parseSheetTarget } from './paths';
 
 const GENRE_LIMIT = 3;
 const HTTP_SERVICE_UNAVAILABLE = 503;
@@ -49,7 +50,9 @@ function getTitleMeta(kind: CatalogTitleKind, title: CatalogTitleDetails, t: Ret
 }
 
 /**
- * Sheet of a movie or a series that is not in the library, from the catalog.
+ * Title sheet opened by TMDB id. The server tells whether the title is on
+ * disk: then the sheet is the library one, with Play. Otherwise it is built
+ * from the catalog.
  * A movie can be downloaded from here when Radarr is enabled and the account
  * may request; a series tells plainly that it is not in the library, its
  * seasons and episodes come with the series download.
@@ -93,9 +96,10 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
         );
     }
 
-    // Already in the library: its own detail page has Play and the episodes
+    // On disk: the same sheet, with Play and everything the library knows. It also
+    // takes over without a reload once a download is imported and the catalog is read again.
     if (title.Availability === CatalogAvailability.OnDisk && title.LocalItemId) {
-        return <Navigate to={getItemPath(title.LocalItemId)} replace />;
+        return <ItemDetails key={title.LocalItemId} itemId={title.LocalItemId} />;
     }
 
     const countries = title.Countries.map(country => country.Name).filter(Boolean).join(', ');
@@ -192,30 +196,33 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
     );
 };
 
+/**
+ * The one title sheet: `title/item/{library id}`, `title/movie|series/{TMDB id}`
+ * or `title/audiobook/{ASIN}`. A title on disk shows Play whichever way it is
+ * opened; a missing one shows Download.
+ */
 export const Component = () => {
     const params = useParams();
     const [ searchParams ] = useSearchParams();
-    const kind = parseCatalogTitleKind(params.kind);
-    const tmdbId = Number(params.id);
     const t = useTranslation();
+    const target = parseSheetTarget(params.kind, params.id, isAsin);
 
-    // Audiobooks share this route, by Audible ASIN: no separate sheet route
-    if (params.kind === AUDIOBOOK_SEGMENT && isAsin(params.id)) {
-        const asin = params.id;
-        return <AudiobookSheet key={asin} asin={asin} market={getMarketParam(searchParams)} />;
+    // Each sheet is keyed by its title: opening a recommendation starts from a clean page state
+    switch (target?.kind) {
+        case 'item':
+            return <ItemDetails key={target.itemId} itemId={target.itemId} />;
+        case 'catalog':
+            return <CatalogTitle key={`${target.titleKind}-${target.tmdbId}`} kind={target.titleKind} tmdbId={target.tmdbId} />;
+        case 'audiobook':
+            return <AudiobookSheet key={target.asin} asin={target.asin} market={getMarketParam(searchParams)} />;
+        default:
+            return (
+                <div className='pf-status' role='status'>
+                    <ErrorOutline aria-hidden='true' />
+                    <p>{t('ItemLoadError')}</p>
+                </div>
+            );
     }
-
-    if (!kind || !Number.isInteger(tmdbId) || tmdbId <= 0) {
-        return (
-            <div className='pf-status' role='status'>
-                <ErrorOutline aria-hidden='true' />
-                <p>{t('ItemLoadError')}</p>
-            </div>
-        );
-    }
-
-    // Keyed by title: opening a recommendation starts from a clean page state
-    return <CatalogTitle key={`${kind}-${tmdbId}`} kind={kind} tmdbId={tmdbId} />;
 };
 
-Component.displayName = 'PufferfinCatalogTitlePage';
+Component.displayName = 'PufferfinTitleSheetPage';
