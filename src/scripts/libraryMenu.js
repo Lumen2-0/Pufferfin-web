@@ -689,7 +689,7 @@ let navDrawerInstance;
 let mainDrawerButton;
 let headerHomeButton;
 let currentDrawerType;
-let documentTitle = 'Jellyfin';
+let documentTitle = 'Pufferfin'; // PUFFERFIN: product name
 let pageTitleElement;
 let headerBackButton;
 let headerUserButton;

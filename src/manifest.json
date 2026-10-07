@@ -1,11 +1,11 @@
 {
-    "name": "Jellyfin",
+    "name": "Pufferfin",
     "description": "The Free Software Media System",
     "lang": "en-US",
-    "short_name": "Jellyfin",
+    "short_name": "Pufferfin",
     "start_url": "index.html#/home",
-    "theme_color": "#101010",
-    "background_color": "#101010",
+    "theme_color": "#000000",
+    "background_color": "#000000",
     "display": "standalone",
     "icons": [
         {
@@ -21,6 +21,11 @@
         {
             "sizes": "144x144",
             "src": "favicons/touchicon144.png",
+            "type": "image/png"
+        },
+        {
+            "sizes": "192x192",
+            "src": "favicons/touchicon192.png",
             "type": "image/png"
         },
         {

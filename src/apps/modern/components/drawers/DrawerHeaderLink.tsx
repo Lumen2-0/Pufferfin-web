@@ -1,13 +1,13 @@
 import { getDisplayVersion } from '@jellyfin/sdk/lib/utils/versioning';
-import Box from '@mui/material/Box';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import React from 'react';
 
 import { useSystemInfo } from 'hooks/useSystemInfo';
 import ListItemLink from 'components/ListItemLink';
-
-import appIcon from '@jellyfin/ux-web/icon-transparent.png';
+// PUFFERFIN: the Pufferfin logo and name in place of the Jellyfin ones
+import PufferfinLogo from 'apps/pufferfin/components/PufferfinLogo';
+import { translate } from 'apps/pufferfin/i18n';
 
 const DrawerHeaderLink = () => {
     const { data: systemInfo } = useSystemInfo();
@@ -15,14 +15,10 @@ const DrawerHeaderLink = () => {
     return (
         <ListItemLink to='/'>
             <ListItemIcon sx={{ minWidth: 56 }}>
-                <Box
-                    component='img'
-                    src={appIcon}
-                    sx={{ height: '2.5rem' }}
-                />
+                <PufferfinLogo decorative style={{ fontSize: '2.5rem' }} />
             </ListItemIcon>
             <ListItemText
-                primary={systemInfo?.ServerName || 'Jellyfin'}
+                primary={systemInfo?.ServerName || translate('ProductName')}
                 secondary={getDisplayVersion(systemInfo?.Version)}
                 slotProps={{
                     primary: { variant: 'h6' }

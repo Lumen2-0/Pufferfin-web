@@ -85,8 +85,9 @@ const config = {
                 'config.json',
                 'robots.txt',
                 {
+                    // PUFFERFIN: the Pufferfin app icons in place of the Jellyfin ones
                     from: 'touchicon*.png',
-                    context: path.resolve(__dirname, 'node_modules/@jellyfin/ux-web/favicons'),
+                    context: path.resolve(__dirname, 'src/apps/pufferfin/assets/favicons'),
                     to: 'favicons'
                 },
                 ...Assets.map(asset => {

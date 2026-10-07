@@ -18,21 +18,13 @@
     animation: fadein 0.5s;
     width: 30%;
     height: 30%;
-    background-image: url(@jellyfin/ux-web/icon-transparent.png);
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: contain;
+    // PUFFERFIN: the Pufferfin logo, drawn in the text color through a mask, in place of the Jellyfin icon and banner
+    background-color: currentColor;
+    mask: url(../apps/pufferfin/assets/logo/pufferfin-logo-dark.svg) center / contain no-repeat;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-}
-
-@media screen
-    and (min-device-width: 992px) {
-    .splashLogo {
-        background-image: url(@jellyfin/ux-web/banner-light.png);
-    }
 }
 
 html {

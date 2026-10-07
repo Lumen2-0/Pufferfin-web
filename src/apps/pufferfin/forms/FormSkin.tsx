@@ -1,7 +1,9 @@
-import { type FC, useEffect } from 'react';
+import React, { type FC, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-import { getFormSkinKind } from './paths';
+import PufferfinLogo from '../components/PufferfinLogo';
+
+import { FormSkinKind, getFormSkinKind } from './paths';
 
 import './formSkin.scss';
 
@@ -32,7 +34,8 @@ const FormSkin: FC = () => {
         };
     }, [ kind ]);
 
-    return null;
+    // The public pages, the first thing a visitor sees, have no bar: they open with the logo
+    return kind === FormSkinKind.Public ? <PufferfinLogo className='pf-public-logo' /> : null;
 };
 
 export default FormSkin;

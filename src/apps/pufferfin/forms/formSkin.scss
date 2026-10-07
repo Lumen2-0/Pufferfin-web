@@ -553,6 +553,22 @@ $skin: ':root.pf-form-skin';
 }
 
 :root.pf-form-skin--public {
+    // The logo opens the page, above its title, and scrolls with it
+    .pf-public-logo {
+        position: absolute;
+        top: 2.5rem;
+        left: 50%;
+        z-index: 1;
+        color: var(--pf-color-text);
+        font-size: 4.5rem;
+        transform: translateX(-50%);
+    }
+
+    // Room for the logo; the upstream padding is important too
+    .standalonePage {
+        padding-top: 9rem !important;
+    }
+
     .manualLoginForm,
     .addServerForm,
     .forgotPasswordForm,

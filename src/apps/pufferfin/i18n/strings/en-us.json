@@ -1,4 +1,5 @@
 {
+    "ProductName": "Pufferfin",
     "AdminSectionTitle": "Pufferfin",
     "AdminOverview": "Overview",
     "AdminOverviewIntro": "Pufferfin drives your catalogs, download services and seeding policy. Everything is configured here; environment variables only provide initial values.",

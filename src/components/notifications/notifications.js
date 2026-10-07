@@ -5,7 +5,8 @@ import { ServerConnections } from 'lib/jellyfin-apiclient';
 import { getItems } from '../../utils/jellyfin-apiclient/getItems.ts';
 import { OutboundWebSocketMessageType } from '@jellyfin/sdk/lib/websocket';
 
-import NotificationIcon from './notificationicon.png';
+// PUFFERFIN: the Pufferfin app icon in place of the Jellyfin one
+import NotificationIcon from 'apps/pufferfin/assets/favicons/touchicon192.png';
 
 function onOneDocumentClick() {
     document.removeEventListener('click', onOneDocumentClick);
