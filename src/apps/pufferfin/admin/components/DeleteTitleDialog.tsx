@@ -174,7 +174,7 @@ const DeleteTitleDialog: FC<DeleteTitleDialogProps> = ({ title, canDeleteImmedia
                 </Stack>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>{translate('ButtonCancel')}</Button>
+                <Button variant='outlined' onClick={onClose}>{translate('ButtonCancel')}</Button>
                 <Button color='error' variant='contained' onClick={onDeleteClick} disabled={!canDelete}>
                     {translate(isImmediate ? 'ButtonDeleteImmediately' : 'ButtonDelete')}
                 </Button>

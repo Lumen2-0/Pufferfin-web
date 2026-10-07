@@ -59,7 +59,7 @@ export const Component = () => {
                                         <ListItemText primary={translate(`Service.${service}`)} />
                                         <ServiceStatus service={service} isEnabled={isEnabled} />
                                         {group && (
-                                            <Button component={Link} to={getGroupPath(group.id)} size='small'>
+                                            <Button variant='outlined' component={Link} to={getGroupPath(group.id)} size='small'>
                                                 {translate('ButtonConfigure')}
                                             </Button>
                                         )}

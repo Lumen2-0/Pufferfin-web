@@ -27,6 +27,10 @@
       "name": "WMC",
       "id": "wmc",
       "color": "#0c2450"
+    }, {
+      "name": "Pufferfin",
+      "id": "pufferfin",
+      "color": "#000000"
     }
   ],
   "menuLinks": [],

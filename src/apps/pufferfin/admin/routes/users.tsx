@@ -49,7 +49,7 @@ const UserRights: FC<{ user: UserDto }> = ({ user }) => {
         <ListItem divider disableGutters sx={{ flexWrap: 'wrap', gap: 2 }}>
             <ListItemText primary={name} secondary={secondary} />
             {!isAdministrator && (
-                <Button size='small' onClick={onEditClick} disabled={isPending || isError}>
+                <Button size='small' variant='outlined' onClick={onEditClick} disabled={isPending || isError}>
                     {translate('ButtonEditRights')}
                 </Button>
             )}

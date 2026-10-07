@@ -7,6 +7,7 @@ declare module '@mui/material/styles' {
         blueradiance: true;
         purplehaze: true;
         wmc: true;
+        pufferfin: true; // PUFFERFIN: the admin dashboard theme
     }
 
     interface Palette {
