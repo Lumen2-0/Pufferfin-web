@@ -18,7 +18,7 @@ interface ChoicePickerProps {
 
 /**
  * Row of round toggle buttons, one per choice (a season, a kind of title). The selected one is told by
- * `aria-pressed`, a check mark and a solid fill, never by color alone.
+ * `aria-pressed`, a check mark and a firmer outline, never by color alone.
  */
 const ChoicePicker: FC<ChoicePickerProps> = ({ label, options, selectedId, onSelect }) => {
     // One handler for every button: the choice id travels in a data attribute

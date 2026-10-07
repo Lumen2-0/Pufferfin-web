@@ -496,6 +496,120 @@
     }
 }
 
+// Discover: the type picker under the top bar. In the flow when there is no
+// featured art; over the art when there is (sibling selector rather than :has,
+// which older TV engines lack)
+
+.pf-discover {
+    position: relative;
+}
+
+.pf-discover__header {
+    position: relative;
+    z-index: 3;
+    padding: 6rem var(--pf-gutter) 0;
+}
+
+.pf-hero + .pf-discover__header {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+}
+
+.pf-discover__picker {
+    position: relative;
+}
+
+.pf-discover__chevron {
+    display: inline-flex;
+    margin-left: 0.35rem;
+
+    [dir='rtl'] & {
+        margin-right: 0.35rem;
+        margin-left: 0;
+    }
+}
+
+// The open list floats over the art: the one place here that keeps the dark glass
+.pf-discover__menu {
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 16rem;
+    padding: 0.5rem;
+    background: var(--pf-glass-background-strong);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 1.75rem;
+    backdrop-filter: blur(var(--pf-glass-blur));
+
+    [dir='rtl'] & {
+        right: 0;
+        left: auto;
+    }
+}
+
+.pf-discover__option {
+    display: flex;
+    align-items: center;
+    min-height: 3rem;
+    margin: 0;
+    padding: 0 1.25rem 0 0.75rem;
+    color: var(--pf-color-text);
+    font-weight: 600;
+    font-size: 1.1rem;
+    font-family: inherit;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+    transition:
+        color var(--pf-duration) var(--pf-ease),
+        background-color var(--pf-duration) var(--pf-ease),
+        box-shadow var(--pf-duration) var(--pf-ease);
+
+    &:hover {
+        background: var(--pf-quiet-background-strong);
+    }
+
+    &:focus,
+    &:focus-visible {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    [dir='rtl'] & {
+        padding: 0 0.75rem 0 1.25rem;
+        text-align: right;
+    }
+}
+
+.pf-discover__option + .pf-discover__option {
+    margin-top: 0.25rem;
+}
+
+.pf-discover__check {
+    display: inline-flex;
+    justify-content: center;
+    width: 1.75rem;
+    margin-right: 0.5rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.5rem;
+    }
+}
+
+// The empty note only shows when every row came back empty
+.pf-discover__rows:not(:empty) + .pf-discover__empty {
+    display: none;
+}
+
 // Detail page
 
 .pf-details__sections {

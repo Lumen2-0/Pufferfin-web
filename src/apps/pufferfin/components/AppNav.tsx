@@ -1,5 +1,5 @@
 import Download from '@mui/icons-material/Download';
-import Home from '@mui/icons-material/Home';
+import Explore from '@mui/icons-material/Explore';
 import MenuIcon from '@mui/icons-material/Menu';
 import VideoLibrary from '@mui/icons-material/VideoLibrary';
 import Search from '@mui/icons-material/Search';
@@ -34,7 +34,7 @@ const AppNav: FC = () => {
     return (
         <nav className='pf-nav' aria-label={t('NavLabel')} {...{ [FOCUS_GROUP_ATTRIBUTE]: true }}>
             <NavLink to={getHomePath()} end className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
-                <span className='pf-button__icon' aria-hidden='true'><Home /></span>
+                <span className='pf-button__icon' aria-hidden='true'><Explore /></span>
                 <span className='pf-button__label'>{t('NavHome')}</span>
             </NavLink>
             <NavLink to={getLibraryPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
