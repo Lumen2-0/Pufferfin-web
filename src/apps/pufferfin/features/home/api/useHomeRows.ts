@@ -17,15 +17,17 @@ const ROW_LIMIT = 20;
 const FIELDS = [ ItemFields.Overview, ItemFields.PrimaryImageAspectRatio ];
 const IMAGE_TYPES = [ ImageType.Primary, ImageType.Thumb, ImageType.Backdrop ];
 
-export const useResumeItems = () => {
+/** Videos to resume, optionally of some types only (films, episodes). */
+export const useResumeItems = (itemTypes?: BaseItemKind[]) => {
     const { api, user } = useApi();
     return useQuery({
-        queryKey: [ 'Pufferfin', 'Home', 'Resume', user?.Id ],
+        queryKey: [ 'Pufferfin', 'Home', 'Resume', itemTypes, user?.Id ],
         queryFn: async ({ signal }) => {
             const response = await getLibraryApi(api!).getResumeItems({
                 userId: user!.Id!,
                 limit: ROW_LIMIT,
                 mediaTypes: [ MediaType.Video ],
+                includeItemTypes: itemTypes,
                 fields: FIELDS,
                 enableImageTypes: IMAGE_TYPES,
                 imageTypeLimit: 1,
@@ -56,13 +58,15 @@ export const useNextUpItems = () => {
     });
 };
 
-export const useLatestItems = () => {
+/** The newest titles of the library, optionally of some types only; episodes come grouped by series. */
+export const useLatestItems = (itemTypes?: BaseItemKind[]) => {
     const { api, user } = useApi();
     return useQuery({
-        queryKey: [ 'Pufferfin', 'Home', 'Latest', user?.Id ],
+        queryKey: [ 'Pufferfin', 'Home', 'Latest', itemTypes, user?.Id ],
         queryFn: async ({ signal }) => {
             const response = await getLibraryApi(api!).getLatestMedia({
                 userId: user!.Id!,
+                includeItemTypes: itemTypes,
                 limit: ROW_LIMIT,
                 fields: FIELDS,
                 enableImageTypes: IMAGE_TYPES,
