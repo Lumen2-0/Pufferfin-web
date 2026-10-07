@@ -12,7 +12,6 @@ import AppToolbar from 'components/toolbar/AppToolbar';
 import ServerButton from 'components/toolbar/ServerButton';
 import { DRAWER_WIDTH } from 'components/ResponsiveDrawer';
 import { appRouter } from 'components/router/appRouter';
-import ThemeCss from 'components/ThemeCss';
 import { useApi } from 'hooks/useApi';
 import { useLocale } from 'hooks/useLocale';
 
@@ -20,6 +19,9 @@ import AppTabs from './components/AppTabs';
 import AppDrawer from './components/drawer/AppDrawer';
 import HelpButton from './components/toolbar/HelpButton';
 import { DASHBOARD_APP_PATHS } from './routes/routes';
+
+// PUFFERFIN: the dashboard always uses the Pufferfin admin theme, which lives in apps/pufferfin and themes/pufferfin.
+import AdminThemeCss from 'apps/pufferfin/admin/components/AdminThemeCss';
 
 import './AppOverrides.scss';
 
@@ -112,7 +114,8 @@ export const Component: FC = () => {
                     </AppBody>
                 </Box>
             </Box>
-            <ThemeCss dashboard />
+            {/* PUFFERFIN: the Pufferfin admin theme in place of the dashboard theme of the user settings. */}
+            <AdminThemeCss />
         </LocalizationProvider>
     );
 };

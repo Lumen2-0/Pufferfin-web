@@ -53,10 +53,10 @@ const DashboardSummary = () => {
                     </List>
                 )}
                 <Stack direction='row' spacing={2}>
-                    <Button component={Link} to={getAdminPagePath(AdminPageId.Requests)}>
+                    <Button variant='outlined' component={Link} to={getAdminPagePath(AdminPageId.Requests)}>
                         {translate('ButtonOpenRequests')}
                     </Button>
-                    <Button component={Link} to={getAdminPagePath(AdminPageId.Users)}>
+                    <Button variant='outlined' component={Link} to={getAdminPagePath(AdminPageId.Users)}>
                         {translate('ButtonOpenUsers')}
                     </Button>
                 </Stack>
@@ -67,7 +67,7 @@ const DashboardSummary = () => {
                 <Stack spacing={2}>
                     <SeedPolicyPanel report={report} canRun={false} />
                     <div>
-                        <Button component={Link} to={getAdminPagePath(AdminPageId.Storage)}>
+                        <Button variant='outlined' component={Link} to={getAdminPagePath(AdminPageId.Storage)}>
                             {translate('ButtonOpenStorage')}
                         </Button>
                     </div>

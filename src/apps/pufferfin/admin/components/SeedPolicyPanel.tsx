@@ -93,7 +93,7 @@ const SeedPolicyPanel: FC<SeedPolicyPanelProps> = ({ report, canRun = true }) =>
                         {translate('ButtonRunSeedPolicy')}
                     </Button>
                 )}
-                <Button component={Link} to={getGroupPath(SettingsGroupId.Behavior)}>
+                <Button variant='outlined' component={Link} to={getGroupPath(SettingsGroupId.Behavior)}>
                     {translate('ButtonEditSeedPolicy')}
                 </Button>
             </Stack>

@@ -83,7 +83,7 @@ const StorageDisks: FC<{ report: StorageReport }> = ({ report }) => {
                 </List>
                 <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap'>
                     <Typography variant='body2'>{translate(`StorageHardlinks.${report.Hardlinks.Status}`)}</Typography>
-                    <Button size='small' onClick={onCheckClick} disabled={refreshStorage.isPending}>
+                    <Button size='small' variant='outlined' onClick={onCheckClick} disabled={refreshStorage.isPending}>
                         {translate('ButtonCheckHardlinks')}
                     </Button>
                 </Stack>

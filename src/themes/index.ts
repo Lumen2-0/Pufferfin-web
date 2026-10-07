@@ -7,6 +7,8 @@ import dark from './dark';
 import light from './light';
 import purplehaze from './purplehaze';
 import wmc from './wmc';
+// PUFFERFIN: the admin dashboard theme
+import pufferfin from './pufferfin';
 
 /** The default theme containing all color scheme variants. */
 const DEFAULT_THEME = createTheme({
@@ -23,7 +25,8 @@ const DEFAULT_THEME = createTheme({
         dark,
         light,
         purplehaze,
-        wmc
+        wmc,
+        pufferfin // PUFFERFIN: the admin dashboard theme
     }
 });
 

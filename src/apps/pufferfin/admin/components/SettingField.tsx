@@ -119,7 +119,7 @@ const SecretState: FC<{ setting: PufferfinSetting, isCleared: boolean, disabled?
                     label={translate(isSet ? 'SecretSet' : 'SecretEmpty')}
                 />
                 {canClear && (
-                    <Button size='small' onClick={onClearClick} disabled={disabled}>
+                    <Button size='small' variant='outlined' onClick={onClearClick} disabled={disabled}>
                         {translate(isCleared ? 'ButtonUndoClearSecret' : 'ButtonClearSecret')}
                     </Button>
                 )}

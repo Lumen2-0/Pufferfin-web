@@ -1,0 +1,356 @@
+// PUFFERFIN: the theme of the admin dashboard.
+// A desktop screen for mouse and keyboard, not a couch screen: dense forms, readable labels,
+// hierarchy from type and space. Pure black, warm neutrals, no hue of blue anywhere.
+// Flat surfaces: no drop shadows, no ripples, no floating buttons. Buttons are fully round.
+// The keyboard focus stays obvious, at desktop size.
+
+$text: #f5f2ec;
+$text-secondary: rgba(245, 242, 236, 0.68);
+$surface: #161412;
+$quiet: rgba(245, 242, 236, 0.08);
+$quiet-strong: rgba(245, 242, 236, 0.16);
+$hairline: rgba(245, 242, 236, 0.22);
+$divider: rgba(245, 242, 236, 0.12);
+$radius: 10px;
+$focus-ring: 2px solid $text;
+
+@use '../_base/theme' with (
+    // Theme options
+    $dark: true,
+
+    // Color palette
+    $background-default: #000,
+    $background-paper: #161412,
+    $primary-main: #f5f2ec,
+    $primary-dark: #d9d4cb,
+    $primary-light: #fff,
+    $primary-hover: rgba(245, 242, 236, 0.12),
+    $primary-contrastText: #000,
+    $text-primary: #f5f2ec,
+    $text-secondary: rgba(245, 242, 236, 0.68),
+    $action-focus: rgba(245, 242, 236, 0.16),
+    $action-hover: rgba(245, 242, 236, 0.08),
+    $divider: rgba(245, 242, 236, 0.12),
+
+    // Components
+    $appBar-defaultBg: #000,
+    $filledInput-bg: rgba(245, 242, 236, 0.06),
+    $filledInput-borderColor: rgba(245, 242, 236, 0.22),
+    $card-borderRadius: 10px,
+    $alert-infoFilledBg: #26231f,
+    $alert-infoFilledColor: #f5f2ec,
+    $button-inheritContainedBg: rgba(245, 242, 236, 0.08),
+    $button-inheritContainedHoverBg: rgba(245, 242, 236, 0.16),
+    $snackbarContent-bg: #26231f,
+    $snackbarContent-color: #f5f2ec
+);
+
+/* Card background color variants: warm neutrals */
+.defaultCardBackground1 {
+    background-color: #1f1c19;
+}
+
+.defaultCardBackground2 {
+    background-color: #2a2622;
+}
+
+.defaultCardBackground3 {
+    background-color: #35302b;
+}
+
+.defaultCardBackground4 {
+    background-color: #24211d;
+}
+
+.defaultCardBackground5 {
+    background-color: #2f2b26;
+}
+
+* {
+    scrollbar-color: #4a453f #000;
+}
+
+// MUI components, scoped to the theme so the rules win over the component styles
+
+[data-theme='pufferfin'] {
+    // Flat surfaces: no drop shadows and no elevation overlays
+    .MuiPaper-root {
+        background-image: none;
+        box-shadow: none;
+    }
+
+    // Floating surfaces are separated from the page by a hairline instead of a shadow
+    .MuiDialog-paper,
+    .MuiPopover-paper,
+    .MuiAutocomplete-paper,
+    .MuiSnackbarContent-root {
+        border: 1px solid $divider;
+        border-radius: $radius;
+    }
+
+    // Cards are flat: the image and the label carry them, not a raised box
+    .MuiCard-root {
+        background-color: transparent;
+        border-radius: $radius;
+    }
+
+    .MuiCardMedia-root,
+    .MuiCardActionArea-root {
+        border-radius: $radius;
+    }
+
+    .MuiAppBar-root {
+        border-bottom: 1px solid $divider;
+    }
+
+    // No ripples: hover and focus states are explicit
+    .MuiTouchRipple-root {
+        display: none;
+    }
+
+    // Round buttons: quiet at rest, the main action keeps its fill
+    .MuiButton-root,
+    .MuiFab-root,
+    .MuiToggleButtonGroup-root,
+    .MuiChip-root {
+        border-radius: 999px;
+    }
+
+    .MuiToggleButton-root {
+        border-radius: 999px;
+
+        &.Mui-selected {
+            border-color: $text;
+        }
+    }
+
+    .MuiButton-contained,
+    .MuiButton-contained:hover,
+    .MuiButton-contained:active {
+        box-shadow: none;
+    }
+
+    .MuiButton-outlined {
+        border-color: $hairline;
+    }
+
+    // No floating action button: it becomes a quiet round button
+    .MuiFab-root {
+        color: $text;
+        background-color: transparent;
+        border: 1px solid $hairline;
+        box-shadow: none;
+
+        &:hover {
+            background-color: $quiet-strong;
+        }
+    }
+
+    // The keyboard focus: a clear warm white ring, sized for a desktop screen
+    .MuiButtonBase-root.Mui-focusVisible,
+    .MuiButtonBase-root:focus-visible {
+        outline: $focus-ring;
+        outline-offset: 2px;
+    }
+
+    // Inside scrolling containers (side navigation, tabs, lists, menus) the ring is drawn inward so it is never clipped
+    .MuiListItemButton-root.Mui-focusVisible,
+    .MuiMenuItem-root.Mui-focusVisible,
+    .MuiTab-root.Mui-focusVisible,
+    .MuiCardActionArea-root.Mui-focusVisible {
+        outline-offset: -2px;
+    }
+
+    .MuiCardActionArea-focusHighlight {
+        display: none;
+    }
+
+    // The current page of the side navigation: a firmer label on top of the tint, never the tint alone
+    .MuiListItemButton-root.Mui-selected .MuiListItemText-primary {
+        font-weight: 600;
+        color: $text;
+    }
+
+    .MuiDrawer-paper {
+        background-color: #000;
+    }
+
+    // The upstream app icon, at the top of the side navigation and of the metadata editor, is blue: shown in grey
+    .MuiDrawer-paper .MuiListItemIcon-root img,
+    .MuiAppBar-root .MuiButton-root img {
+        filter: grayscale(1);
+    }
+
+    // Icons in list avatars (tasks, activity) stay readable: a hairline circle instead of a filled one
+    .MuiListItemAvatar-root .MuiAvatar-root {
+        color: $text;
+        background-color: transparent;
+        border: 1px solid $hairline;
+
+        .MuiSvgIcon-root {
+            color: $text;
+        }
+    }
+
+    .MuiAlert-standardInfo,
+    .MuiAlert-outlinedInfo {
+        color: $text;
+    }
+}
+
+// Legacy elements of the dashboard pages and dialogs
+
+// No floating action button: it becomes a quiet round button
+.fab {
+    color: $text;
+    background: transparent;
+    border: 1px solid $hairline;
+}
+
+.raised,
+.fab,
+a[data-role="button"] {
+    border-radius: 999px;
+    box-shadow: none;
+
+    &:focus {
+        color: #000;
+    }
+}
+
+.button-submit,
+.button-delete {
+    border-radius: 999px;
+}
+
+.emby-button:focus-visible,
+.paper-icon-button-light:focus-visible,
+.listItem:focus-visible {
+    outline: $focus-ring;
+    outline-offset: 2px;
+}
+
+.emby-input,
+.emby-textarea,
+.emby-select-withcolor {
+    border-width: 1px;
+    border-radius: 6px;
+}
+
+.emby-select-withcolor {
+    background: $surface;
+}
+
+.emby-checkbox:checked + span + .checkboxOutline > .checkboxIcon {
+    color: #000;
+}
+
+.paperList,
+.visualCardBox {
+    background-color: transparent;
+    border: 1px solid $divider;
+}
+
+.collapseContent,
+.formDialogFooter:not(.formDialogFooter-clear),
+.formDialogHeader:not(.formDialogHeader-clear) {
+    background-color: #000;
+}
+
+.formDialogHeader:not(.formDialogHeader-clear) {
+    border-bottom: 1px solid $divider;
+}
+
+.formDialogFooter:not(.formDialogFooter-clear) {
+    border-top: 1px solid $divider;
+}
+
+.dialog {
+    border: 1px solid $divider;
+    box-shadow: none;
+}
+
+// Hard coded upstream blues on the dashboard elements
+
+.mdl-switch__input:checked + .mdl-switch__label + .mdl-switch__trackContainer > .mdl-switch__track {
+    background: $quiet-strong;
+}
+
+.mdl-switch__thumb,
+.mdl-switch__input:checked + .mdl-switch__label + .mdl-switch__trackContainer > .mdl-switch__thumb {
+    box-shadow: none;
+}
+
+.mdl-switch__input:checked + .mdl-switch__label + .mdl-switch__trackContainer > .mdl-switch__thumb {
+    background: $text;
+}
+
+.mdl-switch__input:checked:focus + .mdl-switch__label + .mdl-switch__trackContainer .mdl-switch__focus-helper {
+    background-color: $quiet-strong;
+    box-shadow: 0 0 0 1.39em $quiet;
+}
+
+.mdl-radio.show-focus .mdl-radio__button:focus + .mdl-radio__circles .mdl-radio__outer-circle,
+.mdl-radio.show-focus .mdl-radio__button:focus + .mdl-radio__circles .mdl-radio__inner-circle {
+    color: $text;
+}
+
+.mdl-radio__focus-circle {
+    background: $text;
+}
+
+.mdl-spinner__layer-1,
+.mdl-spinner__layer-2,
+.mdl-spinner__layer-3,
+.mdl-spinner__layer-4 {
+    border-color: $text;
+}
+
+progress::-webkit-progress-bar {
+    background: $quiet-strong;
+}
+
+progress::-moz-progress-bar,
+progress::-webkit-progress-value,
+progress[aria-valuenow]::before,
+.playbackProgress > div {
+    background-color: $text;
+}
+
+div[data-role=controlgroup] a.ui-btn-active {
+    color: #000 !important;
+    background: $text !important;
+}
+
+.listItemImageButton:hover {
+    color: $text;
+    background: $quiet-strong;
+}
+
+.listItemIcon:not(.listItemIcon-transparent) {
+    color: #000;
+    background-color: $text;
+}
+
+.jstree-default .jstree-wholerow-clicked {
+    background: $quiet-strong !important;
+}
+
+.metadataSidebarIcon {
+    color: $text;
+}
+
+.infoBanner {
+    border: 1px solid $divider;
+}
+
+.button-link {
+    text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mdl-switch__thumb,
+    .mdl-radio__inner-circle {
+        transition: none;
+    }
+}

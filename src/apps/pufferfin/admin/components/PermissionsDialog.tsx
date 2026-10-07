@@ -90,7 +90,7 @@ const PermissionsDialog: FC<PermissionsDialogProps> = ({ userId, userName, permi
                     </Stack>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={onClose}>{translate('ButtonCancel')}</Button>
+                    <Button variant='outlined' onClick={onClose}>{translate('ButtonCancel')}</Button>
                     <Button type='submit' variant='contained' disabled={isQuotaInvalid || updatePermissions.isPending}>
                         {translate('ButtonSave')}
                     </Button>
