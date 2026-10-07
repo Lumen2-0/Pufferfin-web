@@ -13,6 +13,7 @@ $hairline: rgba(245, 242, 236, 0.22);
 $divider: rgba(245, 242, 236, 0.12);
 $radius: 10px;
 $focus-ring: 2px solid $text;
+$error-text: #e57373;
 
 @use '../_base/theme' with (
     // Theme options
@@ -99,6 +100,15 @@ $focus-ring: 2px solid $text;
         border-radius: $radius;
     }
 
+    // Cards without an image (devices, users, placeholders) are a hairline frame, not a filled block
+    .MuiCard-root:has([class*='defaultCardBackground']) {
+        border: 1px solid $divider;
+    }
+
+    .MuiCard-root [class*='defaultCardBackground'] {
+        background-color: transparent;
+    }
+
     .MuiAppBar-root {
         border-bottom: 1px solid $divider;
     }
@@ -132,6 +142,18 @@ $focus-ring: 2px solid $text;
 
     .MuiButton-outlined {
         border-color: $hairline;
+    }
+
+    // Destructive actions on a page (restart, shut down) stay quiet at rest: red label and hairline, no red fill.
+    // Inside a dialog the destructive action is the confirmation itself and keeps its fill.
+    .MuiButton-containedError:not(.MuiDialog-root *) {
+        color: $error-text;
+        background-color: transparent;
+        border: 1px solid $hairline;
+
+        &:hover {
+            background-color: $quiet;
+        }
     }
 
     // No floating action button: it becomes a quiet round button
@@ -249,6 +271,11 @@ a[data-role="button"] {
 .visualCardBox {
     background-color: transparent;
     border: 1px solid $divider;
+}
+
+// Framed cards without an image (users, tuners) show their icon on the page, not on a filled block
+.visualCardBox .defaultCardBackground {
+    background-color: transparent;
 }
 
 .collapseContent,
