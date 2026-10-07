@@ -48,6 +48,10 @@ export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
                                 lazy: () => import('./library')
                             },
                             {
+                                path: 'library/:viewId',
+                                lazy: () => import('./libraryView')
+                            },
+                            {
                                 path: 'search',
                                 lazy: () => import('./search')
                             },

@@ -900,7 +900,9 @@
     z-index: 2;
     display: flex;
     align-items: center;
-    padding: 1.5rem var(--pf-gutter) 0;
+    padding: 1.5rem var(--pf-gutter) 1.5rem;
+    // A veil under the bar: quiet buttons stay readable over a light featured image
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
 .pf-nav__link {
@@ -943,13 +945,22 @@
 }
 
 // Margins rather than flex gap, which older TV engines lack
-.pf-nav__link + .pf-nav__link,
-.pf-nav__link + .pf-nav__end {
+.pf-nav__link + .pf-nav__link {
     margin-left: 0.75rem;
 
     [dir='rtl'] & {
         margin-right: 0.75rem;
         margin-left: 0;
+    }
+}
+
+// The upstream entries sit at the far end of the bar, with at least the usual spacing
+.pf-nav__link + .pf-nav__end {
+    padding-left: 0.75rem;
+
+    [dir='rtl'] & {
+        padding-right: 0.75rem;
+        padding-left: 0;
     }
 }
 
