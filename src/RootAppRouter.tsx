@@ -14,6 +14,8 @@ import { WIZARD_APP_ROUTES } from 'apps/wizard/routes/routes';
 // PUFFERFIN: Pufferfin interface routes
 import { PUFFERFIN_APP_ROUTES } from 'apps/pufferfin/routes/routes';
 import { isPufferfinPath } from 'apps/pufferfin/routes/paths';
+// PUFFERFIN: account, settings, public pages and wizard in the Pufferfin style
+import FormSkin from 'apps/pufferfin/forms/FormSkin';
 import AppHeader from 'components/AppHeader';
 import Backdrop from 'components/Backdrop';
 import layoutManager from 'components/layoutManager';
@@ -61,6 +63,7 @@ function RootAppLayout() {
             storageManager={ThemeStorageManager}
         >
             <Backdrop />
+            <FormSkin /> {/* PUFFERFIN: Pufferfin style on the upstream form pages */}
             <AppHeader isHidden={layoutManager.modern || isNewLayoutPath} />
 
             <Outlet />

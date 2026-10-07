@@ -33,7 +33,10 @@ export default function (view) {
                 Pin: view.querySelector('#txtPin').value
             }),
             contentType: 'application/json'
-        }).then(processForgotPasswordResult);
+        }).then(processForgotPasswordResult, function () {
+            // PUFFERFIN: a wrong or expired PIN is answered with an error status; say so instead of doing nothing
+            processForgotPasswordResult({ Success: false });
+        });
         e.preventDefault();
         return false;
     }

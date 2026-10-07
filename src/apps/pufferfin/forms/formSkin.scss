@@ -1,0 +1,638 @@
+// Pufferfin style on the upstream form pages: account and settings, public
+// pages, first run wizard. The upstream pages keep their logic and fields; this
+// skin only changes how they look, and only while one of them is shown.
+//
+// Black background, no blue, warm neutrals. Quiet at rest, the focus affirms:
+// a solid warm white fill and the thick ring, readable from a couch. One solid
+// button per screen, the main action. Forms keep their dense grammar.
+
+@use '../styles/tokens' as *;
+
+$skin: ':root.pf-form-skin';
+
+// Palette: the upstream elements and the MUI components read these variables,
+// so the whole page turns black and warm white without a hue of blue
+#{$skin} {
+    @include pf-tokens;
+
+    --pf-field-background: rgba(245, 242, 236, 0.07);
+    --pf-field-background-focus: rgba(245, 242, 236, 0.12);
+    --pf-field-radius: 12px;
+    --pf-field-ring: 0 0 0 2px var(--pf-color-background), 0 0 0 5px var(--pf-color-text);
+    --pf-form-width: 30rem;
+    --jf-palette-background-default: #000;
+    --jf-palette-background-defaultChannel: 0 0 0;
+    --jf-palette-background-defaultImage: none;
+    --jf-palette-background-paper: #161412;
+    --jf-palette-background-paperChannel: 22 20 18;
+    --jf-palette-primary-main: #f5f2ec;
+    --jf-palette-primary-mainChannel: 245 242 236;
+    --jf-palette-primary-light: #fff;
+    --jf-palette-primary-lightChannel: 255 255 255;
+    --jf-palette-primary-dark: #d9d4ca;
+    --jf-palette-primary-darkChannel: 217 212 202;
+    --jf-palette-primary-contrastText: #000;
+    --jf-palette-primary-contrastTextChannel: 0 0 0;
+    --jf-palette-secondary-main: #f5f2ec;
+    --jf-palette-secondary-mainChannel: 245 242 236;
+    --jf-palette-secondary-contrastText: #000;
+    --jf-palette-info-main: #f5f2ec;
+    --jf-palette-info-mainChannel: 245 242 236;
+    --jf-palette-text-primary: #f5f2ec;
+    --jf-palette-text-primaryChannel: 245 242 236;
+    --jf-palette-text-secondary: rgba(245, 242, 236, 0.68);
+    --jf-palette-text-secondaryChannel: 245 242 236;
+    --jf-palette-divider: rgba(245, 242, 236, 0.12);
+    --jf-palette-action-hover: rgba(245, 242, 236, 0.08);
+    --jf-palette-action-focus: rgba(245, 242, 236, 0.16);
+    --jf-palette-action-selected: rgba(245, 242, 236, 0.16);
+    --jf-palette-FilledInput-bg: var(--pf-field-background);
+    --jf-palette-FilledInput-hoverBg: var(--pf-field-background-focus);
+    --jf-palette-FilledInput-borderColor: transparent;
+    --jf-palette-AppBar-defaultBg: #000;
+    --jf-palette-AppBar-gradient: none;
+    --jf-palette-Alert-infoFilledBg: #161412;
+    --jf-palette-Alert-infoFilledColor: #f5f2ec;
+    --jf-palette-SnackbarContent-bg: #f5f2ec;
+    --jf-palette-SnackbarContent-color: #000;
+
+    color: var(--pf-color-text);
+    background: var(--pf-color-background);
+
+    body,
+    .backgroundContainer,
+    .backgroundContainer.withBackdrop,
+    .skinHeader,
+    .MuiAppBar-root {
+        background: var(--pf-color-background);
+        backdrop-filter: none;
+    }
+
+    // The splash screen backdrop of the sign in page carries the Jellyfin artwork
+    .backdropContainer {
+        display: none;
+    }
+
+    // Typography carries the hierarchy
+
+    .page {
+        h1,
+        h2,
+        h3,
+        .sectionTitle {
+            color: var(--pf-color-text);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        p,
+        .fieldDescription,
+        .listItemBodyText.secondary,
+        .secondaryText {
+            color: var(--pf-color-text-secondary);
+        }
+
+        .fieldDescription {
+            margin-top: 0.4em;
+            line-height: 1.45;
+        }
+
+        // Links read as text with an underline, not as a colored word
+        a:not(.emby-button):not(.button-link):not(.listItem-border):not(.card) {
+            color: var(--pf-color-text);
+            text-decoration: underline;
+            text-underline-offset: 0.2em;
+        }
+    }
+
+    .button-link {
+        color: var(--pf-color-text);
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+    }
+
+    // Fields: a faint fill and no frame at rest, a warm white edge and the ring on focus
+
+    .emby-input,
+    .emby-textarea,
+    .emby-select-withcolor {
+        padding: 0.65em 0.9em;
+        color: var(--pf-color-text);
+        background: var(--pf-field-background);
+        border: 1px solid transparent;
+        border-radius: var(--pf-field-radius);
+        transition:
+            background-color var(--pf-duration) var(--pf-ease),
+            box-shadow var(--pf-duration) var(--pf-ease);
+
+        &:hover {
+            background: var(--pf-field-background-focus);
+        }
+
+        &:focus {
+            background: var(--pf-field-background-focus);
+            border-color: var(--pf-color-text) !important;
+            outline: none;
+            box-shadow: var(--pf-field-ring);
+        }
+    }
+
+    // The native list of a select stays readable on every engine
+    .emby-select-withcolor > option {
+        color: var(--pf-color-text);
+        background: var(--jf-palette-background-paper);
+    }
+
+    // TV select: the fill already marks the focus, the ring makes it unmissable
+    .emby-select-tv-withcolor:focus {
+        color: var(--pf-color-on-accent) !important;
+        background: var(--pf-color-accent) !important;
+        box-shadow: var(--pf-field-ring);
+    }
+
+    .selectArrowContainer {
+        color: var(--pf-color-text-secondary);
+    }
+
+    .inputLabel,
+    .selectLabel,
+    .textareaLabel {
+        color: var(--pf-color-text-secondary);
+        font-weight: 600;
+    }
+
+    .inputLabelFocused,
+    .selectLabelFocused,
+    .textareaLabelFocused {
+        color: var(--pf-color-text);
+    }
+
+    // Check boxes: a rounded square, filled warm white with a black check once ticked
+
+    .checkboxOutline {
+        border-width: 2px;
+        border-color: var(--pf-hairline);
+        border-radius: 6px;
+    }
+
+    .emby-checkbox:checked + span + .checkboxOutline {
+        background-color: var(--pf-color-accent);
+        border-color: var(--pf-color-accent);
+    }
+
+    .checkboxIcon-checked {
+        color: var(--pf-color-on-accent);
+    }
+
+    .emby-checkbox:focus + span + .checkboxOutline,
+    .emby-checkbox:focus:not(:checked) + span + .checkboxOutline {
+        border-color: var(--pf-color-text);
+        box-shadow: var(--pf-field-ring);
+    }
+
+    .emby-checkbox:focus + span {
+        color: var(--pf-color-text);
+    }
+
+    // Toggles, sliders, radios and the loading ring carry their own blue upstream: warm white here
+
+    .mdl-switch__input:checked + .mdl-switch__label + .mdl-switch__trackContainer > .mdl-switch__thumb,
+    .mdl-slider-background-lower,
+    .mdl-radio__focus-circle {
+        background: var(--pf-color-accent);
+    }
+
+    .mdl-switch__input:focus + .mdl-switch__label + .mdl-switch__trackContainer > .mdl-switch__thumb {
+        box-shadow: var(--pf-field-ring);
+    }
+
+    .mdl-slider {
+        color: var(--pf-color-accent);
+
+        &::-webkit-slider-thumb {
+            background: var(--pf-color-accent);
+        }
+
+        &::-moz-range-thumb {
+            background: var(--pf-color-accent);
+        }
+
+        &:focus::-webkit-slider-thumb {
+            box-shadow: var(--pf-field-ring);
+        }
+
+        &:focus::-moz-range-thumb {
+            box-shadow: var(--pf-field-ring);
+        }
+    }
+
+    .mdl-radio.show-focus .mdl-radio__button:focus + .mdl-radio__circles .mdl-radio__outer-circle,
+    .mdl-radio.show-focus .mdl-radio__button:focus + .mdl-radio__circles .mdl-radio__inner-circle {
+        color: var(--pf-color-accent);
+    }
+
+    .mdl-spinner__layer-1,
+    .mdl-spinner__layer-2,
+    .mdl-spinner__layer-3,
+    .mdl-spinner__layer-4 {
+        border-color: var(--pf-color-accent);
+    }
+
+    // Buttons: fully round, a hairline at rest; the main action is the one solid button
+
+    .emby-button.raised,
+    .emby-button.button-submit,
+    .emby-button.submit,
+    .emby-button.button-cancel,
+    .emby-button.button-delete,
+    .emby-button.button-alt {
+        min-height: 3rem;
+        padding: 0.7em 1.6em;
+        color: var(--pf-color-text);
+        font-weight: 600;
+        background: transparent;
+        border: 1px solid var(--pf-hairline);
+        border-radius: 999px;
+        box-shadow: none;
+        transition:
+            transform var(--pf-duration) var(--pf-ease),
+            color var(--pf-duration) var(--pf-ease),
+            background-color var(--pf-duration) var(--pf-ease),
+            box-shadow var(--pf-duration) var(--pf-ease);
+
+        &:hover {
+            background: var(--pf-quiet-background-strong);
+        }
+    }
+
+    // The password recovery pages name their main action `submit` rather than `button-submit`
+    .emby-button.button-submit,
+    .emby-button.submit {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        border-color: transparent;
+
+        &:hover {
+            background: var(--pf-color-text);
+        }
+    }
+
+    // A destructive action says so in words; the edge only adds the warning tone
+    .emby-button.button-delete {
+        border-color: var(--jf-palette-error-main);
+    }
+
+    .emby-button.block + .emby-button.block,
+    .emby-button.block + div > .emby-button.block {
+        margin-top: 0.75em;
+    }
+
+    .emby-button.raised:focus,
+    .emby-button.button-submit:focus,
+    .emby-button.submit:focus,
+    .emby-button.button-cancel:focus,
+    .emby-button.button-delete:focus,
+    .emby-button.button-alt:focus,
+    .emby-button.show-focus:focus {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        border-color: transparent;
+        outline: none;
+        transform: scale(1.02);
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    // Icon buttons (reorder, remove, image actions)
+    .paper-icon-button-light {
+        border-radius: 999px;
+
+        &:focus {
+            color: var(--pf-color-on-accent);
+            background: var(--pf-color-accent);
+            outline: none;
+            box-shadow: var(--pf-field-ring);
+        }
+    }
+
+    // Lists: settings menu, home sections, library order. No frame, a quiet row on focus
+
+    .listItem-border {
+        border-radius: 14px;
+    }
+
+    .listItem,
+    .listItem-border {
+        border-color: transparent;
+    }
+
+    .listItem-border:focus,
+    .listItem:focus,
+    .listItem.show-focus:focus {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        border-radius: 14px;
+        outline: none;
+        box-shadow: var(--pf-field-ring);
+
+        .listItemIcon,
+        .listItemBodyText {
+            color: var(--pf-color-on-accent);
+        }
+    }
+
+    .listItem-border:focus .listItem {
+        color: var(--pf-color-on-accent);
+        background: none;
+    }
+
+    .listItemIcon:not(.listItemIcon-transparent) {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+    }
+
+    .listItemImageButton:hover {
+        color: var(--pf-color-text);
+        background: var(--pf-quiet-background-strong);
+    }
+
+    .paperList {
+        background: none;
+        border-radius: 14px;
+    }
+
+    // Sections fold open without a frame
+    .emby-collapsible-button {
+        border-color: var(--pf-hairline);
+        border-radius: 14px;
+    }
+
+    // Cards: server list, user list, libraries of the wizard
+
+    [class*='defaultCardBackground'] {
+        background-color: var(--pf-color-surface);
+    }
+
+    .cardBox,
+    .cardScalable,
+    .cardImageContainer,
+    .cardPadder,
+    .cardContent {
+        border-radius: var(--pf-radius-card);
+    }
+
+    .visualCardBox {
+        background: none;
+    }
+
+    .card:focus {
+        outline: none;
+
+        .cardBox {
+            border-color: transparent;
+        }
+
+        .cardScalable {
+            box-shadow: var(--pf-focus-ring);
+        }
+    }
+
+    // MUI components of the modern settings pages: same round buttons and the same ring
+
+    .MuiButton-root {
+        border-radius: 999px;
+        font-weight: 600;
+        text-transform: none;
+        box-shadow: none;
+    }
+
+    .MuiInputBase-root,
+    .MuiFilledInput-root,
+    .MuiOutlinedInput-root {
+        border-radius: var(--pf-field-radius);
+    }
+
+    .MuiFilledInput-root::before,
+    .MuiFilledInput-root::after {
+        display: none;
+    }
+
+    .Mui-focusVisible,
+    .MuiButtonBase-root:focus-visible,
+    .MuiInputBase-root.Mui-focused {
+        outline: none;
+        box-shadow: var(--pf-field-ring);
+    }
+
+    .MuiButtonBase-root.Mui-focusVisible.MuiButton-root,
+    .MuiButtonBase-root.MuiButton-root:focus-visible {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .MuiCheckbox-root.Mui-focusVisible,
+    .MuiSwitch-switchBase.Mui-focusVisible {
+        border-radius: 6px;
+    }
+
+    // Dialogs opened from these pages (library creator, folder picker, alerts):
+    // a black sheet with type for hierarchy, no colored header
+
+    // Long words (a server path in a recovery message) wrap instead of running out of the sheet
+    .dialog {
+        overflow-wrap: anywhere;
+        color: var(--pf-color-text);
+        background: var(--jf-palette-background-paper);
+        border-radius: 20px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    }
+
+    // A full screen sheet is the screen itself: black like the page under it
+    .dialog.dialog-fullscreen,
+    .dialog.dialog-fullscreen .formDialogHeader,
+    .dialog.dialog-fullscreen .formDialogFooter:not(.formDialogFooter-clear) {
+        background: var(--pf-color-background);
+    }
+
+    .dialog.dialog-fullscreen,
+    .dialog.dialog-fixedSize {
+        border-radius: 0;
+    }
+
+    .formDialogHeader,
+    .formDialogFooter:not(.formDialogFooter-clear) {
+        color: var(--pf-color-text);
+        background: var(--jf-palette-background-paper);
+        border-color: var(--jf-palette-divider);
+    }
+
+    .dialogBackdropOpened {
+        opacity: 0.7;
+    }
+
+    // Toasts carry their message in words; black on warm white stays readable anywhere
+    .toast {
+        color: var(--pf-color-on-accent);
+        font-weight: 600;
+        background: var(--pf-color-accent);
+        border-radius: 999px;
+    }
+}
+
+// Settings: the dense form grammar stays; the chrome is lighter and the column narrower
+
+:root.pf-form-skin--settings {
+    // One centered column on every settings page, quick connect included
+    .readOnlyContent,
+    .settingsContainer form,
+    .userPreferencesPage form {
+        max-width: 54rem;
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    // Profile: saving the password is the main action; the picture buttons stay quiet
+    #btnAddImage.button-submit {
+        color: var(--pf-color-text);
+        background: transparent;
+        border-color: var(--pf-hairline);
+
+        &:hover {
+            background: var(--pf-quiet-background-strong);
+        }
+
+        &:focus {
+            color: var(--pf-color-on-accent);
+            background: var(--pf-color-accent);
+        }
+    }
+
+    // The quick connect error is written out; the edge and the weight only reinforce it
+    .quickConnectError {
+        color: var(--pf-color-text);
+        font-weight: 600;
+        background: none;
+        border: 1px solid var(--jf-palette-error-main);
+        border-radius: var(--pf-field-radius);
+    }
+
+    .verticalSection-extrabottompadding,
+    .verticalSection {
+        margin-bottom: 2.5em;
+    }
+
+    .sectionTitle {
+        margin-bottom: 0.75em;
+        font-size: 1.5rem;
+    }
+
+    // The user name heading the settings menu is the one emphasis of the screen
+    .headerUsername {
+        font-size: 2.25rem;
+    }
+}
+
+// Public pages and wizard: no navigation yet, so no bar. The Pufferfin identity
+// comes from the black surface, the type, the round buttons and the focus.
+
+:root.pf-form-skin--public,
+:root.pf-form-skin--wizard {
+    .skinHeader,
+    .MuiAppBar-root {
+        display: none;
+    }
+
+    .page h1 {
+        font-size: clamp(2rem, 3.2vw, 2.75rem);
+        line-height: 1.15;
+    }
+
+    .page h2 {
+        font-size: 1.75rem;
+    }
+}
+
+:root.pf-form-skin--public {
+    .manualLoginForm,
+    .addServerForm,
+    .forgotPasswordForm,
+    .forgotPasswordPinForm,
+    #loginPage .readOnlyContent {
+        max-width: var(--pf-form-width);
+    }
+
+    .manualLoginForm .sectionTitle,
+    .visualLoginForm h1,
+    #selectServerPage .sectionTitle {
+        margin-bottom: 1em;
+        font-size: clamp(2rem, 3vw, 2.25rem);
+        text-align: center;
+    }
+
+    // Users of the sign in page and servers of the server list: round portraits
+    #loginPage,
+    #selectServerPage {
+        .cardScalable,
+        .cardImageContainer,
+        .cardPadder {
+            border-radius: 50%;
+        }
+
+        // The list scrolls inside a clipping container: the ring goes inside the portrait, no growth
+        .card:focus .cardScalable {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .card:focus .cardImageContainer {
+            box-shadow:
+                inset 0 0 0 5px var(--pf-color-text),
+                inset 0 0 0 8px var(--pf-color-background);
+        }
+
+        .cardText {
+            color: var(--pf-color-text);
+            font-weight: 600;
+        }
+    }
+
+    .loginDisclaimer {
+        color: var(--pf-color-text-secondary);
+    }
+}
+
+:root.pf-form-skin--wizard {
+    .wizardContent {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 0;
+        background: none;
+        box-shadow: none;
+    }
+
+    .wizardNavigation {
+        margin-top: 2.5em;
+        text-align: right;
+
+        .emby-button + .emby-button {
+            margin-left: 0.75em;
+
+            [dir='rtl'] & {
+                margin-right: 0.75em;
+                margin-left: 0;
+            }
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root.pf-form-skin {
+        --pf-duration: 0ms;
+        --pf-focus-scale: 1;
+
+        .emby-button:focus,
+        .card:focus .cardScalable {
+            transform: none !important;
+        }
+    }
+}
