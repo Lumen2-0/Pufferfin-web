@@ -10,7 +10,7 @@ import RoundButton from '../../../components/RoundButton';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../../../navigation/focus';
 import { useInitialFocus } from '../../../navigation/useInitialFocus';
-import { playItemById } from '../../../utils/playback';
+import { playAudiobookById } from '../../../utils/playback';
 import { CatalogAvailability, type CatalogAudiobookDetails } from '../../catalog/api/types';
 import { useAudiobook } from '../../catalog/api/useCatalog';
 import { type CreateMediaRequest, RequestKind } from '../../requests/api/types';
@@ -36,7 +36,8 @@ const AudiobookActions: FC<{ book: CatalogAudiobookDetails }> = ({ book }) => {
 
     const localItemId = book.Availability === CatalogAvailability.OnDisk ? book.LocalItemId : undefined;
     const onListen = useCallback((itemId: string) => {
-        if (api && user?.Id) void playItemById(api, user.Id, itemId);
+        // A book in several files is its folder: its parts play in order, from where the user stopped
+        if (api && user?.Id) void playAudiobookById(api, user.Id, itemId);
     }, [ api, user?.Id ]);
 
     // The server picks the version itself: the language from the settings, then the most seeders
@@ -121,7 +122,8 @@ const AudiobookSheet: FC<{ asin: string, market?: string }> = ({ asin, market })
                     </ul>
                 )}
                 overview={book.Overview}
-                backdropUrl={book.ImageUrl ?? undefined}
+                posterUrl={book.ImageUrl ?? undefined}
+                posterShape='square'
                 actions={<AudiobookActions book={book} />}
             />
 

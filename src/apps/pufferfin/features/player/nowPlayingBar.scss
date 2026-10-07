@@ -17,8 +17,8 @@
         border-radius: 50%;
     }
 
-    .paper-icon-button-light:focus:not(:disabled),
-    .paper-icon-button-light.show-focus:focus {
+    :root.layout-tv .paper-icon-button-light:focus:not(:disabled),
+    :root.layout-tv .paper-icon-button-light.show-focus:focus {
         color: var(--pf-color-text);
         background: var(--pf-glass-background-strong);
         box-shadow: var(--pf-focus-ring);

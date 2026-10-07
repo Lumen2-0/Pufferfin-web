@@ -1,7 +1,8 @@
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import PlayArrow from '@mui/icons-material/PlayArrow';
+import classNames from 'classnames';
 import React, { type FC, type RefObject, useCallback, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
@@ -12,9 +13,17 @@ import MediaRow from '../components/MediaRow';
 import PosterCard from '../components/PosterCard';
 import RoundButton from '../components/RoundButton';
 import { CatalogItemKind, type CatalogItem } from '../features/catalog/api/types';
-import { type CatalogDiscoverFilter, useCatalogDiscover, useRecommendedForYou, useTrending } from '../features/catalog/api/useCatalog';
-import { getOpenableItems } from '../features/catalog/utils/catalog';
-import { useBookItems, useLiveTvOnNow, useRecordings } from '../features/discover/api/useDiscoverRows';
+import {
+    type AudiobookPopularSort,
+    type CatalogDiscoverFilter,
+    useCatalogDiscover,
+    usePopularAudiobooks,
+    useRecommendedForYou,
+    useTrending,
+    useTrendingBooks
+} from '../features/catalog/api/useCatalog';
+import { getCatalogItemPath, getOpenableItems } from '../features/catalog/utils/catalog';
+import { useLiveTvOnNow, useRecordings } from '../features/discover/api/useDiscoverRows';
 import TypePicker from '../features/discover/components/TypePicker';
 import {
     DISCOVER_TYPE_LABELS,
@@ -28,7 +37,7 @@ import {
     parseDiscoverType,
     TV_SHOW_TYPES
 } from '../features/discover/utils/discover';
-import { useAudiobookItems, useLatestItems, useNextUpItems, useResumeItems } from '../features/home/api/useHomeRows';
+import { useNextUpItems, useResumeItems } from '../features/home/api/useHomeRows';
 import DownloadsRow from '../features/requests/components/DownloadsRow';
 import type { StringKey } from '../i18n/translate';
 import { useTranslation } from '../i18n/useTranslation';
@@ -72,23 +81,6 @@ function useCardRenderers() {
         return CardRenderer;
     }, [ api, getEpisodeLabel, openItem, t ]);
 
-    // A book plays from where the user stopped: the card is Listen
-    const renderAudiobook = useCallback((item: ItemDto) => {
-        const progress = getPlayedPercentage(item);
-        return (
-            <PosterCard
-                title={getDisplayTitle(item)}
-                subtitle={item.AlbumArtist ?? item.Artists?.[0] ?? undefined}
-                imageUrl={api ? getCardImageUrl(api, item, 'portrait') : undefined}
-                shape='portrait'
-                progress={progress}
-                progressLabel={progress ? t('ListenedPercent', progress) : undefined}
-                value={item}
-                onSelect={playItem}
-            />
-        );
-    }, [ api, t ]);
-
     // A live program shows its channel under the title; it opens on its upstream page
     const renderProgram = useCallback((item: ItemDto) => (
         <PosterCard
@@ -101,7 +93,7 @@ function useCardRenderers() {
         />
     ), [ api, openItem ]);
 
-    return { getEpisodeLabel, renderCard, renderAudiobook, renderProgram };
+    return { getEpisodeLabel, renderCard, renderProgram };
 }
 
 interface RowProps {
@@ -201,36 +193,36 @@ const CatalogDiscoverRow: FC<CatalogDiscoverRowProps> = ({ title, kind, filter }
 const DOCUMENTARY_FILTER: CatalogDiscoverFilter = { genreId: DOCUMENTARY_GENRE_ID };
 const TV_SHOW_FILTER: CatalogDiscoverFilter = { tvTypes: TV_SHOW_TYPES };
 
-const RecentlyAddedRow: FC<RowProps> = ({ type }) => {
+/** Best sellers or new releases of Audible, in the preferred languages: books to discover, on disk or missing. */
+const PopularAudiobooksRow: FC<{ sort: AudiobookPopularSort }> = ({ sort }) => {
     const t = useTranslation();
-    const { renderCard, renderAudiobook } = useCardRenderers();
-    const latest = useLatestItems(getDiskItemTypes(type));
+    const audiobooks = usePopularAudiobooks(sort);
     return (
         <MediaRow
-            title={t('RowRecentlyAdded')}
+            title={t(sort === 'NewReleases' ? 'RowAudiobookNewReleases' : 'RowAudiobookBestSellers')}
             shape='portrait'
-            items={latest.data}
-            isPending={latest.isPending}
-            isError={latest.isError}
-            getKey={getKey}
-            renderItem={type === DiscoverType.Audiobooks ? renderAudiobook : renderCard('portrait')}
+            items={getOpenableItems(audiobooks.data)}
+            isPending={audiobooks.isPending}
+            isError={audiobooks.isError}
+            getKey={getCatalogKey}
+            renderItem={renderCatalogCard}
         />
     );
 };
 
-const AudiobooksRow: FC = () => {
+/** Books to read trending this week: no row when books are off. */
+const TrendingBooksRow: FC = () => {
     const t = useTranslation();
-    const { renderAudiobook } = useCardRenderers();
-    const audiobooks = useAudiobookItems();
+    const books = useTrendingBooks();
     return (
         <MediaRow
-            title={t('RowAudiobooks')}
+            title={t('RowTrendingBooks')}
             shape='portrait'
-            items={audiobooks.data}
-            isPending={audiobooks.isPending}
-            isError={audiobooks.isError}
-            getKey={getKey}
-            renderItem={renderAudiobook}
+            items={getOpenableItems(books.data)}
+            isPending={books.isPending}
+            isError={books.isError}
+            getKey={getCatalogKey}
+            renderItem={renderCatalogCard}
         />
     );
 };
@@ -277,23 +269,6 @@ const RecordingsRow: FC = () => {
     );
 };
 
-const BooksRow: FC = () => {
-    const t = useTranslation();
-    const { renderCard } = useCardRenderers();
-    const books = useBookItems();
-    return (
-        <MediaRow
-            title={t('RowBooks')}
-            shape='portrait'
-            items={books.data}
-            isPending={books.isPending}
-            isError={books.isError}
-            getKey={getKey}
-            renderItem={renderCard('portrait')}
-        />
-    );
-};
-
 /** One row of a Discover screen; each fetches its own data, only when it is shown. */
 const DiscoverRowView: FC<RowProps> = ({ row, type }) => {
     switch (row) {
@@ -307,18 +282,18 @@ const DiscoverRowView: FC<RowProps> = ({ row, type }) => {
             return <TrendingRow kind={CatalogItemKind.Movie} />;
         case DiscoverRow.TrendingShows:
             return <TrendingRow kind={CatalogItemKind.Series} />;
-        case DiscoverRow.RecentlyAdded:
-            return <RecentlyAddedRow row={row} type={type} />;
         case DiscoverRow.Downloads:
             return <DownloadsRow />;
-        case DiscoverRow.Audiobooks:
-            return <AudiobooksRow />;
+        case DiscoverRow.AudiobookBestSellers:
+            return <PopularAudiobooksRow sort='BestSellers' />;
+        case DiscoverRow.AudiobookNewReleases:
+            return <PopularAudiobooksRow sort='NewReleases' />;
         case DiscoverRow.LiveTvOnNow:
             return <LiveTvOnNowRow />;
         case DiscoverRow.Recordings:
             return <RecordingsRow />;
-        case DiscoverRow.Books:
-            return <BooksRow />;
+        case DiscoverRow.TrendingBooks:
+            return <TrendingBooksRow />;
         case DiscoverRow.DocumentaryMovies:
             return <CatalogDiscoverRow title='RowDocumentaryMovies' kind={CatalogItemKind.Movie} filter={DOCUMENTARY_FILTER} />;
         case DiscoverRow.DocumentarySeries:
@@ -328,46 +303,90 @@ const DiscoverRowView: FC<RowProps> = ({ row, type }) => {
     }
 };
 
-/** Featured title of the video types: the next thing to resume, or the newest title of the type. */
+/** The catalog source of the featured card of a type, when nothing is being watched. */
+const useFeaturedCatalog = (type: DiscoverType) => {
+    const forYou = useRecommendedForYou();
+    const trending = useTrending(type === DiscoverType.Series ? CatalogItemKind.Series : CatalogItemKind.Movie);
+    // Film recommendations stay out of Series
+    const sources = type === DiscoverType.Series ? [ trending ] : [ forYou, trending ];
+    const items = sources.flatMap(source => source.data ?? []);
+    return {
+        // The first title with art and a sheet to open: the card is never a plain black box
+        featured: items.find(item => !!item.BackdropUrl && !!getCatalogItemPath(item)),
+        isLoaded: sources.every(source => !source.isPending)
+    };
+};
+
+/**
+ * Featured card of the video types: what the user is watching, else a
+ * recommendation or a trending title, always one with its art.
+ */
 const Featured: FC<{ type: DiscoverType, pageRef: RefObject<HTMLDivElement> }> = ({ type, pageRef }) => {
     const t = useTranslation();
     const { api } = useApi();
+    const navigate = useNavigate();
     const openItem = useOpenItem();
     const { getEpisodeLabel } = useCardRenderers();
-    const itemTypes = getDiskItemTypes(type);
-    const resume = useResumeItems(itemTypes);
-    const latest = useLatestItems(itemTypes);
+    const resume = useResumeItems(getDiskItemTypes(type));
+    const catalog = useFeaturedCatalog(type);
 
-    const featured = resume.data?.[0] ?? latest.data?.[0];
-    const isLoaded = !resume.isPending && !latest.isPending;
+    const watching = api ? resume.data?.find(item => !!getBackdropUrl(api, item)) : undefined;
+    const fromCatalog = watching ? undefined : catalog.featured;
+    const isLoaded = !resume.isPending && (!!watching || catalog.isLoaded);
 
-    // The focus starts on Play once the featured title is known, not on the picker above it
-    useInitialFocus(pageRef, [ featured, isLoaded ], isLoaded);
+    const openCatalog = useCallback((path: string | undefined) => {
+        if (path) navigate(path);
+    }, [ navigate ]);
 
-    if (!featured) return null;
+    // The focus starts on the main action once the featured title is known, not on the picker above it
+    useInitialFocus(pageRef, [ watching, fromCatalog, isLoaded ], isLoaded);
+
+    if (watching) {
+        return (
+            <Hero
+                variant='card'
+                title={getDisplayTitle(watching)}
+                eyebrow={getEpisodeLabel(watching) ?? t('FeaturedContinue')}
+                overview={watching.Overview}
+                backdropUrl={api ? getBackdropUrl(api, watching) : undefined}
+                actions={
+                    <>
+                        <RoundButton
+                            variant='primary'
+                            icon={<PlayArrow />}
+                            label={isResumable(watching) ? t('ActionResume') : t('ActionPlay')}
+                            value={watching}
+                            onClick={playItem}
+                        />
+                        <RoundButton
+                            icon={<InfoOutlined />}
+                            label={t('ActionMoreInfo')}
+                            value={watching}
+                            onClick={openItem}
+                        />
+                    </>
+                }
+            />
+        );
+    }
+
+    if (!fromCatalog) return null;
 
     return (
         <Hero
-            title={getDisplayTitle(featured)}
-            eyebrow={getEpisodeLabel(featured)}
-            overview={featured.Overview}
-            backdropUrl={api ? getBackdropUrl(api, featured) : undefined}
+            variant='card'
+            title={fromCatalog.Title}
+            eyebrow={fromCatalog.Year ? String(fromCatalog.Year) : undefined}
+            overview={fromCatalog.Overview}
+            backdropUrl={fromCatalog.BackdropUrl ?? undefined}
             actions={
-                <>
-                    <RoundButton
-                        variant='primary'
-                        icon={<PlayArrow />}
-                        label={isResumable(featured) ? t('ActionResume') : t('ActionPlay')}
-                        value={featured}
-                        onClick={playItem}
-                    />
-                    <RoundButton
-                        icon={<InfoOutlined />}
-                        label={t('ActionMoreInfo')}
-                        value={featured}
-                        onClick={openItem}
-                    />
-                </>
+                <RoundButton
+                    variant='primary'
+                    icon={<InfoOutlined />}
+                    label={t('ActionMoreInfo')}
+                    value={getCatalogItemPath(fromCatalog)}
+                    onClick={openCatalog}
+                />
             }
         />
     );
@@ -393,7 +412,7 @@ export const Component = () => {
     useInitialFocus(pageRef, [ type ], !withFeatured);
 
     return (
-        <div ref={pageRef} className='pf-home pf-discover'>
+        <div ref={pageRef} className={classNames('pf-home', 'pf-discover', { 'pf-discover--featured': withFeatured })}>
             {/* The page title for assistive technologies; the picker says which type is shown */}
             {!withFeatured && <h1 className='pf-visually-hidden'>{t('DiscoverTitle', t(DISCOVER_TYPE_LABELS[type]))}</h1>}
             {withFeatured && <Featured key={type} type={type} pageRef={pageRef} />}

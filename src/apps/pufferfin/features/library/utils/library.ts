@@ -61,3 +61,11 @@ export function getNextPageStart(lastPage: LibraryPage): number | undefined {
     if (lastPage.items.length === 0 || next >= lastPage.totalCount) return undefined;
     return next;
 }
+
+/**
+ * Whether a library entry is an audiobook: a file, or the folder of a book
+ * told in several files, as the books of a library come from the server.
+ */
+export function isAudiobookEntry(item: { Type?: string | null }): boolean {
+    return item.Type === BaseItemKind.AudioBook || item.Type === BaseItemKind.Folder;
+}

@@ -21,10 +21,14 @@
     --pf-glass-background-strong: rgba(0, 0, 0, 0.75);
     --pf-glass-blur: 20px;
 
-    // Focus must be obvious from a couch three meters away: a black gap then a
-    // thick warm white ring, readable over any artwork. The one place that adds.
-    --pf-focus-ring: 0 0 0 3px var(--pf-color-background), 0 0 0 7px var(--pf-color-text), 0 10px 32px rgba(0, 0, 0, 0.6);
-    --pf-focus-scale: 1.05;
+    // Focus: nothing with a mouse or a touch screen, where the hover does the
+    // work. On a TV it must be obvious from a couch three meters away: a black
+    // gap then a thick warm white ring, readable over any artwork, and a slight
+    // scale. The one place that adds.
+    // The TV values come from the root (see the end of this file), so the
+    // mixin works wherever it is included, on :root itself too.
+    --pf-focus-ring: var(--pf-tv-focus-ring, none);
+    --pf-focus-scale: var(--pf-tv-focus-scale, 1);
 
     // Motion: appearance and focus moves only, short, no bounce
     --pf-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -33,7 +37,21 @@
     --pf-pulse-duration: 1.6s;
 
     // Layout: hierarchy comes from type and space
-    --pf-gutter: clamp(1.5rem, 4vw, 4.5rem);
-    --pf-row-gap: 3rem;
+    --pf-gutter: clamp(1rem, 3.5vw, 3.5rem);
+    --pf-row-gap: 2.25rem;
     --pf-radius-card: 10px;
+    --pf-radius-hero: 22px;
+
+    // Top bar: one compact line, the screens as text tabs
+    --pf-nav-height: 3.5rem;
+    --pf-control-height: 2.25rem;
+    // The glass capsules of the bar: the tabs and the type picker
+    --pf-capsule-height: 2.375rem;
+}
+
+// The TV layout turns the focus on: the root sets it, every surface that
+// includes the tokens inherits it.
+:root.layout-tv {
+    --pf-tv-focus-ring: 0 0 0 3px #000, 0 0 0 7px #f5f2ec, 0 10px 32px rgba(0, 0, 0, 0.6);
+    --pf-tv-focus-scale: 1.05;
 }

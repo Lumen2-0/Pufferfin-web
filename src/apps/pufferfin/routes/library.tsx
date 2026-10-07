@@ -15,7 +15,7 @@ import { useInitialFocus } from '../navigation/useInitialFocus';
 import { type CardShape, getCardImageUrl } from '../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage } from '../utils/items';
 import { useOpenItem, useOpenLibrary } from '../utils/navigation';
-import { playItem } from '../utils/playback';
+import { playAudiobook } from '../utils/playback';
 
 const getKey = (item: ItemDto) => item.Id ?? '';
 
@@ -69,7 +69,7 @@ const LatestRow: FC<{ view: ItemDto }> = ({ view }) => {
  */
 export const Component = () => {
     const t = useTranslation();
-    const { user } = useApi();
+    const { api, user } = useApi();
     const pageRef = useRef<HTMLDivElement>(null);
     const openItem = useOpenItem();
     const openLibrary = useOpenLibrary();
@@ -91,7 +91,10 @@ export const Component = () => {
 
     const renderLibrary = useCardRenderer('landscape', openLibrary);
     const renderResume = useCardRenderer('landscape', openItem);
-    const renderAudio = useCardRenderer('portrait', playItem, 'ListenedPercent');
+    const listen = useCallback((item: ItemDto) => {
+        if (api && user?.Id) void playAudiobook(api, user.Id, item);
+    }, [ api, user?.Id ]);
+    const renderAudio = useCardRenderer('portrait', listen, 'ListenedPercent');
 
     // The focus starts on the first library, which comes first on the page
     useInitialFocus(pageRef, [ views.isPending ], !views.isPending);

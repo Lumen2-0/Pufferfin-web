@@ -14,6 +14,8 @@ import { FOCUSABLE_ATTRIBUTE, focusElement } from '../../../navigation/focus';
 import { getCardImageUrl } from '../../../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage } from '../../../utils/items';
 import { useOpenItem } from '../../../utils/navigation';
+import { playAudiobook } from '../../../utils/playback';
+import { isAudiobookEntry } from '../utils/library';
 import { type LibraryItemsFilter, useLibraryItems } from '../api/useLibraryItems';
 
 interface LibraryGridProps {
@@ -31,8 +33,16 @@ interface LibraryGridProps {
  */
 const LibraryGrid: FC<LibraryGridProps> = ({ parentId, itemTypes, filter, emptyKey }) => {
     const t = useTranslation();
-    const { api } = useApi();
+    const { api, user } = useApi();
     const openItem = useOpenItem();
+    // A book plays from where the user stopped; the rest opens its page
+    const onSelect = useCallback((item: ItemDto) => {
+        if (isAudiobookEntry(item)) {
+            if (api && user?.Id) void playAudiobook(api, user.Id, item);
+        } else {
+            openItem(item);
+        }
+    }, [ api, openItem, user?.Id ]);
     const gridRef = useRef<HTMLUListElement>(null);
 
     const {
@@ -70,6 +80,7 @@ const LibraryGrid: FC<LibraryGridProps> = ({ parentId, itemTypes, filter, emptyK
     }, [ items.length, queryKey ]);
 
     const getSubtitle = (item: ItemDto) => {
+        if (isAudiobookEntry(item) && item.AlbumArtist) return item.AlbumArtist;
         const numbers = getEpisodeNumbers(item);
         if (numbers) return t('EpisodeNumber', numbers[0], numbers[1]);
         return item.ProductionYear ? String(item.ProductionYear) : undefined;
@@ -92,6 +103,7 @@ const LibraryGrid: FC<LibraryGridProps> = ({ parentId, itemTypes, filter, emptyK
             <ul ref={gridRef} className='pf-grid' aria-busy={isFetchingNextPage}>
                 {items.map(item => {
                     const progress = getPlayedPercentage(item);
+                    const progressKey = isAudiobookEntry(item) ? 'ListenedPercent' : 'WatchedPercent';
                     return (
                         <li key={item.Id ?? ''} className='pf-grid__item'>
                             <PosterCard
@@ -100,9 +112,9 @@ const LibraryGrid: FC<LibraryGridProps> = ({ parentId, itemTypes, filter, emptyK
                                 imageUrl={api ? getCardImageUrl(api, item, 'portrait') : undefined}
                                 shape='portrait'
                                 progress={progress}
-                                progressLabel={progress ? t('WatchedPercent', progress) : undefined}
+                                progressLabel={progress ? t(progressKey, progress) : undefined}
                                 value={item}
-                                onSelect={openItem}
+                                onSelect={onSelect}
                             />
                         </li>
                     );

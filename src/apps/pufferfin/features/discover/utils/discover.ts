@@ -14,8 +14,10 @@ export enum DiscoverType {
 }
 
 /**
- * Rows a Discover screen can show. Catalog rows mix titles on disk and missing
- * ones; disk rows are what the library already has.
+ * Rows a Discover screen can show. Discover is for finding something new:
+ * catalog rows mix titles on disk and missing ones; the only disk rows are the
+ * ones about what is being watched (Continue Watching, Next Up). What the
+ * library already holds is the Library tab.
  */
 export enum DiscoverRow {
     ContinueWatching = 'continueWatching',
@@ -23,12 +25,12 @@ export enum DiscoverRow {
     RecommendedForYou = 'recommendedForYou',
     TrendingMovies = 'trendingMovies',
     TrendingShows = 'trendingShows',
-    RecentlyAdded = 'recentlyAdded',
     Downloads = 'downloads',
-    Audiobooks = 'audiobooks',
+    AudiobookBestSellers = 'audiobookBestSellers',
+    AudiobookNewReleases = 'audiobookNewReleases',
     LiveTvOnNow = 'liveTvOnNow',
     Recordings = 'recordings',
-    Books = 'books',
+    TrendingBooks = 'trendingBooks',
     DocumentaryMovies = 'documentaryMovies',
     DocumentarySeries = 'documentarySeries',
     PopularTvShows = 'popularTvShows'
@@ -73,21 +75,18 @@ const ROWS: Record<DiscoverType, DiscoverRow[]> = {
         DiscoverRow.RecommendedForYou,
         DiscoverRow.TrendingMovies,
         DiscoverRow.TrendingShows,
-        DiscoverRow.RecentlyAdded,
         DiscoverRow.Downloads,
-        DiscoverRow.Audiobooks
+        DiscoverRow.AudiobookBestSellers
     ],
     [DiscoverType.Movies]: [
         DiscoverRow.ContinueWatching,
         DiscoverRow.RecommendedForYou,
-        DiscoverRow.TrendingMovies,
-        DiscoverRow.RecentlyAdded
+        DiscoverRow.TrendingMovies
     ],
     [DiscoverType.Series]: [
         DiscoverRow.ContinueWatching,
         DiscoverRow.NextUp,
-        DiscoverRow.TrendingShows,
-        DiscoverRow.RecentlyAdded
+        DiscoverRow.TrendingShows
     ],
     // Fiction goes to Series; here the unscripted shows, then live TV
     [DiscoverType.TvShows]: [
@@ -100,11 +99,11 @@ const ROWS: Record<DiscoverType, DiscoverRow[]> = {
         DiscoverRow.DocumentarySeries
     ],
     [DiscoverType.Audiobooks]: [
-        DiscoverRow.Audiobooks,
-        DiscoverRow.RecentlyAdded
+        DiscoverRow.AudiobookBestSellers,
+        DiscoverRow.AudiobookNewReleases
     ],
     [DiscoverType.Books]: [
-        DiscoverRow.Books
+        DiscoverRow.TrendingBooks
     ]
 };
 
@@ -121,7 +120,7 @@ export function parseDiscoverType(value: string | null | undefined): DiscoverTyp
 }
 
 /**
- * Item types of the disk rows (Continue Watching, Recently Added) of a type.
+ * Item types of the disk rows (Continue Watching) and of the featured title of a type.
  * Undefined means every type, for All.
  */
 export function getDiskItemTypes(type: DiscoverType): BaseItemKind[] | undefined {

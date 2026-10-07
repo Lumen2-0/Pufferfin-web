@@ -69,8 +69,8 @@
     .videoOsdBottom .paper-icon-button-light.btnPause,
     .videoOsdBottom .paper-icon-button-light.btnPause:hover:not(:disabled),
     .videoOsdBottom .paper-icon-button-light.btnPause:active:not(:disabled),
-    .videoOsdBottom .paper-icon-button-light.btnPause:focus:not(:disabled),
-    .videoOsdBottom .paper-icon-button-light.btnPause.show-focus:focus {
+    :root.layout-tv .videoOsdBottom .paper-icon-button-light.btnPause:focus:not(:disabled),
+    :root.layout-tv .videoOsdBottom .paper-icon-button-light.btnPause.show-focus:focus {
         color: var(--pf-color-on-accent);
         background: var(--pf-color-accent);
         border-color: transparent;

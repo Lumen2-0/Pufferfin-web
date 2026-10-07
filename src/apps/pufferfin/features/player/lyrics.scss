@@ -41,8 +41,8 @@
         background: var(--pf-quiet-background);
     }
 
-    button.lyricsLine:focus,
-    button.lyricsLine.show-focus:focus {
+    :root.layout-tv button.lyricsLine:focus,
+    :root.layout-tv button.lyricsLine.show-focus:focus {
         color: var(--pf-color-on-accent);
         background: var(--pf-color-accent);
         opacity: 1;

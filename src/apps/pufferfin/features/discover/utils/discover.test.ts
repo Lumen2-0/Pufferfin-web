@@ -38,13 +38,24 @@ describe('Pufferfin: Discover types', () => {
         }
     });
 
-    it('mixes disk and catalog in All', () => {
+    it('mixes what is being watched and the catalog in All', () => {
         expect(getDiscoverRows(DiscoverType.All)).toEqual(expect.arrayContaining([
             DiscoverRow.ContinueWatching,
             DiscoverRow.TrendingMovies,
             DiscoverRow.TrendingShows,
-            DiscoverRow.RecentlyAdded
+            DiscoverRow.AudiobookBestSellers
         ]));
+    });
+
+    it('is for discovering: no row lists what the library already holds', () => {
+        for (const type of DISCOVER_TYPES) {
+            expect(getDiscoverRows(type)).not.toContain('recentlyAdded');
+        }
+    });
+
+    it('discovers audiobooks and books in their catalogs, not in the library', () => {
+        expect(getDiscoverRows(DiscoverType.Audiobooks)).toEqual([ DiscoverRow.AudiobookBestSellers, DiscoverRow.AudiobookNewReleases ]);
+        expect(getDiscoverRows(DiscoverType.Books)).toEqual([ DiscoverRow.TrendingBooks ]);
     });
 
     it('keeps the film recommendations out of Series and the series rows out of Movies', () => {

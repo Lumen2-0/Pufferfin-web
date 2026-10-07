@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import CatalogCard from '../components/CatalogCard';
 import AudiobookSheet from '../features/audiobooks/components/AudiobookSheet';
+import BookSheet from '../features/books/components/BookSheet';
 import { isAsin } from '../features/audiobooks/utils/audiobooks';
 import Hero from '../components/Hero';
 import MediaRow from '../components/MediaRow';
@@ -215,6 +216,8 @@ export const Component = () => {
             return <CatalogTitle key={`${target.titleKind}-${target.tmdbId}`} kind={target.titleKind} tmdbId={target.tmdbId} />;
         case 'audiobook':
             return <AudiobookSheet key={target.asin} asin={target.asin} market={getMarketParam(searchParams)} />;
+        case 'book':
+            return <BookSheet key={`${target.provider}-${target.bookId}`} provider={target.provider} bookId={target.bookId} />;
         default:
             return (
                 <div className='pf-status' role='status'>

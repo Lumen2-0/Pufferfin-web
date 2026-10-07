@@ -8,6 +8,7 @@ import { isSearchable, normalizeQuery } from '../../search/utils/query';
 import { getCatalogListFailure } from '../utils/catalog';
 import {
     type CatalogAudiobookDetails,
+    type CatalogItem,
     CatalogItemKind,
     type CatalogListResponse,
     type CatalogSeasonDetails,
@@ -140,6 +141,54 @@ export const useAudiobookSearch = (query: string) => {
         enabled: !!api && !!user?.Id && isSearchable(keywords),
         // Results stay on screen while the next query loads, instead of flashing empty
         placeholderData: keepPreviousData
+    });
+};
+
+/** How the popular audiobooks are ranked by Audible. */
+export type AudiobookPopularSort = 'BestSellers' | 'NewReleases';
+
+/**
+ * Popular audiobooks of the configured Audible markets, in the preferred audio
+ * languages of the server, each marked on disk or missing.
+ */
+export const usePopularAudiobooks = (sort: AudiobookPopularSort) => {
+    const { api, user } = useApi();
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Catalog', 'PopularAudiobooks', sort, user?.Id ],
+        queryFn: async ({ signal }) => toItems(await getPufferfin<CatalogListResponse>(
+            api!,
+            '/Pufferfin/Catalog/Audiobooks/Popular',
+            { params: { sort, limit: ROW_LIMIT }, signal }
+        )),
+        enabled: !!api && !!user?.Id
+    });
+};
+
+/** Books to read trending this week, each marked on disk or missing. Empty when books are off. */
+export const useTrendingBooks = () => {
+    const { api, user } = useApi();
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Catalog', 'TrendingBooks', user?.Id ],
+        queryFn: async ({ signal }) => toItems(await getPufferfin<CatalogListResponse>(
+            api!,
+            '/Pufferfin/Catalog/Books/Trending',
+            { params: { limit: ROW_LIMIT }, signal }
+        )),
+        enabled: !!api && !!user?.Id
+    });
+};
+
+/** The sheet of a book to read, by its metadata provider and its id there. */
+export const useCatalogBook = (provider: string, bookId: string) => {
+    const { api, user } = useApi();
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Catalog', 'Book', provider, bookId, user?.Id ],
+        queryFn: ({ signal }) => getPufferfin<CatalogItem>(
+            api!,
+            `/Pufferfin/Catalog/Books/${encodeURIComponent(provider)}/${encodeURIComponent(bookId)}`,
+            { signal }
+        ),
+        enabled: !!api && !!user?.Id
     });
 };
 

@@ -16,14 +16,19 @@ import Clock from '../shell/Clock';
 import NowPlayingButton from '../shell/NowPlayingButton';
 import SyncPlayButton from '../shell/SyncPlayButton';
 
-// Quiet at rest, the focus affirms; the current screen gets a firmer outline and a bar under its label
-const getClassName = ({ isActive }: { isActive: boolean }) =>
-    classNames('pf-button', 'pf-button--quiet', 'pf-nav__link', { 'pf-button--selected': isActive });
+// A text tab: quiet at rest, the current screen gets a filled capsule and a heavier label
+const getTabClassName = ({ isActive }: { isActive: boolean }) =>
+    classNames('pf-nav__tab', { 'pf-nav__tab--current': isActive });
+
+// The menu entry sits with the small round actions at the end of the bar
+const getActionClassName = ({ isActive }: { isActive: boolean }) =>
+    classNames('pf-button', 'pf-button--quiet', 'pf-button--icon', 'pf-nav__link', { 'pf-button--selected': isActive });
 
 /**
  * The one top bar of the interface, on the Pufferfin screens and on the
- * upstream pages alike. The current screen gets a firmer outline, a bar under
- * its label and `aria-current`, so it never relies on color alone.
+ * upstream pages alike: the screens as text tabs in a capsule at the center,
+ * small round actions at the end. The current screen gets a filled capsule, a
+ * heavier label and `aria-current`, so it never relies on color alone.
  */
 const AppNav: FC = () => {
     const t = useTranslation();
@@ -33,32 +38,41 @@ const AppNav: FC = () => {
 
     return (
         <nav className='pf-nav' aria-label={t('NavLabel')} {...{ [FOCUS_GROUP_ATTRIBUTE]: true }}>
-            <NavLink to={getHomePath()} end className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
-                <span className='pf-button__icon' aria-hidden='true'><Explore /></span>
-                <span className='pf-button__label'>{t('NavDiscover')}</span>
-            </NavLink>
-            <NavLink to={getLibraryPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
-                <span className='pf-button__icon' aria-hidden='true'><VideoLibrary /></span>
-                <span className='pf-button__label'>{t('NavLibrary')}</span>
-            </NavLink>
-            <NavLink to={getSearchPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
-                <span className='pf-button__icon' aria-hidden='true'><Search /></span>
-                <span className='pf-button__label'>{t('NavSearch')}</span>
-            </NavLink>
-            {hasDownloads && (
-                <NavLink to={getDownloadsPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
-                    <span className='pf-button__icon' aria-hidden='true'><Download /></span>
-                    <span className='pf-button__label'>{t('NavDownloads')}</span>
+            <span className='pf-nav__start' />
+            {/* Text tabs; on a narrow screen the icon stands for the label, which stays the accessible name */}
+            <span className='pf-nav__tabs'>
+                <NavLink to={getHomePath()} end className={getTabClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+                    <span className='pf-nav__tab-icon' aria-hidden='true'><Explore /></span>
+                    <span className='pf-nav__tab-label'>{t('NavDiscover')}</span>
                 </NavLink>
-            )}
+                <NavLink to={getLibraryPath()} className={getTabClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+                    <span className='pf-nav__tab-icon' aria-hidden='true'><VideoLibrary /></span>
+                    <span className='pf-nav__tab-label'>{t('NavLibrary')}</span>
+                </NavLink>
+                <NavLink to={getSearchPath()} className={getTabClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+                    <span className='pf-nav__tab-icon' aria-hidden='true'><Search /></span>
+                    <span className='pf-nav__tab-label'>{t('NavSearch')}</span>
+                </NavLink>
+                {hasDownloads && (
+                    <NavLink to={getDownloadsPath()} className={getTabClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+                        <span className='pf-nav__tab-icon' aria-hidden='true'><Download /></span>
+                        <span className='pf-nav__tab-label'>{t('NavDownloads')}</span>
+                    </NavLink>
+                )}
+            </span>
             {/* The upstream header entries: player, SyncPlay, cast, then account, dashboard and the other libraries; the clock on TV */}
             <span className='pf-nav__end'>
                 <NowPlayingButton />
                 <SyncPlayButton />
                 <CastButton />
-                <NavLink to={getMenuPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
+                <NavLink
+                    to={getMenuPath()}
+                    className={getActionClassName}
+                    aria-label={t('NavMenu')}
+                    title={t('NavMenu')}
+                    {...{ [FOCUSABLE_ATTRIBUTE]: true }}
+                >
                     <span className='pf-button__icon' aria-hidden='true'><MenuIcon /></span>
-                    <span className='pf-button__label'>{t('NavMenu')}</span>
                 </NavLink>
                 <Clock />
             </span>

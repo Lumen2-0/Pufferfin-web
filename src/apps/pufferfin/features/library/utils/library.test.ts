@@ -2,7 +2,7 @@ import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-ite
 import { CollectionType } from '@jellyfin/sdk/lib/generated-client/models/collection-type';
 import { describe, expect, it } from 'vitest';
 
-import { getNextPageStart, getViewItemTypes, hasLatestRow } from './library';
+import { getNextPageStart, getViewItemTypes, hasLatestRow, isAudiobookEntry } from './library';
 
 const page = (startIndex: number, count: number, totalCount: number) => ({
     items: Array.from({ length: count }),
@@ -47,5 +47,12 @@ describe('Pufferfin: library helpers', () => {
 
     it('stops on an empty page even if the total says otherwise', () => {
         expect(getNextPageStart(page(60, 0, 150))).toBeUndefined();
+    });
+
+    it('plays a book from the books of a library: a file, or the folder of a book in parts', () => {
+        expect(isAudiobookEntry({ Type: BaseItemKind.AudioBook })).toBe(true);
+        expect(isAudiobookEntry({ Type: BaseItemKind.Folder })).toBe(true);
+        expect(isAudiobookEntry({ Type: BaseItemKind.Book })).toBe(false);
+        expect(isAudiobookEntry({ Type: BaseItemKind.Movie })).toBe(false);
     });
 });

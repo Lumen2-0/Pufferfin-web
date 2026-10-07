@@ -5,7 +5,8 @@ export enum RequestKind {
     Movie = 'Movie',
     Season = 'Season',
     Episode = 'Episode',
-    Audiobook = 'Audiobook'
+    Audiobook = 'Audiobook',
+    Ebook = 'Ebook'
 }
 
 /** Where a request stands. The usual path is Queued, Searching, Downloading, Importing, Available. */
@@ -60,6 +61,9 @@ export interface MediaRequest {
     TmdbId: number;
     /** Audible ASIN of an audiobook. */
     Asin?: string | null;
+    /** Metadata provider and id of a book to read. */
+    BookProvider?: string | null;
+    BookId?: string | null;
     SeasonNumber?: number | null;
     EpisodeNumber?: number | null;
     Title: string;
@@ -88,6 +92,9 @@ export interface CreateMediaRequest {
     /** Audible ASIN and market of an audiobook. */
     Asin?: string;
     Market?: string;
+    /** Metadata provider and id of a book to read. */
+    BookProvider?: string;
+    BookId?: string;
     SeasonNumber?: number;
     EpisodeNumber?: number;
     AirDate?: string;

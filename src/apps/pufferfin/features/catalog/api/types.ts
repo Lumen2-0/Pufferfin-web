@@ -5,7 +5,8 @@ export enum CatalogItemKind {
     Movie = 'Movie',
     Series = 'Series',
     Person = 'Person',
-    Audiobook = 'Audiobook'
+    Audiobook = 'Audiobook',
+    Book = 'Book'
 }
 
 /** Whether a catalog entry is in the local library. */
@@ -55,6 +56,9 @@ export interface CatalogItem {
     Market?: string | null;
     /** Several books of a series in one: shown next to the volumes, never their fallback. */
     IsCompleteEdition?: boolean;
+    /** Metadata provider of a book to read (for example `openlibrary`), and its id there. */
+    BookProvider?: string | null;
+    BookId?: string | null;
 }
 
 export interface CatalogListResponse {

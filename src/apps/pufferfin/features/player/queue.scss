@@ -85,8 +85,8 @@
         background: var(--pf-quiet-background);
     }
 
-    .paper-icon-button-light:focus:not(:disabled),
-    .paper-icon-button-light.show-focus:focus {
+    :root.layout-tv .paper-icon-button-light:focus:not(:disabled),
+    :root.layout-tv .paper-icon-button-light.show-focus:focus {
         color: var(--pf-color-on-accent);
         background: var(--pf-color-accent);
         outline: none;
@@ -130,7 +130,7 @@
         border-radius: 999px;
     }
 
-    .emby-collapsible-button:focus {
+    :root.layout-tv .emby-collapsible-button:focus {
         color: var(--pf-color-on-accent);
         background: var(--pf-color-accent);
         outline: none;
@@ -172,6 +172,10 @@
     .listItem.show-focus:focus {
         background: var(--pf-quiet-background-strong);
         outline: none;
+    }
+
+    :root.layout-tv .listItem:focus,
+    :root.layout-tv .listItem.show-focus:focus {
         box-shadow: inset 0 0 0 3px var(--pf-color-text);
     }
 

@@ -18,7 +18,8 @@ $skin: ':root.pf-form-skin';
     --pf-field-background: rgba(245, 242, 236, 0.07);
     --pf-field-background-focus: rgba(245, 242, 236, 0.12);
     --pf-field-radius: 12px;
-    --pf-field-ring: 0 0 0 2px var(--pf-color-background), 0 0 0 5px var(--pf-color-text);
+    // The ring of a field or a control: on a TV only (see the end of the sheet)
+    --pf-field-ring: none;
     --pf-form-width: 30rem;
     --jf-palette-background-default: #000;
     --jf-palette-background-defaultChannel: 0 0 0;
@@ -144,7 +145,7 @@ $skin: ':root.pf-form-skin';
     }
 
     // TV select: the fill already marks the focus, the ring makes it unmissable
-    .emby-select-tv-withcolor:focus {
+    :root.layout-tv .emby-select-tv-withcolor:focus {
         color: var(--pf-color-on-accent) !important;
         background: var(--pf-color-accent) !important;
         box-shadow: var(--pf-field-ring);
@@ -287,13 +288,13 @@ $skin: ':root.pf-form-skin';
         margin-top: 0.75em;
     }
 
-    .emby-button.raised:focus,
-    .emby-button.button-submit:focus,
-    .emby-button.submit:focus,
-    .emby-button.button-cancel:focus,
-    .emby-button.button-delete:focus,
-    .emby-button.button-alt:focus,
-    .emby-button.show-focus:focus {
+    :root.layout-tv .emby-button.raised:focus,
+    :root.layout-tv .emby-button.button-submit:focus,
+    :root.layout-tv .emby-button.submit:focus,
+    :root.layout-tv .emby-button.button-cancel:focus,
+    :root.layout-tv .emby-button.button-delete:focus,
+    :root.layout-tv .emby-button.button-alt:focus,
+    :root.layout-tv .emby-button.show-focus:focus {
         color: var(--pf-color-on-accent);
         background: var(--pf-color-accent);
         border-color: transparent;
@@ -307,9 +308,12 @@ $skin: ':root.pf-form-skin';
         border-radius: 999px;
 
         &:focus {
+            outline: none;
+        }
+
+        :root.layout-tv &:focus {
             color: var(--pf-color-on-accent);
             background: var(--pf-color-accent);
-            outline: none;
             box-shadow: var(--pf-field-ring);
         }
     }
@@ -325,9 +329,9 @@ $skin: ':root.pf-form-skin';
         border-color: transparent;
     }
 
-    .listItem-border:focus,
-    .listItem:focus,
-    .listItem.show-focus:focus {
+    :root.layout-tv .listItem-border:focus,
+    :root.layout-tv .listItem:focus,
+    :root.layout-tv .listItem.show-focus:focus {
         color: var(--pf-color-on-accent);
         background: var(--pf-color-accent);
         border-radius: 14px;
@@ -340,7 +344,7 @@ $skin: ':root.pf-form-skin';
         }
     }
 
-    .listItem-border:focus .listItem {
+    :root.layout-tv .listItem-border:focus .listItem {
         color: var(--pf-color-on-accent);
         background: none;
     }
@@ -423,8 +427,8 @@ $skin: ':root.pf-form-skin';
         box-shadow: var(--pf-field-ring);
     }
 
-    .MuiButtonBase-root.Mui-focusVisible.MuiButton-root,
-    .MuiButtonBase-root.MuiButton-root:focus-visible {
+    :root.layout-tv .MuiButtonBase-root.Mui-focusVisible.MuiButton-root,
+    :root.layout-tv .MuiButtonBase-root.MuiButton-root:focus-visible {
         color: var(--pf-color-on-accent);
         background: var(--pf-color-accent);
         box-shadow: var(--pf-focus-ring);
@@ -651,4 +655,9 @@ $skin: ':root.pf-form-skin';
             transform: none !important;
         }
     }
+}
+
+// On a TV the fields and controls get their ring: the focus must be obvious from a couch
+#{$skin}.layout-tv {
+    --pf-field-ring: 0 0 0 2px var(--pf-color-background), 0 0 0 5px var(--pf-color-text);
 }

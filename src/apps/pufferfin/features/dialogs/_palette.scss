@@ -52,15 +52,19 @@
 
     &:focus,
     &.show-focus:focus {
+        outline: none;
+    }
+
+    &:hover:not(:disabled) {
+        background: var(--pf-quiet-background);
+    }
+
+    // On a TV the focus fill wins over the hover tint
+    :root.layout-tv &:focus,
+    :root.layout-tv &.show-focus:focus {
         color: var(--pf-color-on-accent);
         background: var(--pf-color-accent);
         border-color: transparent;
-        outline: none;
         box-shadow: var(--pf-focus-ring);
-    }
-
-    // The focus fill wins over the hover tint
-    &:hover:not(:disabled, :focus) {
-        background: var(--pf-quiet-background);
     }
 }

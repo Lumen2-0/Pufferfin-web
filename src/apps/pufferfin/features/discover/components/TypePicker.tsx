@@ -79,7 +79,7 @@ const TypePicker: FC<TypePickerProps> = ({ value, onChange }) => {
             <button
                 ref={buttonRef}
                 type='button'
-                className='pf-button pf-button--quiet'
+                className='pf-button pf-button--quiet pf-discover__toggle'
                 aria-haspopup='listbox'
                 aria-expanded={isOpen}
                 aria-controls={isOpen ? listId : undefined}

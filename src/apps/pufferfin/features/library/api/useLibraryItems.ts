@@ -2,7 +2,6 @@ import { BaseItemKind as BaseItemKindValue, type BaseItemKind } from '@jellyfin/
 import { ImageType } from '@jellyfin/sdk/lib/generated-client/models/image-type';
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
 import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
-import { MediaType } from '@jellyfin/sdk/lib/generated-client/models/media-type';
 import { SortOrder } from '@jellyfin/sdk/lib/generated-client/models/sort-order';
 import { getGenreApi } from '@jellyfin/sdk/lib/utils/api/genre-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
@@ -13,7 +12,22 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
 
+import { getPufferfin } from '../../../api/client';
+
 import { getNextPageStart, LIBRARY_PAGE_SIZE } from '../utils/library';
+
+/** The books of a library, one entry per book (see `PufferfinBooksController` on the server). */
+const BOOKS_PATH = '/Pufferfin/Library/Books';
+
+interface BooksPage {
+    Items?: ItemDto[]
+    TotalRecordCount?: number
+}
+
+/** The plain listing of a library of books, without a genre, a studio or a sort: that one comes book by book. */
+const isBookListing = (itemTypes: BaseItemKind[] | null, filter: LibraryItemsFilter) =>
+    !!itemTypes?.includes(BaseItemKindValue.AudioBook)
+    && !filter.genreId && !filter.studioId && !filter.sortBy && !filter.isServerWide;
 
 const ROW_LIMIT = 20;
 const FIELDS = [ ItemFields.Overview, ItemFields.PrimaryImageAspectRatio ];
@@ -42,6 +56,19 @@ export const useLibraryItems = (
     return useInfiniteQuery({
         queryKey: [ 'Pufferfin', 'Library', parentId, itemTypes, filter, user?.Id ],
         queryFn: async ({ pageParam, signal }) => {
+            // A library of books lists one entry per book: the server groups the files of a book told in parts
+            if (isBookListing(itemTypes, filter)) {
+                const books = await getPufferfin<BooksPage>(api!, BOOKS_PATH, {
+                    params: { parentId, startIndex: pageParam, limit: LIBRARY_PAGE_SIZE },
+                    signal
+                });
+                return {
+                    items: books.Items ?? [],
+                    startIndex: pageParam,
+                    totalCount: books.TotalRecordCount ?? 0
+                };
+            }
+
             const response = await getLibraryApi(api!).getItems({
                 userId: user!.Id!,
                 parentId: filter.isServerWide ? undefined : parentId,
@@ -90,22 +117,17 @@ export const useLatestInLibrary = (parentId: string) => {
     });
 };
 
-/** Music and audiobooks to pick up where the user stopped. */
+/** Audiobooks to pick up where the user stopped, one entry per book, last listened first. */
 export const useResumeAudioItems = () => {
     const { api, user } = useApi();
     return useQuery({
         queryKey: [ 'Pufferfin', 'Library', 'ResumeAudio', user?.Id ],
         queryFn: async ({ signal }) => {
-            const response = await getLibraryApi(api!).getResumeItems({
-                userId: user!.Id!,
-                limit: ROW_LIMIT,
-                mediaTypes: [ MediaType.Audio ],
-                fields: FIELDS,
-                enableImageTypes: IMAGE_TYPES,
-                imageTypeLimit: 1,
-                enableTotalRecordCount: false
-            }, { signal });
-            return (response.data.Items ?? []) as ItemDto[];
+            const books = await getPufferfin<BooksPage>(api!, BOOKS_PATH, {
+                params: { inProgress: true, limit: ROW_LIMIT },
+                signal
+            });
+            return books.Items ?? [];
         },
         enabled: !!api && !!user?.Id
     });
