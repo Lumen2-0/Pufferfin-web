@@ -57,7 +57,7 @@ export const useLiveTvOnNow = () => {
             }, { signal });
             return (response.data.Items ?? []) as ItemDto[];
         },
-        enabled: !!api && !!user?.Id
+        enabled: !!api && !!user?.Id && !!user.Policy?.EnableLiveTvAccess
     });
 };
 
@@ -77,6 +77,6 @@ export const useRecordings = () => {
             }, { signal });
             return (response.data.Items ?? []) as ItemDto[];
         },
-        enabled: !!api && !!user?.Id
+        enabled: !!api && !!user?.Id && !!user.Policy?.EnableLiveTvAccess
     });
 };

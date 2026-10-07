@@ -35,7 +35,7 @@ const AppNav: FC = () => {
         <nav className='pf-nav' aria-label={t('NavLabel')} {...{ [FOCUS_GROUP_ATTRIBUTE]: true }}>
             <NavLink to={getHomePath()} end className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
                 <span className='pf-button__icon' aria-hidden='true'><Explore /></span>
-                <span className='pf-button__label'>{t('NavHome')}</span>
+                <span className='pf-button__label'>{t('NavDiscover')}</span>
             </NavLink>
             <NavLink to={getLibraryPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
                 <span className='pf-button__icon' aria-hidden='true'><VideoLibrary /></span>

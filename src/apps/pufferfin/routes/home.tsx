@@ -206,10 +206,17 @@ const AudiobooksRow: FC = () => {
     );
 };
 
+/** Live TV rows only exist for a user allowed to watch live TV: no row, rather than a row in error. */
+const useHasLiveTvAccess = () => {
+    const { user } = useApi();
+    return !!user?.Policy?.EnableLiveTvAccess;
+};
+
 const LiveTvOnNowRow: FC = () => {
     const t = useTranslation();
     const { renderProgram } = useCardRenderers();
     const programs = useLiveTvOnNow();
+    if (!useHasLiveTvAccess()) return null;
     return (
         <MediaRow
             title={t('RowLiveTvOnNow')}
@@ -227,6 +234,7 @@ const RecordingsRow: FC = () => {
     const t = useTranslation();
     const { renderCard } = useCardRenderers();
     const recordings = useRecordings();
+    if (!useHasLiveTvAccess()) return null;
     return (
         <MediaRow
             title={t('RowRecordings')}

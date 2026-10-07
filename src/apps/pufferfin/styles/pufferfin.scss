@@ -504,10 +504,12 @@
     position: relative;
 }
 
+// Its top padding lies under the top bar: only the picker itself takes clicks
 .pf-discover__header {
     position: relative;
     z-index: 3;
     padding: 6rem var(--pf-gutter) 0;
+    pointer-events: none;
 }
 
 .pf-hero + .pf-discover__header {
@@ -519,6 +521,8 @@
 
 .pf-discover__picker {
     position: relative;
+    display: inline-block;
+    pointer-events: auto;
 }
 
 .pf-discover__chevron {
