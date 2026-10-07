@@ -28,6 +28,12 @@
     background: #000;
     backdrop-filter: none;
 
+    // About the height of the upstream button row, which the legacy pages pad for
+    .pf-shell .pf-nav {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+
     .headerTop {
         display: none;
     }

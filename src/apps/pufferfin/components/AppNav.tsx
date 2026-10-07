@@ -12,6 +12,8 @@ import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { getDownloadsPath, getHomePath, getLibraryPath, getMenuPath, getSearchPath } from '../routes/paths';
 import CastButton from '../shell/CastButton';
+import Clock from '../shell/Clock';
+import NowPlayingButton from '../shell/NowPlayingButton';
 import SyncPlayButton from '../shell/SyncPlayButton';
 
 // Quiet at rest, the focus affirms; the current screen gets a firmer outline and a bar under its label
@@ -49,14 +51,16 @@ const AppNav: FC = () => {
                     <span className='pf-button__label'>{t('NavDownloads')}</span>
                 </NavLink>
             )}
-            {/* The upstream header entries: SyncPlay, cast, then account, dashboard and the other libraries */}
+            {/* The upstream header entries: player, SyncPlay, cast, then account, dashboard and the other libraries; the clock on TV */}
             <span className='pf-nav__end'>
+                <NowPlayingButton />
                 <SyncPlayButton />
                 <CastButton />
                 <NavLink to={getMenuPath()} className={getClassName} {...{ [FOCUSABLE_ATTRIBUTE]: true }}>
                     <span className='pf-button__icon' aria-hidden='true'><MenuIcon /></span>
                     <span className='pf-button__label'>{t('NavMenu')}</span>
                 </NavLink>
+                <Clock />
             </span>
         </nav>
     );

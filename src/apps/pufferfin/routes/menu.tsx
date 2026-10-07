@@ -113,7 +113,7 @@ export const Component = () => {
                     </li>
                 ))}
                 {menuLinks?.map(link => (
-                    <li key={link.url} className='pf-menu__item'>
+                    <li key={`${link.name}|${link.url}`} className='pf-menu__item'>
                         <a
                             href={link.url}
                             target='_blank'

@@ -844,6 +844,20 @@
     }
 }
 
+// TV layout: the time of day, as the upstream header showed it
+.pf-nav__clock {
+    margin-left: 1.25rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    font-variant-numeric: tabular-nums;
+
+    [dir='rtl'] & {
+        margin-right: 1.25rem;
+        margin-left: 0;
+    }
+}
+
 // Narrow screens: icons only, the label stays the accessible name
 @media (max-width: 50em) {
     .pf-nav .pf-nav__link {
