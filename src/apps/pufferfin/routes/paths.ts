@@ -48,6 +48,9 @@ export function parseCatalogTitleKind(segment: string | undefined): CatalogTitle
 /** Library tab: only the titles on disk. */
 export const getLibraryPath = () => `/${PUFFERFIN_APP_PATH}/library`;
 
+/** One library of the server (Movies, Shows, Music...), its titles on disk. */
+export const getLibraryViewPath = (viewId: string) => `${getLibraryPath()}/${viewId}`;
+
 /** Downloads panel: every request on its way, then the latest finished ones. */
 export const getDownloadsPath = () => `/${PUFFERFIN_APP_PATH}/downloads`;
 

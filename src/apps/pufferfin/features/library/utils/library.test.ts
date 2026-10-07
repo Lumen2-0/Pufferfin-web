@@ -1,6 +1,8 @@
+import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
+import { CollectionType } from '@jellyfin/sdk/lib/generated-client/models/collection-type';
 import { describe, expect, it } from 'vitest';
 
-import { getNextPageStart, parseLibraryKind } from './library';
+import { getNextPageStart, getViewItemTypes, hasLatestRow } from './library';
 
 const page = (startIndex: number, count: number, totalCount: number) => ({
     items: Array.from({ length: count }),
@@ -9,11 +11,32 @@ const page = (startIndex: number, count: number, totalCount: number) => ({
 });
 
 describe('Pufferfin: library helpers', () => {
-    it('reads the shelf from the URL, movies by default', () => {
-        expect(parseLibraryKind('shows')).toBe('shows');
-        expect(parseLibraryKind('movies')).toBe('movies');
-        expect(parseLibraryKind('audiobooks')).toBe('movies');
-        expect(parseLibraryKind(null)).toBe('movies');
+    it('lists what each kind of library holds', () => {
+        expect(getViewItemTypes(CollectionType.Movies)).toEqual([ BaseItemKind.Movie ]);
+        expect(getViewItemTypes(CollectionType.Tvshows)).toEqual([ BaseItemKind.Series ]);
+        expect(getViewItemTypes(CollectionType.Music)).toEqual([ BaseItemKind.MusicAlbum ]);
+        expect(getViewItemTypes(CollectionType.Books)).toEqual([ BaseItemKind.Book, BaseItemKind.AudioBook ]);
+    });
+
+    it('lists films, series and videos for a mixed library', () => {
+        expect(getViewItemTypes(undefined)).toEqual(expect.arrayContaining([ BaseItemKind.Movie, BaseItemKind.Series, BaseItemKind.Video ]));
+    });
+
+    it('leaves live TV to its upstream page', () => {
+        expect(getViewItemTypes(CollectionType.Livetv)).toBeNull();
+    });
+
+    it('gives a Recently added row to the libraries the upstream home gives one', () => {
+        expect(hasLatestRow({ Id: 'a', CollectionType: CollectionType.Movies })).toBe(true);
+        expect(hasLatestRow({ Id: 'a', CollectionType: CollectionType.Livetv })).toBe(false);
+        expect(hasLatestRow({ Id: 'a', CollectionType: CollectionType.Boxsets })).toBe(false);
+        expect(hasLatestRow({ Id: 'a', CollectionType: CollectionType.Playlists })).toBe(false);
+        expect(hasLatestRow({ CollectionType: CollectionType.Movies })).toBe(false);
+    });
+
+    it('skips the libraries the user excluded from their home', () => {
+        expect(hasLatestRow({ Id: 'a', CollectionType: CollectionType.Movies }, [ 'a' ])).toBe(false);
+        expect(hasLatestRow({ Id: 'b', CollectionType: CollectionType.Movies }, [ 'a' ])).toBe(true);
     });
 
     it('asks for the next page until every title is loaded', () => {

@@ -5,7 +5,8 @@ import { appRouter } from 'components/router/appRouter';
 import type { ItemDto } from 'types/base/models/item-dto';
 import { ItemKind } from 'types/base/models/item-kind';
 
-import { getItemPath, getPersonPath } from '../routes/paths';
+import { getViewItemTypes } from '../features/library/utils/library';
+import { getItemPath, getLibraryViewPath, getPersonPath } from '../routes/paths';
 
 /**
  * Id of the Pufferfin detail page that shows this item: the item itself for a
@@ -45,5 +46,19 @@ export function useOpenPerson() {
 
     return useCallback((personId: string | null | undefined) => {
         if (personId) navigate(getPersonPath(personId));
+    }, [ navigate ]);
+}
+
+/** Opens a library of the server: its Pufferfin page, or the upstream one for the kinds Pufferfin has no page for yet. */
+export function useOpenLibrary() {
+    const navigate = useNavigate();
+
+    return useCallback((view: ItemDto) => {
+        if (!view.Id) return;
+        if (getViewItemTypes(view.CollectionType) === null) {
+            navigate(appRouter.getRouteUrl(view, { context: view.CollectionType }).substring(1));
+        } else {
+            navigate(getLibraryViewPath(view.Id));
+        }
     }, [ navigate ]);
 }
