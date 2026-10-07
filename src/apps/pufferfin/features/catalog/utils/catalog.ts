@@ -24,9 +24,10 @@ export function isMissing(item: { Availability: CatalogAvailability }) {
 }
 
 /**
- * Screen that shows a catalog entry: the library detail page when it is on
- * disk, the catalog sheet when it is missing. Undefined for the kinds
- * Pufferfin has no catalog screen for yet.
+ * Screen that shows a catalog entry: always the one title sheet. By library id
+ * when the server already names the local item, by TMDB id otherwise; on the
+ * TMDB address the sheet asks the server whether the title is on disk, and
+ * shows Play or Download. Undefined for the kinds Pufferfin has no screen for yet.
  */
 export function getCatalogItemPath(item: CatalogItem): string | undefined {
     // An audiobook has one sheet, on disk or not: Listen or Download is there

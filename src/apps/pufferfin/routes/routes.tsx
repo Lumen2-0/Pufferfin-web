@@ -4,7 +4,7 @@ import { Navigate, type RouteObject } from 'react-router-dom';
 import ConnectionRequired from 'components/ConnectionRequired';
 import ErrorBoundary from 'components/router/ErrorBoundary';
 
-import { getHomePath, HOME_APP_PATH, PUFFERFIN_APP_PATH } from './paths';
+import { getHomePath, HOME_APP_PATH, LEGACY_ITEM_ROUTE, PUFFERFIN_APP_PATH } from './paths';
 
 /**
  * The Pufferfin home is mounted on `home`: a top level route outranks the
@@ -32,7 +32,8 @@ export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
                                 element: <Navigate replace to={getHomePath()} />
                             },
                             {
-                                path: 'item/:itemId',
+                                // Former address of the sheet of a title on disk: redirects to the one title sheet
+                                path: LEGACY_ITEM_ROUTE,
                                 lazy: () => import('./item')
                             },
                             {

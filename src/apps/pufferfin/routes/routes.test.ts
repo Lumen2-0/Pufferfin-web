@@ -1,7 +1,8 @@
 import { matchRoutes, type RouteObject } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
-import { isPufferfinPath } from './paths';
+import { getCatalogTitlePath, getItemPath, isPufferfinPath, parseSheetTarget } from './paths';
+import { CatalogItemKind } from '../features/catalog/api/types';
 import { PUFFERFIN_APP_ROUTES } from './routes';
 
 // The route guard and error page pull the whole legacy app; only the route table is under test
@@ -54,5 +55,29 @@ describe('Pufferfin: routes', () => {
         expect(isPufferfinPath('/pufferfin/library')).toBe(true);
         expect(isPufferfinPath('/homevideos')).toBe(false);
         expect(isPufferfinPath('/movies')).toBe(false);
+    });
+
+    it('serves one title sheet route for library ids and TMDB ids alike', () => {
+        const byLibraryId = matchLeaf(PUFFERFIN_APP_ROUTES, getItemPath('abc'));
+        const byTmdbId = matchLeaf(PUFFERFIN_APP_ROUTES, getCatalogTitlePath(CatalogItemKind.Movie, 603));
+        expect(byLibraryId).toBeDefined();
+        expect(byLibraryId).toBe(byTmdbId);
+    });
+
+    it('keeps the former sheet address, which only redirects', () => {
+        const legacy = matchLeaf(PUFFERFIN_APP_ROUTES, '/pufferfin/item/abc');
+        expect(legacy?.lazy).toBeDefined();
+        expect(legacy).not.toBe(matchLeaf(PUFFERFIN_APP_ROUTES, getItemPath('abc')));
+    });
+
+    it('reads what a title sheet address points to', () => {
+        const isAsin = (value: string) => /^[A-Z0-9]{10}$/.test(value);
+        expect(parseSheetTarget('item', 'abc', isAsin)).toEqual({ kind: 'item', itemId: 'abc' });
+        expect(parseSheetTarget('movie', '603', isAsin)).toEqual({ kind: 'catalog', titleKind: CatalogItemKind.Movie, tmdbId: 603 });
+        expect(parseSheetTarget('series', '1399', isAsin)).toEqual({ kind: 'catalog', titleKind: CatalogItemKind.Series, tmdbId: 1399 });
+        expect(parseSheetTarget('audiobook', 'B0036NAKL0', isAsin)).toEqual({ kind: 'audiobook', asin: 'B0036NAKL0' });
+        expect(parseSheetTarget('movie', 'abc', isAsin)).toBeUndefined();
+        expect(parseSheetTarget('unknown', '1', isAsin)).toBeUndefined();
+        expect(parseSheetTarget('audiobook', 'nope', isAsin)).toBeUndefined();
     });
 });
