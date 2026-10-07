@@ -8,6 +8,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { appRouter } from 'components/router/appRouter';
 import { useUserViews } from 'hooks/api/useUserViews';
 import { useApi } from 'hooks/useApi';
+import { toLocaleDateString } from 'scripts/datetime';
 import type { ItemDto } from 'types/base/models/item-dto';
 
 import ChoicePicker from '../components/ChoicePicker';
@@ -121,10 +122,15 @@ const SuggestionsTab: FC<TabProps> = ({ view }) => {
     );
 };
 
-/** Episodes airing soon. They are not on disk yet: plain tiles, with their air date in words. */
+/**
+ * Episodes airing soon, with their air date in words. They are not on disk
+ * yet: each tile opens the page of its series, and is a focus stop so the
+ * whole list stays reachable with the arrow keys.
+ */
 const UpcomingTab: FC<TabProps> = ({ view }) => {
     const t = useTranslation();
     const { api } = useApi();
+    const openItem = useOpenItem();
     const upcoming = useUpcomingEpisodes(view.Id ?? undefined);
 
     if (upcoming.isError) {
@@ -142,7 +148,8 @@ const UpcomingTab: FC<TabProps> = ({ view }) => {
         <ul className='pf-grid'>
             {upcoming.data.map(item => {
                 const numbers = getEpisodeNumbers(item);
-                const date = item.PremiereDate ? new Date(item.PremiereDate).toLocaleDateString() : undefined;
+                // In the language of the interface; air dates are days, stored at midnight UTC
+                const date = item.PremiereDate ? toLocaleDateString(new Date(item.PremiereDate), { timeZone: 'UTC' }) : undefined;
                 const subtitle = [
                     numbers ? t('EpisodeNumber', numbers[0], numbers[1]) : undefined,
                     date ? t('UpcomingOn', date) : undefined
@@ -155,6 +162,7 @@ const UpcomingTab: FC<TabProps> = ({ view }) => {
                             imageUrl={api ? getCardImageUrl(api, item, 'portrait') : undefined}
                             shape='portrait'
                             value={item}
+                            onSelect={openItem}
                         />
                     </li>
                 );
