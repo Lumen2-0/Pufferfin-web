@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CatalogAvailability, CatalogItemKind, type CatalogTitleDetails } from '../features/catalog/api/types';
 import { getCatalogItemPath } from '../features/catalog/utils/catalog';
 import { getItemPath } from './paths';
+// Imported once with the file: a cold import of the page inside the first test would eat its time limit
+import { Component } from './title';
 
 // Each branch of the sheet is replaced by its main button: what is under test is which one the same route shows
 vi.mock('./item', () => ({ ItemDetails: ({ itemId }: { itemId: string }) => <button type='button' data-item={itemId}>Play</button> }));
@@ -42,7 +44,6 @@ describe('Pufferfin: the one title sheet', () => {
     let root: Root;
 
     const render = async (path: string) => {
-        const { Component } = await import('./title');
         const router = createMemoryRouter([ { path: '/pufferfin/title/:kind/:id', Component } ], { initialEntries: [ path ] });
         act(() => root.render(<RouterProvider router={router} />));
     };
