@@ -197,12 +197,6 @@ $error-text: #e57373;
         background-color: #000;
     }
 
-    // The upstream app icon, at the top of the side navigation and of the metadata editor, is blue: shown in grey
-    .MuiDrawer-paper .MuiListItemIcon-root img,
-    .MuiAppBar-root .MuiButton-root img {
-        filter: grayscale(1);
-    }
-
     // Icons in list avatars (tasks, activity) stay readable: a hairline circle instead of a filled one
     .MuiListItemAvatar-root .MuiAvatar-root {
         color: $text;

@@ -1,4 +1,5 @@
-import icon from '@jellyfin/ux-web/icon-transparent.png';
+// PUFFERFIN: the Pufferfin logo, white with its eye and smile cut out
+import icon from 'apps/pufferfin/assets/logo/pufferfin-logo-dark.svg';
 
 import { PluginType } from 'constants/pluginType';
 import { randomInt } from 'utils/number';

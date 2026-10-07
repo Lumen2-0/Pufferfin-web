@@ -1,4 +1,5 @@
 {
+    "ProductName": "Pufferfin",
     "AdminSectionTitle": "Pufferfin",
     "AdminOverview": "Vue d'ensemble",
     "AdminOverviewIntro": "Pufferfin pilote vos catalogues, vos services de téléchargement et la politique de partage. Tout se configure ici ; les variables d'environnement ne fournissent que les valeurs initiales.",

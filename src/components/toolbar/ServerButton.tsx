@@ -1,9 +1,11 @@
-import icon from '@jellyfin/ux-web/icon-transparent.png';
 import Button from '@mui/material/Button/Button';
 import React, { FC } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useSystemInfo } from 'hooks/useSystemInfo';
+// PUFFERFIN: the Pufferfin logo and name in place of the Jellyfin ones
+import PufferfinLogo from 'apps/pufferfin/components/PufferfinLogo';
+import { translate } from 'apps/pufferfin/i18n';
 
 const ServerButton: FC = () => {
     const {
@@ -17,20 +19,12 @@ const ServerButton: FC = () => {
             size='large'
             color='inherit'
             startIcon={
-                <img
-                    src={icon}
-                    alt=''
-                    aria-hidden
-                    style={{
-                        maxHeight: '1.25em',
-                        maxWidth: '1.25em'
-                    }}
-                />
+                <PufferfinLogo decorative style={{ fontSize: '1.25em' }} />
             }
             component={Link}
             to='/'
         >
-            {isPending ? '' : (systemInfo?.ServerName || 'Jellyfin')}
+            {isPending ? '' : (systemInfo?.ServerName || translate('ProductName'))}
         </Button>
     );
 };
