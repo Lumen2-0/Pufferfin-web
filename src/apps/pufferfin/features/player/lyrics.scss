@@ -1,0 +1,60 @@
+// Pufferfin style on the upstream lyrics. The page keeps its logic (timed
+// lines, auto scroll, a line that seeks on click); only its look changes. Type
+// carries everything on a black page: the current line in full white, the
+// others dimmed. A line that seeks is a button: quiet at rest, and on focus a
+// warm white pill with black text, readable from a couch.
+
+@use '../dialogs/palette' as *;
+
+.pf-player-skin #lyricPage {
+    @include pf-overlay-palette;
+
+    color: var(--pf-color-text);
+    background: var(--pf-color-background);
+
+    .lyricsContainer {
+        gap: 0.2em;
+        padding: 0 var(--pf-gutter);
+    }
+
+    .lyricsLine {
+        padding: 0.15em 0.6em;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        line-height: 1.25;
+        text-align: start;
+        border-radius: 999px;
+    }
+
+    // Lines are buttons when they seek: no upstream button chrome
+    button.lyricsLine {
+        font: inherit;
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: inherit;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+    }
+
+    button.lyricsLine:hover {
+        background: var(--pf-quiet-background);
+    }
+
+    button.lyricsLine:focus,
+    button.lyricsLine.show-focus:focus {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        opacity: 1;
+        outline: none;
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .futureLyric {
+        opacity: 0.35;
+    }
+
+    .pastLyric {
+        opacity: 0.55;
+    }
+}

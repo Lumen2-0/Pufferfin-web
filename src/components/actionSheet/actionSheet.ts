@@ -160,7 +160,8 @@ export function show(options: Options) {
         dialogOptions.exitAnimation = options.exitAnimation;
         dialogOptions.entryAnimationDuration = options.entryAnimationDuration || 140;
         dialogOptions.exitAnimationDuration = options.exitAnimationDuration || 100;
-        dialogOptions.autoFocus = false;
+        // PUFFERFIN: the focus enters the sheet in every layout, so a keyboard or a remote never loses it behind the sheet
+        dialogOptions.autoFocus = true;
     }
 
     const dlg = dialogHelper.createDialog(dialogOptions);
@@ -255,7 +256,8 @@ export function show(options: Options) {
             continue;
         }
 
-        const autoFocus = item.selected && layoutManager.tv ? ' autoFocus' : '';
+        // PUFFERFIN: focus lands on the current choice in every layout, not only on TV
+        const autoFocus = item.selected ? ' autoFocus' : '';
 
         // Check for null in case int 0 was passed in
         const optionId = item.id == null || item.id === '' ? item.value : item.id;

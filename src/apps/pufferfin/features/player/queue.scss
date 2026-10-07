@@ -1,0 +1,209 @@
+// Pufferfin style on the upstream queue (now playing and its playlist). The
+// page keeps its logic: transport, tracks, subtitles, repeat, shuffle, the
+// remote control panel and the reorderable playlist; only its look changes.
+// Black page, the artwork as the one point of emphasis, round buttons quiet at
+// rest and affirmed by the focus, no blue.
+
+@use '../dialogs/palette' as *;
+
+.pf-player-skin #nowPlayingPage {
+    @include pf-overlay-palette;
+
+    color: var(--pf-color-text);
+    background: var(--pf-color-background);
+
+    .nowPlayingPageImage {
+        border-radius: var(--pf-radius-card);
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    }
+
+    // A title without artwork gets a warm dark tile, not one of the theme's blue placeholders
+    .nowPlayingPageImageContainerNoAlbum .cardImageContainer,
+    .listItemImage.cardImageContainer {
+        color: var(--pf-color-text-secondary);
+        background-color: var(--pf-color-surface);
+        border-radius: var(--pf-radius-card);
+    }
+
+    .nowPlayingPageTitle {
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    .nowPlayingAlbum,
+    .nowPlayingArtist,
+    .positionTime,
+    .runtime {
+        color: var(--pf-color-text-secondary);
+    }
+
+    // Timeline: warm white instead of the theme accent
+
+    .mdl-slider {
+        color: var(--pf-color-accent);
+    }
+
+    .mdl-slider-background-lower {
+        background-color: var(--pf-color-accent);
+    }
+
+    .mdl-slider::-webkit-slider-thumb {
+        background: var(--pf-color-accent);
+    }
+
+    .mdl-slider::-moz-range-thumb {
+        background: var(--pf-color-accent);
+    }
+
+    .mdl-slider:focus {
+        outline: none;
+    }
+
+    .mdl-slider:focus::-webkit-slider-thumb {
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .mdl-slider:focus::-moz-range-thumb {
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    // Transport and secondary buttons: round, the main one solid
+
+    .paper-icon-button-light {
+        margin: 0 0.2em;
+        color: var(--pf-color-text);
+        background: transparent;
+        border-radius: 50%;
+        transition:
+            transform var(--pf-duration) var(--pf-ease),
+            box-shadow var(--pf-duration) var(--pf-ease);
+    }
+
+    .paper-icon-button-light:hover:not(:disabled),
+    .paper-icon-button-light:active:not(:disabled) {
+        color: var(--pf-color-text);
+        background: var(--pf-quiet-background);
+    }
+
+    .paper-icon-button-light:focus:not(:disabled),
+    .paper-icon-button-light.show-focus:focus {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        outline: none;
+        transform: scale(var(--pf-focus-scale));
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    // Repeat and shuffle say they are on with a dot under the icon, not only a hue
+    .paper-icon-button-light.buttonActive {
+        position: relative;
+    }
+
+    .paper-icon-button-light.buttonActive::after {
+        position: absolute;
+        bottom: 0.15em;
+        left: 50%;
+        width: 0.3em;
+        height: 0.3em;
+        content: '';
+        background: currentcolor;
+        border-radius: 50%;
+        transform: translateX(-50%);
+    }
+
+    .nowPlayingInfoButtons .btnPlayPause {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+    }
+
+    // Remote control panel (navigation arrows, messages): quiet round buttons
+
+    .button-submit {
+        color: var(--pf-color-text);
+        background: transparent;
+        border: 1px solid var(--pf-hairline);
+    }
+
+    .emby-collapsible-button {
+        color: var(--pf-color-text);
+        background: transparent;
+        border-radius: 999px;
+    }
+
+    .emby-collapsible-button:focus {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        outline: none;
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .emby-button.raised {
+        @include pf-round-button;
+    }
+
+    .emby-input:focus {
+        border-color: var(--pf-color-text);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--pf-color-background), 0 0 0 5px var(--pf-color-text);
+    }
+
+    // Playlist: rows carried by their type, no frame; the focused row gets the
+    // warm ring drawn inside, so the scrolling list never clips it
+
+    .playlistSectionButton {
+        color: var(--pf-color-text);
+        background: var(--pf-color-background);
+    }
+
+    .nowPlayingPlaylist {
+        background: none;
+    }
+
+    .listItem {
+        border-radius: 14px;
+        border-color: transparent;
+    }
+
+    .listItem:hover {
+        background: var(--pf-quiet-background);
+    }
+
+    .listItem:focus,
+    .listItem.show-focus:focus {
+        background: var(--pf-quiet-background-strong);
+        outline: none;
+        box-shadow: inset 0 0 0 3px var(--pf-color-text);
+    }
+
+    // A row plays its track: a keyboard target outside the TV layout too, with the same inner ring
+    .listItemBody[role='button'] {
+        border-radius: 10px;
+        cursor: pointer;
+    }
+
+    .listItemBody[role='button']:focus-visible {
+        background: var(--pf-quiet-background-strong);
+        outline: none;
+        box-shadow: inset 0 0 0 3px var(--pf-color-text);
+    }
+
+    .listItemImage {
+        border-radius: 8px;
+    }
+
+    .listItem .secondary {
+        color: var(--pf-color-text-secondary);
+    }
+
+    // The item now playing reads by its weight and its animated indicator, not by a hue
+    .listItem:has(.playlistIndexIndicatorImage) .listItemBodyText:first-child {
+        font-weight: 700;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-player-skin #nowPlayingPage {
+        --pf-duration: 0ms;
+        --pf-focus-scale: 1;
+    }
+}

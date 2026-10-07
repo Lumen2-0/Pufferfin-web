@@ -1,12 +1,22 @@
-// Pufferfin skin for the upstream video player, active only while the
-// document element carries .pf-player-skin (playback started from Pufferfin).
+// Pufferfin skin for the upstream video player and its overlays (subtitle
+// offset, playback stats, up next). The document element always carries
+// .pf-player-skin, so every playback gets it, whatever screen started it.
 // Full width, black veils, round glass buttons, no blue: the controls and
 // their logic stay upstream, only their look changes here.
 
 @use '../../styles/tokens' as *;
+@use '../dialogs/palette' as *;
 
 .pf-player-skin {
     @include pf-tokens;
+
+    // The player redefines the theme palette, so no upstream accent shows through
+    #videoOsdPage,
+    .upNextDialog,
+    .subtitleSync,
+    .playerStats {
+        @include pf-overlay-palette;
+    }
 
     // Black veils under the controls instead of the upstream grey ones
 
@@ -117,6 +127,97 @@
         color: var(--pf-color-text);
         background: var(--pf-glass-background-strong);
         box-shadow: var(--pf-focus-ring);
+    }
+
+    // Back button of the player header: the same halo as the controls
+
+    .osdHeader .headerButton:focus,
+    .osdHeader .headerButton.show-focus:focus {
+        color: var(--pf-color-text);
+        background: var(--pf-glass-background-strong);
+        border-radius: 50%;
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    // Subtitle offset and playback stats float over the picture: dark glass
+
+    .subtitleSyncContainer,
+    .playerStats {
+        color: var(--pf-color-text);
+        background: var(--pf-glass-background-strong);
+        border: 1px solid var(--pf-glass-border);
+        border-radius: 20px;
+        backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+    }
+
+    .subtitleSyncTextField {
+        color: var(--pf-color-text);
+        font-weight: 700;
+    }
+
+    .subtitleSyncTextField:focus {
+        border-radius: 999px;
+        outline: none;
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .subtitleSync-closeButton,
+    .playerStats-closeButton {
+        color: var(--pf-color-text-secondary);
+    }
+
+    .subtitleSync-closeButton:focus,
+    .playerStats-closeButton:focus {
+        color: var(--pf-color-text);
+        background: var(--pf-glass-background-strong);
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .playerStats-stat-header {
+        color: var(--pf-color-text);
+        font-weight: 700;
+    }
+
+    .playerStats-stat-value {
+        color: var(--pf-color-text-secondary);
+    }
+
+    // Volume and brightness indicators: dark glass, a warm white bar instead of the upstream blue and orange
+
+    .iconOsd {
+        color: var(--pf-color-text);
+        background: var(--pf-glass-background-strong);
+        border: 1px solid var(--pf-glass-border);
+        border-radius: 20px;
+        backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+    }
+
+    .iconOsdProgressOuter {
+        background: var(--pf-quiet-background-strong);
+    }
+
+    .iconOsdProgressInner,
+    .brightnessOsdProgressInner {
+        background: var(--pf-color-accent);
+    }
+
+    // Up next: a glass card over the end credits, its two actions round buttons
+
+    .upNextContainer {
+        color: var(--pf-color-text);
+        background: var(--pf-glass-background-strong);
+        border: 1px solid var(--pf-glass-border);
+        border-radius: 20px;
+        backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+    }
+
+    .upNextDialog-countdownText {
+        color: var(--pf-color-text);
+        font-weight: 700;
+    }
+
+    .upNextDialog-button {
+        @include pf-round-button;
     }
 
     // SyncPlay pulse: warm white instead of blue

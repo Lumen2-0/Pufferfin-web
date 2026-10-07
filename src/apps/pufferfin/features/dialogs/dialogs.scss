@@ -1,0 +1,248 @@
+// Pufferfin style on the shared upstream dialogs, on every user page: action
+// sheets (audio and subtitle tracks, quality, speed, aspect ratio, repeat,
+// chapters, context menus), confirm and form dialogs, the SyncPlay and cast
+// menus, toasts. Their logic stays upstream; this skin only changes how they
+// look, so that no Jellyfin dialog opens over a Pufferfin screen.
+//
+// A black sheet with type for hierarchy, no colored header, no heavy shadow.
+// Options are quiet at rest; the focus fills them warm white, readable from a
+// couch. A chosen option keeps its check mark, never a fill.
+
+@use 'palette' as *;
+
+$skin: ':root.pf-dialog-skin';
+
+#{$skin} {
+    // Every overlay root redefines the theme palette for what it holds
+
+    .dialogContainer,
+    .toastContainer,
+    .MuiPopover-root,
+    .MuiDialog-root {
+        @include pf-overlay-palette;
+    }
+
+    .dialogBackdropOpened {
+        background: #000;
+        opacity: 0.7;
+    }
+
+    // Long words (a file name, a server path) wrap instead of running out of the sheet
+    .dialog {
+        overflow-wrap: anywhere;
+        color: var(--pf-color-text);
+        background: var(--pf-color-surface);
+        border: 1px solid var(--pf-glass-border);
+        border-radius: 20px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    }
+
+    // A full screen sheet is the screen itself: black, no frame
+    .dialog.dialog-fullscreen,
+    .dialog.actionsheet-fullscreen {
+        background: var(--pf-color-background);
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .dialog.dialog-fullscreen .formDialogHeader,
+    .dialog.dialog-fullscreen .formDialogFooter:not(.formDialogFooter-clear) {
+        background: var(--pf-color-background);
+    }
+
+    .formDialogHeader,
+    .formDialogFooter:not(.formDialogFooter-clear) {
+        color: var(--pf-color-text);
+        background: var(--pf-color-surface);
+        border-color: var(--pf-glass-border);
+    }
+
+    .formDialogHeaderTitle,
+    .actionSheetTitle {
+        font-weight: 700;
+    }
+
+    .actionSheetText {
+        color: var(--pf-color-text-secondary);
+    }
+
+    // Action sheets: one option per line, a pill that fills on focus
+
+    .actionSheetContent {
+        padding: 0.6em !important;
+    }
+
+    .actionSheetMenuItem {
+        color: var(--pf-color-text);
+        background: transparent;
+        border-radius: 999px;
+        transition: background-color var(--pf-duration) var(--pf-ease);
+    }
+
+    .actionSheetMenuItem:hover {
+        background: var(--pf-quiet-background);
+    }
+
+    // The sheet focuses its current choice on opening; opened with a mouse, that focus stays invisible
+    .actionSheetMenuItem:focus:not(:focus-visible, :hover) {
+        background: transparent;
+    }
+
+    .actionSheetMenuItem:focus-visible,
+    .actionSheetMenuItem.show-focus:focus-visible {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        outline: none;
+    }
+
+    .actionSheetMenuItem:focus-visible .secondary,
+    .actionSheetMenuItem:focus-visible .actionSheetItemAsideText {
+        color: var(--pf-color-on-accent);
+        opacity: 0.75;
+    }
+
+    .actionsheetDivider {
+        margin: 0.4em 1em;
+        background: var(--pf-glass-border);
+    }
+
+    // Dialog buttons: round, quiet at rest, affirmed by the focus. The main
+    // action of a form keeps its fill, the only solid button of the sheet.
+
+    .dialog .emby-button.raised,
+    .dialog .emby-button.btnCloseActionSheet,
+    .dialog .formDialogFooterItem {
+        @include pf-round-button;
+    }
+
+    .dialog .emby-button.button-submit {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        border-color: transparent;
+    }
+
+    .dialog .emby-button.button-submit:focus {
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .dialog .paper-icon-button-light:focus,
+    .dialog .paper-icon-button-light.show-focus:focus {
+        color: var(--pf-color-text);
+        background: var(--pf-quiet-background-strong);
+        outline: none;
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    // Fields inside dialogs (playlist name, SyncPlay settings): the same warm ring
+
+    .dialog .emby-input:focus,
+    .dialog .emby-select-withcolor:focus,
+    .dialog .emby-textarea:focus {
+        border-color: var(--pf-color-text);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--pf-color-background), 0 0 0 5px var(--pf-color-text);
+    }
+
+    .dialog .emby-checkbox:checked + span + .checkboxOutline,
+    .dialog .emby-checkbox:focus + span + .checkboxOutline {
+        border-color: var(--pf-color-text);
+        background-color: var(--pf-color-accent);
+    }
+
+    .dialog .emby-checkbox + span + .checkboxOutline .checkboxIcon-checked {
+        color: var(--pf-color-on-accent);
+    }
+
+    .dialog .listItem:not(.actionSheetMenuItem):focus {
+        background: var(--pf-quiet-background-strong);
+        outline: none;
+        box-shadow: inset 0 0 0 3px var(--pf-color-text);
+    }
+
+    // SyncPlay and cast menus (MUI): a flat black sheet with a hairline, no
+    // elevation tint; the focused entry fills warm white
+
+    .MuiMenu-paper,
+    .MuiPopover-paper,
+    .MuiDialog-paper {
+        color: var(--pf-color-text);
+        background: var(--pf-color-surface);
+        background-image: none;
+        border: 1px solid var(--pf-glass-border);
+        border-radius: 16px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    }
+
+    .MuiMenu-list {
+        padding: 0.5rem;
+    }
+
+    .MuiMenuItem-root,
+    .MuiListItemButton-root {
+        border-radius: 999px;
+    }
+
+    .MuiListSubheader-root {
+        color: var(--pf-color-text-secondary);
+        background: transparent;
+    }
+
+    .MuiListItemIcon-root {
+        color: inherit;
+    }
+
+    .MuiMenuItem-root.Mui-focusVisible,
+    .MuiMenuItem-root:focus-visible,
+    .MuiListItemButton-root.Mui-focusVisible {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+    }
+
+    .MuiMenuItem-root.Mui-focusVisible .MuiListItemText-secondary,
+    .MuiListItemButton-root.Mui-focusVisible .MuiListItemText-secondary {
+        color: inherit;
+        opacity: 0.75;
+    }
+
+    .MuiDivider-root {
+        border-color: var(--pf-glass-border);
+    }
+
+    .MuiDialog-root .MuiButton-root {
+        border-radius: 999px;
+        text-transform: none;
+        box-shadow: none;
+    }
+
+    .MuiDialog-root .MuiButton-root.Mui-focusVisible {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    // The loading spinner shown over the player and the dialogs: warm white, not the upstream blue
+    .mdl-spinner .mdl-spinner__layer {
+        border-color: #f5f2ec;
+    }
+
+    // Toasts carry their message in words; black on warm white stays readable anywhere
+    .toast {
+        color: var(--pf-color-on-accent);
+        font-weight: 600;
+        background: var(--pf-color-accent);
+        border-radius: 999px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #{$skin} {
+        .dialogContainer,
+        .toastContainer,
+        .MuiPopover-root,
+        .MuiDialog-root {
+            --pf-duration: 0ms;
+            --pf-focus-scale: 1;
+        }
+    }
+}
