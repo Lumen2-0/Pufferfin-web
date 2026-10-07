@@ -4,8 +4,8 @@ import React, { type ReactNode, useCallback } from 'react';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 
 interface RoundButtonProps<T> {
-    /** Solid light button for the main action, glass for the others. */
-    variant?: 'primary' | 'glass'
+    /** Solid light button for the one main action, quiet for the others: the focus affirms them. */
+    variant?: 'primary' | 'quiet'
     icon?: ReactNode
     /** Visible label. Without it the button is a circle and `ariaLabel` is required. */
     label?: string
@@ -17,7 +17,7 @@ interface RoundButtonProps<T> {
 }
 
 const RoundButton = <T, >({
-    variant = 'glass',
+    variant = 'quiet',
     icon,
     label,
     ariaLabel,

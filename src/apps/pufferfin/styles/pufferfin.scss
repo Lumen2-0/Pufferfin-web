@@ -1,5 +1,6 @@
-// Pufferfin interface: black background, no blue anywhere, light glass on
-// layered surfaces, round buttons, large art, soft motion.
+// Pufferfin interface: black background, no blue anywhere, minimal chrome,
+// round buttons that the focus affirms, large art, sober motion.
+// Hierarchy comes from type and space; the artwork is the one emphasis.
 // Accents come from the artwork or from a warm neutral, never from a hue of blue.
 
 @use 'tokens' as *;
@@ -41,7 +42,9 @@
     clip: rect(0 0 0 0);
 }
 
-// Buttons: fully round, primary is solid warm white, others are glass
+// Buttons: fully round. At rest they stay quiet, a hairline and no fill; the
+// focus affirms them with a solid warm white fill and the ring. Only the one
+// main action of a screen is solid at rest.
 
 .pf-button {
     display: inline-flex;
@@ -54,24 +57,27 @@
     font-weight: 600;
     font-size: 1.1rem;
     font-family: inherit;
-    background: var(--pf-glass-background);
-    border: 1px solid var(--pf-glass-border);
+    background: transparent;
+    border: 1px solid var(--pf-hairline);
     border-radius: 999px;
     outline: none;
     cursor: pointer;
     transition:
         transform var(--pf-duration) var(--pf-ease),
+        color var(--pf-duration) var(--pf-ease),
         background-color var(--pf-duration) var(--pf-ease),
         box-shadow var(--pf-duration) var(--pf-ease);
-    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
     scroll-margin: 2rem;
 
     &:hover {
-        background: var(--pf-glass-background-strong);
+        background: var(--pf-quiet-background-strong);
     }
 
     &:focus-visible,
     &:focus {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        border-color: transparent;
         transform: scale(var(--pf-focus-scale));
         box-shadow: var(--pf-focus-ring);
     }
@@ -90,6 +96,11 @@
     &:hover {
         background: var(--pf-color-text);
     }
+}
+
+// A chosen option of a picker: a firmer outline and a check mark, never a fill
+.pf-button--selected {
+    border-color: var(--pf-color-text);
 }
 
 .pf-button--icon {
@@ -234,7 +245,7 @@
 }
 
 .pf-row {
-    margin-top: 2rem;
+    margin-top: var(--pf-row-gap);
 }
 
 .pf-row__title {
@@ -384,7 +395,7 @@
     border-radius: 999px;
 }
 
-// Missing from the library: a discreet glass pill, an icon and a word, never color alone
+// Missing from the library: a discreet dark pill, an icon and a word, never color alone
 .pf-card__badge {
     position: absolute;
     top: 0.5rem;
@@ -397,10 +408,8 @@
     font-size: 0.75rem;
     font-weight: 600;
     white-space: nowrap;
-    background: rgba(0, 0, 0, 0.55);
-    border: 1px solid var(--pf-glass-border);
+    background: rgba(0, 0, 0, 0.72);
     border-radius: 999px;
-    backdrop-filter: blur(var(--pf-glass-blur));
 
     [dir='rtl'] & {
         right: 0.5rem;
@@ -536,7 +545,7 @@
     width: min(28rem, 100%);
     height: 0.4rem;
     overflow: hidden;
-    background: var(--pf-glass-background);
+    background: var(--pf-quiet-background-strong);
     border-radius: 999px;
 }
 
@@ -762,7 +771,8 @@
     width: clamp(8rem, 10vw, 10.5rem);
 }
 
-// Top bar: round glass buttons over the screen content
+// Top bar: one row of quiet round buttons over the screen content, no frame.
+// The same bar runs on the Pufferfin screens and on the upstream pages.
 
 .pf-nav {
     position: absolute;
@@ -771,6 +781,7 @@
     left: 0;
     z-index: 2;
     display: flex;
+    align-items: center;
     padding: 1.5rem var(--pf-gutter) 0;
 }
 
@@ -779,7 +790,7 @@
     text-decoration: none;
 }
 
-// The current screen also gets a bar under its label: never told by fill alone
+// The current screen also gets a bar under its label: never told by an outline alone
 .pf-nav__link[aria-current='page']::after {
     position: absolute;
     right: 1.75rem;
@@ -791,16 +802,20 @@
     content: '';
 }
 
-.pf-nav__link + .pf-nav__link {
-    margin-left: 0.75rem;
-
-    [dir='rtl'] & {
-        margin-right: 0.75rem;
-        margin-left: 0;
-    }
+// An active SyncPlay group: a dot on the icon, on top of the firmer outline
+.pf-nav__dot {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: currentcolor;
+    border-radius: 50%;
 }
 
-.pf-nav__link.pf-nav__link--end {
+.pf-nav__end {
+    display: flex;
+    align-items: center;
     margin-left: auto;
 
     [dir='rtl'] & {
@@ -809,7 +824,63 @@
     }
 }
 
-// Search: a round glass field, the voice button, then rows of results
+// Margins rather than flex gap, which older TV engines lack
+.pf-nav__link + .pf-nav__link,
+.pf-nav__link + .pf-nav__end {
+    margin-left: 0.75rem;
+
+    [dir='rtl'] & {
+        margin-right: 0.75rem;
+        margin-left: 0;
+    }
+}
+
+.pf-nav__end > .pf-nav__link + .pf-nav__link {
+    margin-left: 0.5rem;
+
+    [dir='rtl'] & {
+        margin-right: 0.5rem;
+        margin-left: 0;
+    }
+}
+
+// TV layout: the time of day, as the upstream header showed it
+.pf-nav__clock {
+    margin-left: 1.25rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    font-variant-numeric: tabular-nums;
+
+    [dir='rtl'] & {
+        margin-right: 1.25rem;
+        margin-left: 0;
+    }
+}
+
+// Narrow screens: icons only, the label stays the accessible name
+@media (max-width: 50em) {
+    .pf-nav .pf-nav__link {
+        width: 3.25rem;
+        padding: 0;
+    }
+
+    .pf-nav .pf-nav__link .pf-button__label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        white-space: nowrap;
+        clip: rect(0 0 0 0);
+    }
+
+    .pf-nav__link[aria-current='page']::after {
+        right: 1rem;
+        left: 1rem;
+    }
+}
+
+// Search: a round quiet field, the voice button, then rows of results
 
 .pf-search {
     padding-top: 7rem;
@@ -838,11 +909,10 @@
     max-width: 48rem;
     min-height: 3.75rem;
     padding: 0 1.5rem;
-    background: var(--pf-glass-background);
-    border: 1px solid var(--pf-glass-border);
+    background: var(--pf-quiet-background);
+    border: 1px solid var(--pf-hairline);
     border-radius: 999px;
     transition: box-shadow var(--pf-duration) var(--pf-ease);
-    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
 
     // The halo goes on the whole field: the caret alone is too small to see from a couch
     &:focus-within {
@@ -937,7 +1007,7 @@
     text-decoration: none;
 }
 
-// Downloads panel: one glass card per request, its state, then its buttons
+// Downloads panel: one entry per request, carried by its title and spacing, then its buttons
 
 .pf-downloads__section + .pf-downloads__section {
     margin-top: 2.5rem;
@@ -951,11 +1021,8 @@
 
 .pf-download {
     max-width: 56rem;
-    margin-bottom: 1rem;
-    padding: 1.25rem 1.5rem 0.25rem;
-    background: var(--pf-glass-background);
-    border: 1px solid var(--pf-glass-border);
-    border-radius: var(--pf-radius-card);
+    margin-bottom: 1.5rem;
+    padding: 0 0 1.5rem;
 }
 
 .pf-download__heading {

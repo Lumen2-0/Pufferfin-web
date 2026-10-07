@@ -137,6 +137,11 @@
     "SectionAbout": "About",
     "SectionBiography": "Biography",
     "SectionFilmography": "Filmography",
+    "ShellCast": "Play on another device",
+    "ShellCastActive": "Playing on {0}",
+    "ShellNowPlaying": "Now Playing",
+    "ShellSyncPlay": "SyncPlay",
+    "ShellSyncPlayActive": "SyncPlay, in a group",
     "VoiceError": "Voice search is not available right now.",
     "VoiceListening": "Listening",
     "WatchedPercent": "{0}% watched"
