@@ -82,7 +82,8 @@ function fillItem(item) {
     const elem = instance.options.parent;
 
     // PUFFERFIN: the series as the title, the episode under it, its picture beside
-    const episode = itemHelper.getDisplayName(item);
+    // The name alone: the display name already starts with the numbers of an episode
+    const episode = item.Type === 'Episode' ? item.Name : itemHelper.getDisplayName(item);
     const numbers = item.Type === 'Episode' && item.ParentIndexNumber != null && item.IndexNumber != null ?
         `S${item.ParentIndexNumber}:E${item.IndexNumber}` :
         '';
