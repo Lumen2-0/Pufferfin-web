@@ -651,14 +651,17 @@ export default function (view) {
 
     function onPromptSkip(e, mediaSegment) {
         const player = this;
+        // PUFFERFIN: credits found by Intro Skipper often stop a second or two before the end
         if (mediaSegment && player && mediaSegment.EndTicks != null
-            && mediaSegment.EndTicks >= playbackManager.duration(player)
+            && mediaSegment.EndTicks >= playbackManager.duration(player) - CREDITS_END_TOLERANCE_TICKS
             && playbackManager.getNextItem()
             && userSettings.enableNextVideoInfoOverlay()
         ) {
             showComingUpNext(player);
         }
     }
+
+    const CREDITS_END_TOLERANCE_TICKS = 3 * TICKS_PER_SECOND;
 
     function showComingUpNextIfNeeded(player, currentItem, currentTimeTicks, runtimeTicks) {
         if (runtimeTicks && currentTimeTicks && !comingUpNextDisplayed && !currentVisibleMenu && currentItem.Type === 'Episode' && userSettings.enableNextVideoInfoOverlay()) {

@@ -1,0 +1,245 @@
+// The overlays of the video player in the manner of shadcn/ui on its dark
+// neutral theme, like its menus: the Skip button of a media segment (intro,
+// recap, credits, preview) and the card of the next episode. No blue.
+
+$skip-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 4 10 8-10 8V4z'/%3E%3Cpath d='M19 5v14'/%3E%3C/svg%3E");
+
+:root.pf-player-skin {
+    // Skip: a light pill at the bottom right, above the controls
+
+    .skip-button-container {
+        right: 0;
+        bottom: clamp(6.5rem, 14vh, 8.5rem);
+        left: 0;
+    }
+
+    .skip-button {
+        gap: 0.5rem;
+        margin-right: clamp(1rem, 2.5vw, 1.5rem);
+        padding: 0.7rem 1.15rem 0.7rem 1.25rem;
+        color: #0a0a0a;
+        font-weight: 600;
+        font-size: 0.9rem;
+        font-family: inherit;
+        line-height: 1;
+        background: #fafafa;
+        border: 0;
+        border-radius: 999px;
+        box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.6);
+        transition:
+            opacity 200ms ease-out,
+            transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+            background-color 120ms ease;
+
+        &:hover {
+            background: #e5e5e5;
+        }
+
+        &:focus,
+        &.show-focus:focus {
+            color: #0a0a0a;
+            background: #fafafa;
+            box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 4px #a3a3a3;
+        }
+
+        .material-icons {
+            width: 1rem;
+            height: 1rem;
+            font-size: 0;
+
+            &::before {
+                display: block;
+                width: 100%;
+                height: 100%;
+                background-color: currentColor;
+                mask: $skip-icon center / contain no-repeat;
+                content: '';
+            }
+        }
+    }
+
+    .skip-button-hidden {
+        transform: translateY(0.5rem);
+    }
+
+    // The next episode: a dark card with the picture, the countdown along it,
+    // the series and the episode, Play now and Cancel
+
+    .upNextContainer {
+        right: 0;
+        bottom: clamp(6.5rem, 14vh, 8.5rem);
+        width: min(25rem, calc(100vw - 2rem));
+        margin: 0 clamp(1rem, 2.5vw, 1.5rem) 0 0;
+        padding: 0;
+        color: #fafafa;
+        background: #0a0a0a;
+        border: 1px solid #262626;
+        border-radius: 1rem;
+        box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.8);
+        backdrop-filter: none;
+        transition:
+            opacity 220ms ease-out,
+            transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+
+        [dir='rtl'] & {
+            margin: 0 0 0 clamp(1rem, 2.5vw, 1.5rem);
+        }
+    }
+
+    .upNextDialog-hidden {
+        transform: translateY(0.75rem);
+    }
+
+    .pf-upnext {
+        display: flex;
+        gap: 0.9rem;
+        align-items: stretch;
+        padding: 0.75rem;
+    }
+
+    .pf-upnext__art {
+        position: relative;
+        flex: none;
+        width: 8.5rem;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: #262626;
+        border-radius: 0.6rem;
+    }
+
+    .pf-upnext__image {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .pf-upnext__countdown {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: rgba(250, 250, 250, 0.25);
+    }
+
+    .pf-upnext__countdown-fill {
+        display: block;
+        height: 100%;
+        background: #fafafa;
+        transform-origin: left;
+        transition: transform 400ms linear;
+    }
+
+    .pf-upnext__body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .pf-upnext__eyebrow {
+        margin: 0;
+        color: #a3a3a3;
+        font-weight: 500;
+        font-size: 0.75rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .upNextDialog-countdownText {
+        color: #fafafa;
+        font-weight: 600;
+    }
+
+    .pf-upnext__title {
+        width: auto;
+        margin: 0.2rem 0 0;
+        overflow: hidden;
+        font-weight: 600;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .pf-upnext__subtitle {
+        margin: 0.1rem 0 0;
+        overflow: hidden;
+        color: #a3a3a3;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+
+        &:empty {
+            display: none;
+        }
+    }
+
+    .pf-upnext__buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-start;
+        width: auto;
+        margin-top: auto;
+        padding-top: 0.6rem;
+    }
+
+    .upNextDialog-button.pf-upnext__play,
+    .upNextDialog-button.pf-upnext__cancel {
+        display: inline-flex;
+        gap: 0.4rem;
+        align-items: center;
+        min-height: 2.1rem;
+        margin: 0;
+        padding: 0 0.9rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+        font-family: inherit;
+        border-radius: 0.5rem;
+        box-shadow: none;
+        transition: background-color 120ms ease;
+    }
+
+    .upNextDialog-button.pf-upnext__play {
+        color: #0a0a0a;
+        background: #fafafa;
+        border: 0;
+
+        &:hover {
+            background: #e5e5e5;
+        }
+    }
+
+    .upNextDialog-button.pf-upnext__cancel {
+        color: #fafafa;
+        background: transparent;
+        border: 1px solid #262626;
+
+        &:hover {
+            background: #262626;
+        }
+    }
+
+    .upNextDialog-button.pf-upnext__play:focus-visible,
+    .upNextDialog-button.pf-upnext__cancel:focus-visible,
+    .upNextDialog-button.show-focus:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 4px #a3a3a3;
+    }
+
+    // On a narrow phone the picture leaves the room to the words
+    @media (max-width: 30em) {
+        .pf-upnext__art {
+            display: none;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root.pf-player-skin {
+        .skip-button,
+        .upNextContainer,
+        .pf-upnext__countdown-fill {
+            transition: none;
+        }
+    }
+}

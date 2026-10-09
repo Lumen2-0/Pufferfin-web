@@ -1,7 +1,6 @@
 import dom from '../../utils/dom';
 import { playbackManager } from '../playback/playbackmanager';
 import Events from '../../utils/events.ts';
-import mediaInfo from '../mediainfo/mediainfo';
 import layoutManager from '../layoutManager';
 import focusManager from '../focusManager';
 import globalize from '../../lib/globalize';
@@ -14,32 +13,31 @@ import '../../styles/flexstyles.scss';
 
 const transitionEndEventName = dom.whichTransitionEvent();
 
+// PUFFERFIN: a card of the next episode: its picture with the countdown along
+// its bottom edge, what it is, Play now and Cancel
+const PLAY_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z"/></svg>';
+
 function getHtml() {
     let html = '';
 
-    html += '<div class="flex flex-direction-column flex-grow">';
+    html += '<div class="pf-upnext">';
+    html += '<div class="pf-upnext__art"><img class="pf-upnext__image" alt="" loading="eager" /><span class="pf-upnext__countdown"><span class="pf-upnext__countdown-fill"></span></span></div>';
+    html += '<div class="pf-upnext__body">';
+    html += '<p class="upNextDialog-nextVideoText pf-upnext__eyebrow">&nbsp;</p>';
+    html += '<h3 class="upNextDialog-title pf-upnext__title"></h3>';
+    html += '<p class="pf-upnext__subtitle"></p>';
+    html += '<div class="upNextDialog-buttons pf-upnext__buttons">';
 
-    html += '<h2 class="upNextDialog-nextVideoText" style="margin:.25em 0;">&nbsp;</h2>';
-
-    html += '<h3 class="upNextDialog-title" style="margin:.25em 0 .5em;"></h3>';
-
-    html += '<div class="flex flex-direction-row upNextDialog-mediainfo">';
-    html += '</div>';
-
-    html += '<div class="flex flex-direction-row upNextDialog-buttons" style="margin-top:1em;">';
-
-    html += '<button type="button" is="emby-button" class="raised raised-mini btnStartNow upNextDialog-button">';
-    html += globalize.translate('HeaderStartNow');
+    html += '<button type="button" is="emby-button" class="btnStartNow upNextDialog-button pf-upnext__play">';
+    html += PLAY_ICON + '<span>' + globalize.translate('HeaderStartNow') + '</span>';
     html += '</button>';
 
-    html += '<button type="button" is="emby-button" class="raised raised-mini btnHide upNextDialog-button">';
-    html += globalize.translate('Hide');
+    html += '<button type="button" is="emby-button" class="btnHide upNextDialog-button pf-upnext__cancel">';
+    html += globalize.translate('ButtonCancel');
     html += '</button>';
 
-    // buttons
     html += '</div>';
-
-    // main
+    html += '</div>';
     html += '</div>';
 
     return html;
@@ -68,6 +66,14 @@ function setNextVideoText() {
     }
 
     elem.querySelector('.upNextDialog-nextVideoText').innerHTML = nextVideoText;
+
+    // PUFFERFIN: the bar along the picture empties as the next episode nears
+    const fill = elem.querySelector('.pf-upnext__countdown-fill');
+    if (fill) {
+        if (!instance.showStaticNextText && !instance._countdownStartMs) instance._countdownStartMs = Math.max(getTimeRemainingMs(instance), 1);
+        const ratio = instance.showStaticNextText ? 0 : Math.min(Math.max(getTimeRemainingMs(instance) / instance._countdownStartMs, 0), 1);
+        fill.style.transform = `scaleX(${ratio})`;
+    }
 }
 
 function fillItem(item) {
@@ -75,23 +81,42 @@ function fillItem(item) {
 
     const elem = instance.options.parent;
 
-    elem.querySelector('.upNextDialog-mediainfo').innerHTML = mediaInfo.getPrimaryMediaInfoHtml(item, {
-        criticRating: true,
-        originalAirDate: false,
-        starRating: true,
-        subtitles: false
-    });
+    // PUFFERFIN: the series as the title, the episode under it, its picture beside
+    const episode = itemHelper.getDisplayName(item);
+    const numbers = item.Type === 'Episode' && item.ParentIndexNumber != null && item.IndexNumber != null ?
+        `S${item.ParentIndexNumber}:E${item.IndexNumber}` :
+        '';
+    elem.querySelector('.upNextDialog-title').innerText = item.SeriesName || episode || '';
+    elem.querySelector('.pf-upnext__subtitle').innerText = item.SeriesName ? [ numbers, episode ].filter(Boolean).join(' · ') : '';
 
-    let title = itemHelper.getDisplayName(item);
-    if (item.SeriesName) {
-        title = item.SeriesName + ' - ' + title;
+    const image = elem.querySelector('.pf-upnext__image');
+    const imageUrl = getImageUrl(item);
+    if (imageUrl) {
+        image.src = imageUrl;
+        image.classList.remove('hide');
+    } else {
+        image.classList.add('hide');
     }
-
-    elem.querySelector('.upNextDialog-title').innerText = title || '';
 
     instance.itemType = item.Type;
 
     instance.show();
+}
+
+// The still of the episode, else a thumb or a backdrop of its series
+function getImageUrl(item) {
+    const apiClient = ServerConnections.getApiClient(item);
+    const options = { maxWidth: 480, quality: 90 };
+    if (item.ImageTags?.Primary) {
+        return apiClient.getScaledImageUrl(item.Id, { ...options, type: 'Primary', tag: item.ImageTags.Primary });
+    }
+    if (item.ParentThumbItemId && item.ParentThumbImageTag) {
+        return apiClient.getScaledImageUrl(item.ParentThumbItemId, { ...options, type: 'Thumb', tag: item.ParentThumbImageTag });
+    }
+    if (item.ParentBackdropItemId && item.ParentBackdropImageTags?.length) {
+        return apiClient.getScaledImageUrl(item.ParentBackdropItemId, { ...options, type: 'Backdrop', tag: item.ParentBackdropImageTags[0] });
+    }
+    return null;
 }
 
 function clearCountdownTextTimeout(instance) {
@@ -254,6 +279,7 @@ class UpNextDialog {
 
         this.options = null;
         this.showStaticNextText = false;
+        this._countdownStartMs = null;
         this.itemType = null;
     }
 }

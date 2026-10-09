@@ -1,3 +1,4 @@
+import { MediaSegmentType } from '@jellyfin/sdk/lib/generated-client/models/media-segment-type';
 import type { UserConfiguration } from '@jellyfin/sdk/lib/generated-client/models/user-configuration';
 import type { UserDto } from '@jellyfin/sdk/lib/generated-client/models/user-dto';
 import classNames from 'classnames';
@@ -7,6 +8,8 @@ import { createPortal } from 'react-dom';
 import { useApi } from 'hooks/useApi';
 import { useQuickConnectEnabled } from 'hooks/useQuickConnect';
 import { currentSettings as userSettings } from 'scripts/settings/userSettings';
+import { MediaSegmentAction } from 'apps/legacy/features/playback/constants/mediaSegmentAction';
+import { getId as getSegmentSettingId, getMediaSegmentAction } from 'apps/legacy/features/playback/utils/mediaSegmentSettings';
 
 import { Check, Close, Download, type IconProps, Lock, ManageAccounts, MenuBook, PlayArrow, Translate, Tv } from '../../components/icons';
 import type { StringKey } from '../../i18n/translate';
@@ -187,6 +190,31 @@ const ProfileSection: FC<{ me: UserDto }> = ({ me }) => {
     );
 };
 
+/** The parts of an episode or a film Intro Skipper finds, in the order they play. */
+const SKIPPABLE_SEGMENTS: Array<{ type: MediaSegmentType, label: StringKey }> = [
+    { type: MediaSegmentType.Recap, label: 'SkipSegmentRecap' },
+    { type: MediaSegmentType.Intro, label: 'SkipSegmentIntro' },
+    { type: MediaSegmentType.Commercial, label: 'SkipSegmentCommercial' },
+    { type: MediaSegmentType.Outro, label: 'SkipSegmentOutro' },
+    { type: MediaSegmentType.Preview, label: 'SkipSegmentPreview' }
+];
+
+/** What the player does with one kind of segment: offer a Skip button, skip it, or nothing. Kept on this device. */
+const SegmentSelect: FC<{ type: MediaSegmentType, label: string }> = ({ type, label }) => {
+    const t = useTranslation();
+    const [ value, setValue ] = useState<string>(() => getMediaSegmentAction(userSettings, type));
+    const options = useMemo<SelectOption[]>(() => [
+        { value: MediaSegmentAction.AskToSkip, label: t('SkipActionAsk') },
+        { value: MediaSegmentAction.Skip, label: t('SkipActionAuto') },
+        { value: MediaSegmentAction.None, label: t('SkipActionNone') }
+    ], [ t ]);
+    const onChange = useCallback((next: string) => {
+        userSettings.set(getSegmentSettingId(type), next, false);
+        setValue(next);
+    }, [ type ]);
+    return <Select id={`pf-skip-${type}`} value={value} options={options} onChange={onChange} label={label} />;
+};
+
 const PlaybackSection: FC<SectionProps> = ({ me, save }) => {
     const t = useTranslation();
     const config = me.Configuration ?? {};
@@ -208,6 +236,16 @@ const PlaybackSection: FC<SectionProps> = ({ me, save }) => {
             <SettingRow label={t('PlaybackRememberSubtitles')}>
                 <ConfigSwitch label={t('PlaybackRememberSubtitles')} checked={config.RememberSubtitleSelections !== false} field='RememberSubtitleSelections' save={save} />
             </SettingRow>
+            {SKIPPABLE_SEGMENTS.map(({ type, label }, index) => (
+                <SettingRow
+                    key={type}
+                    label={t(label)}
+                    description={index === 0 ? t('SkipSegmentsHint') : undefined}
+                    htmlFor={`pf-skip-${type}`}
+                >
+                    <SegmentSelect type={type} label={t(label)} />
+                </SettingRow>
+            ))}
         </>
     );
 };

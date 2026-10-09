@@ -13,6 +13,8 @@ import * as userSettings from 'scripts/settings/userSettings';
 import focusManager from 'components/focusManager';
 import layoutManager from 'components/layoutManager';
 
+const CREDITS_END_TOLERANCE_TICKS = 3 * TICKS_PER_SECOND;
+
 interface ShowOptions {
     animate?: boolean;
     keep?: boolean;
@@ -149,8 +151,9 @@ class SkipSegment extends PlaybackSubscriber {
     }
 
     onPromptSkip(e: Event, segment: MediaSegmentDto) {
+        // PUFFERFIN: credits that stop a second or two before the end lead to the next episode too
         if (this.player && segment.EndTicks != null
-            && segment.EndTicks >= this.playbackManager.currentItem(this.player).RunTimeTicks
+            && segment.EndTicks >= (this.playbackManager.currentItem(this.player).RunTimeTicks ?? Infinity) - CREDITS_END_TOLERANCE_TICKS
             && this.playbackManager.getNextItem()
             && userSettings.enableNextVideoInfoOverlay()
         ) {

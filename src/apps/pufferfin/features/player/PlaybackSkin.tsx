@@ -8,6 +8,7 @@ import './lyrics.scss';
 import './nowPlayingBar.scss';
 import './player.scss';
 import './playerMenus.scss';
+import './playerOverlays.scss';
 import './queue.scss';
 
 /**

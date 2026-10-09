@@ -5,9 +5,13 @@ import { UserSettings } from 'scripts/settings/userSettings';
 import { MediaSegmentAction } from '../constants/mediaSegmentAction';
 
 const PREFIX = 'segmentTypeAction';
+// PUFFERFIN: every segment Intro Skipper detects offers its Skip button by default
 const DEFAULT_ACTIONS: Partial<Record<MediaSegmentType, MediaSegmentAction>> = {
     [MediaSegmentType.Intro]: MediaSegmentAction.AskToSkip,
-    [MediaSegmentType.Outro]: MediaSegmentAction.AskToSkip
+    [MediaSegmentType.Recap]: MediaSegmentAction.AskToSkip,
+    [MediaSegmentType.Outro]: MediaSegmentAction.AskToSkip,
+    [MediaSegmentType.Preview]: MediaSegmentAction.AskToSkip,
+    [MediaSegmentType.Commercial]: MediaSegmentAction.AskToSkip
 };
 
 export const getId = (type: MediaSegmentType) => `${PREFIX}__${type}`;

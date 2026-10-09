@@ -1156,7 +1156,7 @@
     "MediaSegmentSkipPrompt": "Skip {0}",
     "MediaSegmentType.Commercial": "Commercial",
     "MediaSegmentType.Intro": "Intro",
-    "MediaSegmentType.Outro": "Outro",
+    "MediaSegmentType.Outro": "Credits",
     "MediaSegmentType.Preview": "Preview",
     "MediaSegmentType.Recap": "Recap",
     "Menu": "Menu",

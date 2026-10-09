@@ -387,25 +387,6 @@
         }
     }
 
-    // Skip intro: a round glass pill with the focus halo
-
-    .skip-button {
-        padding: 0.8em 1.6em;
-        color: var(--pf-color-text);
-        background: var(--pf-glass-background);
-        border: 1px solid var(--pf-glass-border);
-        border-radius: 999px;
-        backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
-    }
-
-    // The theme paints .emby-button.show-focus:focus in its accent: stay above it
-    .skip-button:focus,
-    .skip-button.show-focus:focus {
-        color: var(--pf-color-text);
-        background: var(--pf-glass-background-strong);
-        box-shadow: var(--pf-focus-ring);
-    }
-
     // Back button of the player header: the same halo as the controls
 
     .osdHeader .headerButton:focus,
@@ -457,25 +438,6 @@
 
     .playerStats-stat-value {
         color: var(--pf-color-text-secondary);
-    }
-
-    // Up next: a glass card over the end credits, its two actions round buttons
-
-    .upNextContainer {
-        color: var(--pf-color-text);
-        background: var(--pf-glass-background-strong);
-        border: 1px solid var(--pf-glass-border);
-        border-radius: 20px;
-        backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
-    }
-
-    .upNextDialog-countdownText {
-        color: var(--pf-color-text);
-        font-weight: 700;
-    }
-
-    .upNextDialog-button {
-        @include pf-round-button;
     }
 
     // SyncPlay pulse: warm white instead of blue
