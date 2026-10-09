@@ -83,3 +83,8 @@ export function getPersonImageUrl(api: Api, person: BaseItemPerson) {
 export function getItemPosterUrl(api: Api, itemId: string) {
     return getImageApi(api).getItemImageUrlById(itemId, ImageType.Primary, { maxWidth: 400, quality: 90 });
 }
+
+/** Square cover of an audiobook: the first of the items given that has one, such as the book then its first part. */
+export function getCoverUrl(api: Api, items: ItemDto[], maxWidth: number) {
+    return toUrl(api, items.map(item => source(item.Id, ImageType.Primary, item.ImageTags?.Primary)), maxWidth);
+}

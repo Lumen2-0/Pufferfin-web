@@ -5,6 +5,28 @@
 
 @use 'tokens' as *;
 
+// Large screens: the whole interface grows with the width of the screen. The
+// upstream base size (93%) stays up to about 1600px wide, then everything sized
+// in rem follows, up to 1.8 times on a 4K screen. The TV and phone layouts keep
+// their own sizes.
+html.layout-desktop {
+    font-size: clamp(93%, calc(0.6vw + 0.35rem), 170%);
+}
+
+// No scroll bars: the content scrolls with the wheel, the touch pad, a finger
+// or the arrows, the bars are not drawn
+html,
+body,
+* {
+    scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
 .pf-app {
     @include pf-tokens;
 
@@ -255,6 +277,35 @@
     }
 }
 
+.pf-hero__credit {
+    margin: 0.6rem 0 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.95rem;
+}
+
+.pf-hero__credit-label {
+    margin-right: 0.35rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.35rem;
+    }
+}
+
+.pf-hero__credit-link {
+    color: var(--pf-color-text);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 4px;
+    outline: none;
+    transition: color var(--pf-duration) var(--pf-ease);
+
+    &:hover {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+}
+
 .pf-hero__poster {
     flex: none;
     width: clamp(8rem, 18vw, 15rem);
@@ -333,6 +384,120 @@
 
 .pf-hero--card ~ .pf-home__rows {
     margin-top: 0.5rem;
+}
+
+// Brands: quiet glass capsules the height of the type picker. A service shows
+// its app icon and its name; a studio or a network its wordmark, drawn in the
+// color of the text. The chosen one is filled
+
+.pf-brands {
+    display: flex;
+    flex: none;
+    align-items: center;
+}
+
+.pf-brand {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    height: var(--pf-capsule-height);
+    margin: 0 0.5rem 0 0;
+    padding: 0 0.9rem 0 0.4rem;
+    color: var(--pf-color-text);
+    font: inherit;
+    font-weight: 500;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    background: var(--pf-glass-background);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+    transition:
+        color var(--pf-duration) var(--pf-ease),
+        background-color var(--pf-duration) var(--pf-ease),
+        border-color var(--pf-duration) var(--pf-ease);
+
+    &:hover {
+        background: var(--pf-quiet-background-strong);
+    }
+
+    [dir='rtl'] & {
+        margin: 0 0 0 0.5rem;
+    }
+}
+
+// A wordmark needs no icon on its left: even padding
+.pf-brand--studio,
+.pf-brand--network {
+    padding: 0 1rem;
+}
+
+.pf-brand__icon {
+    display: block;
+    width: calc(var(--pf-capsule-height) - 0.8rem);
+    height: calc(var(--pf-capsule-height) - 0.8rem);
+    margin-right: 0.55rem;
+    object-fit: cover;
+    border-radius: 7px;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.55rem;
+    }
+}
+
+// The red Marvel block, drawn in CSS
+.pf-brand__badge {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.pf-brand__badge--marvel {
+    height: 1.35rem;
+    padding: 0 0.35rem;
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: Impact, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+    letter-spacing: -0.02em;
+    background: #ec1d24;
+    border-radius: 2px;
+    transform: scaleY(1.08);
+}
+
+// Marvel is its block alone: the capsule hugs it
+.pf-brand--studio:has(.pf-brand__badge--marvel) {
+    padding: 0 0.55rem;
+}
+
+.pf-brand__icon--logo {
+    object-fit: contain;
+    border-radius: 0;
+}
+
+// A wordmark needs no icon on its left; a studio with its logo does
+.pf-brand--studio:has(.pf-brand__icon--logo) {
+    padding: 0 0.9rem 0 0.5rem;
+}
+
+.pf-brand__wordmark {
+    display: block;
+    width: 4.5rem;
+    height: 1.05rem;
+    background-color: currentColor;
+    mask: var(--pf-brand-logo) center / contain no-repeat;
+}
+
+.pf-brand--selected,
+.pf-brand--selected:hover {
+    color: var(--pf-color-on-accent);
+    background: var(--pf-color-accent);
+    border-color: transparent;
 }
 
 .pf-home__empty {
@@ -561,26 +726,8 @@
     font-size: 0.78rem;
 }
 
-.pf-card--skeleton {
-    cursor: default;
-
-    .pf-card__art {
-        animation: pf-pulse var(--pf-pulse-duration) var(--pf-ease) infinite alternate;
-    }
-}
-
 .pf-card:hover .pf-card__caption {
     opacity: 1;
-}
-
-@keyframes pf-pulse {
-    from {
-        opacity: 0.45;
-    }
-
-    to {
-        opacity: 0.9;
-    }
 }
 
 // Discover: the type picker under the top bar. In the flow when there is no
@@ -605,11 +752,23 @@
     pointer-events: none;
 }
 
-// Without a featured card, the rows start under the bar
+// Without a featured card, the rows open the screen under the bar
 .pf-discover:not(.pf-discover--featured) .pf-discover__rows {
     margin-top: 0;
     padding-top: var(--pf-nav-height);
 }
+
+// The brands under the featured card, in a row that scrolls sideways when it is longer than the screen
+.pf-discover__brands {
+    display: flex;
+    align-items: center;
+    min-height: var(--pf-discover-bar);
+    padding: 0 var(--pf-gutter);
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+// Without a featured card, the rows start under the bar
 
 .pf-discover__picker {
     position: relative;
@@ -730,55 +889,10 @@
     padding: 0 var(--pf-gutter);
 }
 
-// Availability of a catalog title, in place of the actions it cannot offer yet
-.pf-availability {
-    display: flex;
-    align-items: center;
-    margin: 0 0 1rem;
-    color: var(--pf-color-text);
-    font-weight: 600;
-    font-size: 1.1rem;
-}
-
-.pf-availability__icon {
-    margin-right: 0.5rem;
-    font-size: 1.5rem;
-
-    [dir='rtl'] & {
-        margin-right: 0;
-        margin-left: 0.5rem;
-    }
-}
-
-// Request of a missing title: its state in words, a bar while downloading, then the buttons
+// Request of a missing title: Download, then the tag that replaces it
 
 .pf-request {
     flex-basis: 100%;
-}
-
-.pf-request__state .pf-availability {
-    margin-bottom: 0.5rem;
-}
-
-.pf-request__bar {
-    width: min(28rem, 100%);
-    height: 0.4rem;
-    overflow: hidden;
-    background: var(--pf-quiet-background-strong);
-    border-radius: 999px;
-}
-
-.pf-request__bar-fill {
-    display: block;
-    height: 100%;
-    background: var(--pf-color-text);
-    border-radius: 999px;
-    transition: width var(--pf-duration) var(--pf-ease);
-}
-
-// No news for a while: the bar dims and the words say so, it never passes for live progress
-.pf-request__bar--stale .pf-request__bar-fill {
-    opacity: 0.45;
 }
 
 .pf-request__detail {
@@ -787,7 +901,92 @@
 }
 
 .pf-request .pf-button-row {
-    margin-top: 1rem;
+    margin-top: 0;
+}
+
+// The Download button once pressed: a capsule of the same size telling where
+// the download stands, a thin bar running along its bottom edge
+
+.pf-download-tag {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    // The room of the button it replaces: Cancel and Try Again never touch it
+    margin: 0 0.75rem 1rem 0;
+    min-width: 11rem;
+    height: var(--pf-control-height);
+    padding: 0 1.1rem 0 0.95rem;
+    overflow: hidden;
+    color: var(--pf-color-text);
+    font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    background: var(--pf-glass-background);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 999px;
+    backdrop-filter: blur(var(--pf-glass-blur));
+    font-variant-numeric: tabular-nums;
+}
+
+.pf-download-tag__icon {
+    display: inline-flex;
+    margin-right: 0.45rem;
+    font-size: 1.1rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.45rem;
+    }
+}
+
+.pf-download-tag__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pf-download-tag__track {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    overflow: hidden;
+    background: var(--pf-quiet-background);
+}
+
+.pf-download-tag__fill {
+    display: block;
+    height: 100%;
+    background: var(--pf-color-text);
+    transition: width 600ms var(--pf-ease);
+}
+
+@keyframes pf-download-sweep {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(250%);
+    }
+}
+
+// Waiting for a slot, searching, importing: the length is unknown, the bar sweeps
+.pf-download-tag__track--indeterminate .pf-download-tag__fill {
+    width: 40%;
+    animation: pf-download-sweep 1.4s var(--pf-ease) infinite;
+}
+
+.pf-download-tag--stale .pf-download-tag__fill {
+    opacity: 0.45;
+}
+
+.pf-download-tag--stalled .pf-download-tag__fill {
+    opacity: 0.35;
+}
+
+.pf-download-tag--failed {
+    color: var(--pf-color-text-secondary);
 }
 
 .pf-status {
@@ -1026,14 +1225,20 @@
     align-items: center;
     justify-content: center;
     height: 1.875rem;
+    margin: 0;
     padding: 0 0.95rem;
     color: var(--pf-color-text-secondary);
     font-weight: 500;
     font-size: 0.8125rem;
+    font-family: inherit;
     letter-spacing: 0.01em;
     text-decoration: none;
+    // Search is a button among the links: the same look
+    background: none;
+    border: 0;
     border-radius: 999px;
     outline: none;
+    cursor: pointer;
     transition:
         color var(--pf-duration) var(--pf-ease),
         background-color var(--pf-duration) var(--pf-ease),
@@ -1148,19 +1353,14 @@
         display: inline-flex;
     }
 
-    .pf-nav__tab-label {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        white-space: nowrap;
-        clip: rect(0 0 0 0);
-    }
-
     // No room beside the tabs: the type picker gets a second line of the same height
     .pf-discover__header {
         top: var(--pf-nav-height);
         height: var(--pf-capsule-height);
+    }
+
+    .pf-hero--viewport {
+        --pf-hero-top: calc(var(--pf-nav-height) + var(--pf-capsule-height) + 0.75rem);
     }
 
     .pf-hero--card {
@@ -1169,6 +1369,15 @@
 
     .pf-discover:not(.pf-discover--featured) .pf-discover__rows {
         padding-top: calc(var(--pf-nav-height) + var(--pf-capsule-height) + 0.5rem);
+    }
+
+    .pf-nav__tab-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        white-space: nowrap;
+        clip: rect(0 0 0 0);
     }
 }
 
@@ -1294,56 +1503,253 @@
     text-decoration: none;
 }
 
-// Downloads panel: one entry per request, carried by its title and spacing, then its buttons
+// Downloads page: a centered column of wide cards, stacked. Each section is
+// named by a small label and its count; the art of a title on the left of its
+// card, its name and where it stands in the middle, small buttons on the right
+
+.pf-downloads {
+    width: min(48rem, calc(100% - 2 * var(--pf-gutter)));
+    margin: 0 auto;
+    padding-top: calc(var(--pf-nav-height) + 2rem);
+}
 
 .pf-downloads__section + .pf-downloads__section {
-    margin-top: 2.5rem;
+    margin-top: 2.25rem;
+}
+
+.pf-downloads__heading {
+    display: flex;
+    align-items: center;
+    margin: 0 0 0.75rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.pf-downloads__count {
+    margin-left: 0.5rem;
+    padding: 0.1rem 0.45rem;
+    color: var(--pf-color-text);
+    font-size: 0.7rem;
+    letter-spacing: 0;
+    background: var(--pf-quiet-background);
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+
+    [dir='rtl'] & {
+        margin-right: 0.5rem;
+        margin-left: 0;
+    }
 }
 
 .pf-downloads__list {
     margin: 0;
-    padding: 0.75rem var(--pf-gutter) 0;
+    padding: 0;
     list-style: none;
 }
 
-.pf-download {
-    max-width: 56rem;
-    margin-bottom: 1.5rem;
-    padding: 0 0 1.5rem;
+.pf-downloads__note {
+    margin: 0 0 2rem;
+    color: var(--pf-color-text-secondary);
+    text-align: center;
 }
 
-.pf-download__heading {
+// Nothing yet: a quiet icon and one sentence, in the middle of the screen
+.pf-downloads__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 22vh;
+    color: var(--pf-color-text-secondary);
+    text-align: center;
+
+    p {
+        max-width: 22rem;
+        margin: 1rem 0 0;
+    }
+}
+
+.pf-downloads__empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.6rem;
+    background: var(--pf-quiet-background);
+    border-radius: 50%;
+}
+
+.pf-download {
+    display: flex;
+    align-items: center;
     margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    background: var(--pf-color-surface);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 16px;
+}
+
+.pf-download--done {
+    background: transparent;
+}
+
+.pf-download__art {
+    position: relative;
+    flex: none;
+    width: clamp(6.5rem, 18vw, 10rem);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--pf-quiet-background);
+    border-radius: var(--pf-radius-card);
+
+    img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+// A book cover is square: it keeps its shape in the height of the card
+.pf-download__art--cover {
+    width: auto;
+    height: clamp(3.65rem, 10.1vw, 5.625rem);
+    aspect-ratio: 1;
+}
+
+.pf-download--done .pf-download__art {
+    opacity: 0.7;
+}
+
+.pf-download__body {
+    flex: 1;
+    min-width: 0;
+    margin: 0 1rem;
 }
 
 .pf-download__title {
+    display: block;
+    overflow: hidden;
     color: var(--pf-color-text);
     font-weight: 600;
-    font-size: 1.3rem;
+    font-size: 1.05rem;
+    white-space: nowrap;
     text-decoration: none;
+    text-overflow: ellipsis;
     border-radius: 6px;
     outline: none;
     transition: box-shadow var(--pf-duration) var(--pf-ease);
 }
 
-.pf-download__part {
-    margin-left: 0.75rem;
+.pf-download__subtitle {
+    margin: 0.15rem 0 0;
+    overflow: hidden;
     color: var(--pf-color-text-secondary);
-    font-weight: 400;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-download__state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    margin-top: 0.5rem;
+    color: var(--pf-color-text);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.pf-download__state-icon {
+    align-self: center;
+    margin-right: 0.35rem;
+    font-size: 1rem;
 
     [dir='rtl'] & {
-        margin-right: 0.75rem;
+        margin-right: 0;
+        margin-left: 0.35rem;
+    }
+}
+
+.pf-download__detail {
+    margin-left: 0.6rem;
+    color: var(--pf-color-text-secondary);
+
+    [dir='rtl'] & {
+        margin-right: 0.6rem;
         margin-left: 0;
     }
 }
 
-.pf-download__owner {
-    margin: 0.25rem 0 0;
+.pf-download--failed .pf-download__state {
     color: var(--pf-color-text-secondary);
 }
 
+.pf-download__track {
+    display: block;
+    height: 3px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    background: var(--pf-quiet-background-strong);
+    border-radius: 2px;
+}
+
+.pf-download__fill {
+    display: block;
+    height: 100%;
+    background: var(--pf-color-text);
+    border-radius: 2px;
+    transition: width 600ms var(--pf-ease);
+}
+
+.pf-download__track--indeterminate .pf-download__fill {
+    width: 40%;
+    animation: pf-download-sweep 1.4s var(--pf-ease) infinite;
+}
+
+.pf-download__track--stale .pf-download__fill {
+    opacity: 0.45;
+}
+
+.pf-download__problem {
+    margin: 0.4rem 0 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.8rem;
+}
+
 .pf-download__actions {
-    margin-top: 1rem;
+    display: flex;
+    flex: none;
+    align-items: center;
+
+    .pf-button + .pf-button {
+        margin-left: 0.4rem;
+
+        [dir='rtl'] & {
+            margin-right: 0.4rem;
+            margin-left: 0;
+        }
+    }
+}
+
+@media (max-width: 40em) {
+    .pf-download {
+        flex-wrap: wrap;
+    }
+
+    .pf-download__body {
+        flex-basis: calc(100% - 8rem);
+        margin-right: 0;
+    }
+
+    .pf-download__actions {
+        justify-content: flex-end;
+        width: 100%;
+        margin-top: 0.5rem;
+    }
 }
 
 // A search result: the card, and its Play button under it
@@ -1356,6 +1762,748 @@
 
 .pf-result__action {
     margin-top: 1rem;
+}
+
+// Featured carousel: the card fills the screen under the bar, its art fades
+// from one title to the next
+
+.pf-hero--viewport {
+    --pf-hero-top: calc(var(--pf-nav-height) + 0.25rem);
+
+    // The card and the filter row under it fill the screen together: the
+    // filters stay in view, the first row starts below the fold
+    padding-bottom: 0;
+
+    .pf-hero__frame {
+        height: calc(100vh - var(--pf-hero-top) - var(--pf-discover-bar));
+        height: calc(100svh - var(--pf-hero-top) - var(--pf-discover-bar));
+        min-height: 26rem;
+        touch-action: pan-y;
+    }
+}
+
+.pf-carousel__backdrop {
+    opacity: 0;
+    transition: opacity 700ms var(--pf-ease);
+    user-select: none;
+}
+
+.pf-carousel__backdrop--active {
+    opacity: 1;
+}
+
+@keyframes pf-carousel-text {
+    from {
+        opacity: 0;
+        transform: translateY(0.75rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.pf-carousel__text {
+    animation: pf-carousel-text 500ms var(--pf-ease) both;
+}
+
+.pf-carousel__dots {
+    position: absolute;
+    right: clamp(1rem, 3vw, 2.5rem);
+    bottom: clamp(1rem, 3vw, 2.25rem);
+    display: flex;
+    align-items: center;
+
+    [dir='rtl'] & {
+        right: auto;
+        left: clamp(1rem, 3vw, 2.5rem);
+    }
+}
+
+.pf-carousel__dot {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1rem;
+    height: 1.5rem;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    transition: width 450ms var(--pf-ease);
+
+    // The visible dot is small; the button around it is easy to hit
+    &::before {
+        width: 0.4rem;
+        height: 0.4rem;
+        background: rgba(245, 242, 236, 0.4);
+        border-radius: 999px;
+        transition:
+            width 450ms var(--pf-ease),
+            background-color var(--pf-duration) var(--pf-ease);
+        content: '';
+    }
+
+    &:hover::before {
+        background: rgba(245, 242, 236, 0.8);
+    }
+}
+
+// The title on screen: its dot stretches into a capsule that fills up until the next one
+.pf-carousel__dot--active {
+    width: 2.6rem;
+
+    &::before {
+        width: 2rem;
+        background: rgba(245, 242, 236, 0.3);
+    }
+}
+
+@keyframes pf-carousel-fill {
+    from {
+        transform: scaleX(0);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
+.pf-carousel__dot-fill {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2rem;
+    height: 0.4rem;
+    margin: -0.2rem 0 0 -1rem;
+    background: var(--pf-color-text);
+    border-radius: 999px;
+    transform-origin: left center;
+    animation: pf-carousel-fill 8s linear both;
+}
+
+// Held under the pointer or the focus: the fill waits, the title stays
+.pf-carousel--held .pf-carousel__dot-fill {
+    animation-play-state: paused;
+}
+
+// A title on disk: a small round Play at the bottom right of its art, shown
+// under the pointer. It sits beside the card button, over the art, in a box of
+// the same ratio
+
+.pf-card-play {
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.pf-card-play__zone {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+
+    &::before {
+        display: block;
+        padding-top: 56.25%;
+        content: '';
+    }
+}
+
+.pf-card-play--portrait .pf-card-play__zone::before {
+    padding-top: 150%;
+}
+
+.pf-card-play__button {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    color: var(--pf-color-on-accent);
+    font-size: 1.35rem;
+    background: rgba(245, 242, 236, 0.92);
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    outline: none;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(0.25rem) scale(0.9);
+    transition:
+        opacity var(--pf-duration) var(--pf-ease),
+        transform var(--pf-duration) var(--pf-ease),
+        background-color var(--pf-duration) var(--pf-ease);
+    pointer-events: auto;
+
+    &:hover {
+        background: var(--pf-color-text);
+        transform: scale(1.06);
+    }
+
+    [dir='rtl'] & {
+        right: auto;
+        left: 0.5rem;
+    }
+}
+
+.pf-card-play:hover .pf-card-play__button,
+.pf-card-play:focus-within .pf-card-play__button {
+    opacity: 1;
+    transform: none;
+}
+
+// No pointer to hover with: the Play stays in view
+@media (hover: none) {
+    .pf-card-play__button {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+// The menu of the bar: a small glass sheet under its button, its entries as plain lines
+
+@keyframes pf-dropdown-in {
+    from {
+        opacity: 0;
+        transform: translateY(-0.35rem) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.pf-dropdown {
+    position: relative;
+    margin-left: 0.25rem;
+
+    [dir='rtl'] & {
+        margin-right: 0.25rem;
+        margin-left: 0;
+    }
+}
+
+.pf-dropdown__panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 30;
+    width: 15rem;
+    padding: 0.35rem;
+    background: rgba(24, 22, 20, 0.92);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+    transform-origin: top right;
+    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+    animation: pf-dropdown-in 160ms var(--pf-ease) both;
+
+    [dir='rtl'] & {
+        right: auto;
+        left: 0;
+        transform-origin: top left;
+    }
+}
+
+.pf-dropdown__header {
+    margin: 0;
+    padding: 0.55rem 0.7rem 0.6rem;
+    overflow: hidden;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid var(--pf-glass-border);
+}
+
+.pf-dropdown__label {
+    margin: 0.35rem 0 0;
+    padding: 0.55rem 0.7rem 0.25rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-top: 1px solid var(--pf-glass-border);
+}
+
+.pf-dropdown__list {
+    margin: 0;
+    padding: 0.25rem 0 0;
+    list-style: none;
+}
+
+.pf-dropdown__item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    color: var(--pf-color-text);
+    font: inherit;
+    font-size: 0.875rem;
+    text-align: start;
+    background: none;
+    border: 0;
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        background: rgba(245, 242, 236, 0.1);
+    }
+}
+
+// Sign out closes the account part, after a hairline
+.pf-dropdown__item--danger {
+    margin-top: 0.25rem;
+    color: var(--pf-color-text-secondary);
+}
+
+// Skeletons: placeholders in the shape of what loads, a soft light running across
+
+@keyframes pf-shimmer {
+    from {
+        background-position: 150% 0;
+    }
+
+    to {
+        background-position: -50% 0;
+    }
+}
+
+.pf-bone {
+    display: block;
+    background:
+        linear-gradient(100deg, transparent 30%, rgba(245, 242, 236, 0.07) 50%, transparent 70%)
+        var(--pf-quiet-background);
+    background-size: 200% 100%;
+    border-radius: 8px;
+    animation: pf-shimmer var(--pf-pulse-duration) linear infinite;
+}
+
+.pf-bone--line {
+    height: 0.8rem;
+    margin-top: 0.55rem;
+    border-radius: 999px;
+}
+
+.pf-bone--small {
+    height: 0.65rem;
+}
+
+.pf-bone--heading {
+    height: 1rem;
+    border-radius: 999px;
+}
+
+.pf-bone--title {
+    height: clamp(1.8rem, 3.5vw, 2.8rem);
+    border-radius: 10px;
+}
+
+.pf-bone--button {
+    height: var(--pf-control-height);
+    border-radius: 999px;
+}
+
+.pf-bone--round {
+    flex: none;
+    width: var(--pf-control-height);
+    height: var(--pf-control-height);
+    border-radius: 50%;
+}
+
+.pf-bone-lines {
+    display: block;
+}
+
+.pf-card--skeleton {
+    cursor: default;
+
+    .pf-bone--art {
+        // The card art keeps its own ratio and radius; only the fill changes
+        background:
+            linear-gradient(100deg, transparent 30%, rgba(245, 242, 236, 0.07) 50%, transparent 70%)
+            var(--pf-color-surface);
+        background-size: 200% 100%;
+    }
+}
+
+.pf-card-bone__caption {
+    display: block;
+    margin-top: 0.15rem;
+}
+
+.pf-row--skeleton .pf-row__title {
+    display: block;
+}
+
+// A sheet: the art is a dark surface, the words and buttons sit at the bottom
+.pf-hero--skeleton {
+    .pf-hero__frame {
+        background: var(--pf-color-surface);
+    }
+
+    .pf-bone--backdrop {
+        border-radius: 0;
+        opacity: 0.6;
+    }
+}
+
+.pf-hero--card.pf-hero--skeleton .pf-hero__frame {
+    border-radius: var(--pf-radius-hero);
+}
+
+.pf-hero-bone__text {
+    width: min(36rem, 100%);
+
+    .pf-bone--title {
+        margin: 0.6rem 0 0.4rem;
+    }
+}
+
+.pf-hero-bone__overview {
+    margin-top: 0.8rem;
+}
+
+.pf-hero-bone__actions {
+    display: flex;
+    margin-top: 1.4rem;
+
+    .pf-bone + .pf-bone {
+        margin-left: 0.6rem;
+
+        [dir='rtl'] & {
+            margin-right: 0.6rem;
+            margin-left: 0;
+        }
+    }
+}
+
+.pf-album-bone__text {
+    flex: 1;
+
+    .pf-bone--title {
+        margin-bottom: 0.5rem;
+    }
+}
+
+.pf-album-bone__button {
+    margin-top: 1.25rem;
+}
+
+.pf-tracks-bone {
+    cursor: default;
+
+    &:hover {
+        background: none;
+    }
+
+    .pf-bone--line {
+        margin-top: 0;
+    }
+}
+
+.pf-tracks-bone__number {
+    flex: none;
+    width: 1.1rem;
+    height: 0.8rem;
+    margin: 0 1.2rem 0 0.45rem;
+    border-radius: 999px;
+
+    [dir='rtl'] & {
+        margin: 0 0.45rem 0 1.2rem;
+    }
+}
+
+.pf-tracks-bone__length {
+    margin-left: auto;
+
+    [dir='rtl'] & {
+        margin-right: auto;
+        margin-left: 0;
+    }
+}
+
+.pf-person-bone__text {
+    flex: 1;
+}
+
+.pf-download--skeleton {
+    .pf-download__art {
+        border-radius: var(--pf-radius-card);
+    }
+
+    .pf-download__body .pf-bone--line:first-child {
+        margin-top: 0;
+    }
+}
+
+.pf-download-bone__track {
+    height: 3px;
+    margin-top: 0.9rem;
+    border-radius: 2px;
+}
+
+// Loading: the small turning arc of the player and of the upstream pages
+
+@keyframes pf-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// A play started from Pufferfin just starts: no loader over the page behind
+.pf-quiet-loading .docspinner {
+    display: none;
+}
+
+// The loader of the player and of the upstream pages: the same small arc,
+// drawn over the spinner element so the upstream code stays as it is
+.docspinner.mdl-spinner {
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: -0.875rem 0 0 -0.875rem;
+    color: var(--pf-color-text-secondary);
+    animation: pf-spin 0.8s linear infinite;
+
+    &::before {
+        position: absolute;
+        inset: 0;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        content: '';
+    }
+
+    .mdl-spinner__layer {
+        display: none;
+    }
+}
+
+// Page of an audiobook, laid out as a music album
+
+.pf-album {
+    padding: calc(var(--pf-nav-height) + 2rem) var(--pf-gutter) 4rem;
+}
+
+.pf-album__header {
+    display: flex;
+    align-items: flex-end;
+}
+
+.pf-album__cover {
+    position: relative;
+    flex: none;
+    width: clamp(10rem, 26vw, 19rem);
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--pf-color-surface);
+    border-radius: var(--pf-radius-card);
+    box-shadow: 0 0 0 1px var(--pf-glass-border), 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.pf-album__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pf-album__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 1rem;
+    color: var(--pf-color-text-secondary);
+    text-align: center;
+}
+
+.pf-album__text {
+    min-width: 0;
+    margin-left: clamp(1.25rem, 3vw, 2.5rem);
+
+    [dir='rtl'] & {
+        margin-right: clamp(1.25rem, 3vw, 2.5rem);
+        margin-left: 0;
+    }
+}
+
+.pf-album__title {
+    margin: 0;
+    font-size: clamp(1.6rem, 3vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+.pf-album__authors {
+    margin: 0.4rem 0 0;
+    font-size: 1.15rem;
+}
+
+.pf-album__facts {
+    margin: 0.35rem 0 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.95rem;
+}
+
+.pf-album__actions {
+    margin-top: 1.25rem;
+}
+
+.pf-album__overview {
+    display: -webkit-box;
+    max-width: 46rem;
+    margin: 1.25rem 0 0;
+    overflow: hidden;
+    color: var(--pf-color-text-secondary);
+    line-height: 1.5;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.pf-album__parts {
+    margin-top: 2.5rem;
+}
+
+.pf-album__parts-title {
+    padding: 0;
+}
+
+@media (max-width: 40em) {
+    .pf-album__header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .pf-album__cover {
+        width: min(16rem, 70vw);
+    }
+
+    .pf-album__text,
+    [dir='rtl'] .pf-album__text {
+        margin: 1.25rem 0 0;
+    }
+}
+
+.pf-tracks {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pf-tracks__item + .pf-tracks__item {
+    border-top: 1px solid var(--pf-glass-border);
+}
+
+.pf-tracks__row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 3.25rem;
+    padding: 0 0.75rem;
+    color: var(--pf-color-text);
+    font: inherit;
+    text-align: start;
+    background: none;
+    border: 0;
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+    transition: background-color var(--pf-duration) var(--pf-ease);
+
+    &:hover {
+        background: var(--pf-quiet-background);
+    }
+}
+
+.pf-tracks__marker {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    margin-right: 0.75rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.75rem;
+    }
+}
+
+// Under the pointer, the number gives way to Play
+.pf-tracks__play {
+    position: absolute;
+    opacity: 0;
+}
+
+.pf-tracks__row:hover .pf-tracks__play {
+    opacity: 1;
+}
+
+.pf-tracks__row:hover .pf-tracks__number,
+.pf-tracks__row:hover .pf-tracks__check {
+    opacity: 0;
+}
+
+.pf-tracks__title {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-tracks__row--played .pf-tracks__title {
+    color: var(--pf-color-text-secondary);
+}
+
+.pf-tracks__progress {
+    display: block;
+    width: 6rem;
+    height: 3px;
+    margin-top: 0.35rem;
+    overflow: hidden;
+    background: var(--pf-quiet-background-strong);
+    border-radius: 2px;
+}
+
+.pf-tracks__progress-fill {
+    display: block;
+    height: 100%;
+    background: var(--pf-color-text);
+}
+
+.pf-tracks__length {
+    flex: none;
+    margin-left: 1rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+
+    [dir='rtl'] & {
+        margin-right: 1rem;
+        margin-left: 0;
+    }
 }
 
 // Reduced motion: no scaling, no shifting, no smooth scroll, no pulsing.
@@ -1373,6 +2521,14 @@
 
     .pf-row__list {
         scroll-behavior: auto;
+    }
+
+    .pf-carousel__backdrop,
+    .pf-carousel__text,
+    .pf-bone,
+    .pf-carousel__dot-fill {
+        transition: none;
+        animation: none;
     }
 }
 
@@ -1411,12 +2567,22 @@
         box-shadow: var(--pf-focus-ring);
     }
 
+    .pf-dropdown__item:focus,
+    .pf-hero__credit-link:focus,
+    .pf-brand:focus,
+    .pf-brand:focus-visible,
     .pf-nav__tab:focus,
     .pf-nav__tab:focus-visible,
     .pf-discover__option:focus,
     .pf-discover__option:focus-visible {
         color: var(--pf-color-on-accent);
         background: var(--pf-color-accent);
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .pf-carousel__dot:focus::before,
+    .pf-carousel__dot:focus-visible::before {
+        background: var(--pf-color-text);
         box-shadow: var(--pf-focus-ring);
     }
 
@@ -1428,8 +2594,203 @@
         box-shadow: var(--pf-focus-ring);
     }
 
+    .pf-tracks__row:focus,
+    .pf-tracks__row:focus-visible {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        box-shadow: var(--pf-focus-ring);
+
+        .pf-tracks__marker,
+        .pf-tracks__length,
+        .pf-tracks__title {
+            color: inherit;
+        }
+    }
+
     // The halo goes on the whole field: the caret alone is too small to see from a couch
     .pf-search__field:focus-within {
         box-shadow: var(--pf-focus-ring);
     }
+}
+
+// A secondary action of a sheet as plain text: gray, underlined, in the row of buttons
+
+.pf-text-action {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    margin: 0 1rem 1rem 0.25rem;
+    padding: 0.25rem 0;
+    color: var(--pf-color-text-secondary);
+    font: inherit;
+    font-weight: 500;
+    font-size: 0.875rem;
+    text-decoration: underline;
+    text-decoration-color: currentcolor;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+    background: none;
+    border: 0;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    transition: color var(--pf-duration) var(--pf-ease);
+
+    &:hover,
+    &:focus-visible {
+        color: var(--pf-color-text);
+    }
+
+    &:focus-visible {
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    [dir='rtl'] & {
+        margin: 0 0.25rem 1rem 1rem;
+    }
+}
+
+.pf-text-action__icon {
+    margin-inline-start: 0.35rem;
+    font-size: 0.8em;
+}
+
+// Windows over a sheet: the trailer, the seasons of a series
+
+.pf-modal.pf-settings__panel {
+    flex-direction: column;
+    height: auto;
+    max-height: 100%;
+}
+
+.pf-modal__icon {
+    display: inline-flex;
+    margin-inline-end: 0.6rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.2rem;
+}
+
+.pf-trailer.pf-settings__panel {
+    width: min(72rem, 100%);
+
+    .pf-settings__body {
+        padding: 0;
+    }
+}
+
+.pf-trailer__frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #000;
+
+    iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+}
+
+.pf-seasons-modal.pf-settings__panel {
+    width: min(40rem, 100%);
+    max-height: min(44rem, 100%);
+
+    .pf-settings__body {
+        padding: 0.5rem 1.25rem 1rem;
+        overflow-y: auto;
+    }
+}
+
+.pf-season-lines {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pf-season-line {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+
+    & + & {
+        border-top: 1px solid var(--pf-glass-border);
+    }
+
+    .pf-download-tag {
+        min-width: 0;
+        margin: 0;
+    }
+}
+
+.pf-season-line__poster {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.1rem;
+    background: var(--pf-quiet-background-strong);
+    border-radius: 6px;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.pf-season-line__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0 1rem;
+}
+
+.pf-season-line__name {
+    overflow: hidden;
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-season-line__detail,
+.pf-season-line__error {
+    margin-top: 0.15rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.pf-season-line__error {
+    display: inline-flex;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.pf-season-line__action {
+    flex: none;
+}
+
+.pf-season-line__state {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.85rem;
+}
+
+// The account picture as the menu button
+
+.pf-nav__avatar {
+    display: block;
+    width: 1.75rem;
+    height: 1.75rem;
+    object-fit: cover;
+    border-radius: 50%;
 }

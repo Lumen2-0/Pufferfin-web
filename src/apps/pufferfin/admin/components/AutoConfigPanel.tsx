@@ -1,4 +1,3 @@
-import Sync from '@mui/icons-material/Sync';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Chip, { type ChipProps } from '@mui/material/Chip';
@@ -14,6 +13,7 @@ import { translate } from 'apps/pufferfin/i18n';
 import { useLocale } from 'hooks/useLocale';
 
 import { useAutoConfig, useRunAutoConfig } from '../api/useAutoConfig';
+import { Sync } from '../../components/icons';
 
 const STEP_COLORS: Record<AutoConfigStepStatus, ChipProps['color']> = {
     [AutoConfigStepStatus.Applied]: 'success',

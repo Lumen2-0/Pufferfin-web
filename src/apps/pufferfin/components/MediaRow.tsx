@@ -1,11 +1,13 @@
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import React, { type ReactNode, useId } from 'react';
 
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE } from '../navigation/focus';
 import type { CardShape } from '../utils/images';
 
-const SKELETON_COUNT = 6;
+import { CardBone } from './Skeleton';
+import { ErrorOutline } from './icons';
+
+const SKELETON_COUNT = 8;
 
 interface MediaRowProps<T> {
     title: string
@@ -36,11 +38,7 @@ const MediaRow = <T, >({
     if (isPending) {
         content = (
             <div className='pf-row__list' aria-busy='true'>
-                {Array.from({ length: SKELETON_COUNT }, (_, index) => (
-                    <span key={index} className={`pf-card pf-card--${shape} pf-card--skeleton`} aria-hidden='true'>
-                        <span className='pf-card__art' />
-                    </span>
-                ))}
+                {Array.from({ length: SKELETON_COUNT }, (_, index) => <CardBone key={index} shape={shape} withCaption={false} />)}
                 {/* Last, so the row spacing still starts with the first card */}
                 <span className='pf-visually-hidden'>{t('Loading')}</span>
             </div>

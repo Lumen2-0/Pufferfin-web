@@ -33,6 +33,7 @@ import { ServerConnections } from 'lib/jellyfin-apiclient';
 import LibraryMenu from 'scripts/libraryMenu';
 import { setBackdropTransparency, TRANSPARENCY_LEVEL } from 'components/backdrop/backdrop';
 import { pluginManager } from 'components/pluginManager';
+import { createVolumePanel, enableButtonHints, getVolumeIcon } from 'apps/pufferfin/features/player/volumePanel';
 
 function getOpenedDialog() {
     return document.querySelector('.dialogContainer .dialog.opened');
@@ -277,6 +278,8 @@ export default function (view) {
     }
 
     function hideOsd() {
+        // PUFFERFIN: the volume panel holds the controls while it is open
+        if (volumePanel.isOpen()) return;
         Events.trigger(document, EventType.SHOW_VIDEO_OSD, [ false ]);
         slideUpToHide(headerElement);
         hideMainOsdControls();
@@ -376,7 +379,7 @@ export default function (view) {
 
     function resetIdle() {
         // Restart hide timer if OSD is currently visible and there is no opened dialog
-        if (currentVisibleMenu && !mouseIsDown && !getOpenedDialog()) {
+        if (currentVisibleMenu && !mouseIsDown && !getOpenedDialog() && !volumePanel.isOpen()) {
             startOsdHideTimer();
         } else {
             stopOsdHideTimer();
@@ -885,13 +888,12 @@ export default function (view) {
 
         buttonMuteIcon.classList.remove('volume_off', 'volume_up');
 
-        if (isMuted) {
-            buttonMute.setAttribute('title', globalize.translate('Unmute') + ' (M)');
-            buttonMuteIcon.classList.add('volume_off');
-        } else {
-            buttonMute.setAttribute('title', globalize.translate('Mute') + ' (M)');
-            buttonMuteIcon.classList.add('volume_up');
-        }
+        // PUFFERFIN: the button opens the volume panel; its icon tells the level
+        buttonMuteIcon.classList.remove('volume_down');
+        buttonMute.setAttribute('title', globalize.translate('Volume'));
+        buttonMuteIcon.classList.add(getVolumeIcon(isMuted, volumeLevel));
+        volumePanel.update(isMuted, volumeLevel);
+        canSetVolume = showVolumeSlider;
 
         if (showMuteButton) {
             buttonMute.classList.remove('hide');
@@ -974,6 +976,8 @@ export default function (view) {
                     stats: true,
                     suboffset: showSubOffset,
                     onOption: onSettingsOption
+                }).catch(() => {
+                    // PUFFERFIN: closed without a choice, nothing to do
                 }).finally(() => {
                     resetIdle();
                 });
@@ -1047,6 +1051,8 @@ export default function (view) {
                 if (index !== currentIndex) {
                     playbackManager.setAudioStreamIndex(index, player);
                 }
+            }).catch(() => {
+                // PUFFERFIN: closed without a choice, nothing to do
             }).finally(() => {
                 resetIdle();
             });
@@ -1095,6 +1101,9 @@ export default function (view) {
                 }
             }
         })
+            .catch(() => {
+                // PUFFERFIN: closed without a choice, nothing to do
+            })
             .finally(() => {
                 resetIdle();
             });
@@ -1174,6 +1183,8 @@ export default function (view) {
                 }
 
                 toggleSubtitleSync();
+            }).catch(() => {
+                // PUFFERFIN: closed without a choice, nothing to do
             }).finally(() => {
                 resetIdle();
             });
@@ -1652,6 +1663,17 @@ export default function (view) {
     const headerElement = document.querySelector('.skinHeader');
     const osdBottomElement = view.querySelector('.videoOsdBottom-maincontrols');
 
+    let canSetVolume = true;
+    const volumePanel = createVolumePanel({
+        button: view.querySelector('.buttonMute'),
+        container: view.querySelector('.volumeButtons'),
+        setVolume: volume => playbackManager.setVolume(volume, currentPlayer),
+        setMuted: muted => playbackManager.setMute(muted, currentPlayer),
+        labels: { volume: globalize.translate('Volume'), mute: globalize.translate('Mute'), unmute: globalize.translate('Unmute') },
+        onOpenChange: isOpen => (isOpen ? stopOsdHideTimer() : resetIdle())
+    });
+    enableButtonHints(view);
+
     nowPlayingPositionSlider.enableKeyboardDragging();
     nowPlayingVolumeSlider.enableKeyboardDragging();
 
@@ -1714,6 +1736,7 @@ export default function (view) {
         }
     });
     view.addEventListener('viewbeforehide', function () {
+        volumePanel.close();
         if (statsOverlay) {
             statsOverlay.enabled(false);
         }
@@ -1839,8 +1862,13 @@ export default function (view) {
         playbackManager.toggleFullscreen(currentPlayer);
     });
 
+    // PUFFERFIN: the volume button opens a panel with a slider; without volume control it mutes
     view.querySelector('.buttonMute').addEventListener('click', function () {
-        playbackManager.toggleMute(currentPlayer);
+        if (canSetVolume) {
+            volumePanel.toggle();
+        } else {
+            playbackManager.toggleMute(currentPlayer);
+        }
     });
 
     nowPlayingVolumeSlider.addEventListener('input', (e) => {

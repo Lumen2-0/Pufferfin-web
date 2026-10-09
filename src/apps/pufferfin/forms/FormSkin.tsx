@@ -34,8 +34,10 @@ const FormSkin: FC = () => {
         };
     }, [ kind ]);
 
-    // The public pages, the first thing a visitor sees, have no bar: they open with the logo
-    return kind === FormSkinKind.Public ? <PufferfinLogo className='pf-public-logo' /> : null;
+    // The public pages, the first thing a visitor sees, have no bar: they open with the logo.
+    // The sign in page opens on its form alone
+    const isLogin = /^\/login\/?$/i.test(pathname);
+    return kind === FormSkinKind.Public && !isLogin ? <PufferfinLogo className='pf-public-logo' /> : null;
 };
 
 export default FormSkin;

@@ -1,7 +1,6 @@
 import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
 import { CollectionType } from '@jellyfin/sdk/lib/generated-client/models/collection-type';
 import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
@@ -40,6 +39,10 @@ import { useInitialFocus } from '../navigation/useInitialFocus';
 import { getCardImageUrl } from '../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage } from '../utils/items';
 import { useOpenItem } from '../utils/navigation';
+import { CapsulesSkeleton, GridSkeleton, TilesSkeleton } from '../components/Skeleton';
+import { isPlayableItem } from '../utils/playback';
+import { usePlayItem } from '../utils/usePlay';
+import { ErrorOutline } from '../components/icons';
 
 const getKey = (item: ItemDto) => item.Id ?? '';
 
@@ -57,10 +60,11 @@ const SuggestionsTab: FC<TabProps> = ({ view }) => {
     const t = useTranslation();
     const { api } = useApi();
     const openItem = useOpenItem();
+    const playCard = usePlayItem();
     const isSeries = view.CollectionType === CollectionType.Tvshows;
     const resume = useLibraryResume(view.Id ?? undefined);
     const nextUp = useLibraryNextUp(view.Id ?? undefined, isSeries);
-    const latest = useLatestInLibrary(view.Id ?? '');
+    const latest = useLatestInLibrary(view);
 
     const renderCard = useCallback((shape: 'landscape' | 'portrait') => {
         const CardRenderer = (item: ItemDto) => {
@@ -76,11 +80,12 @@ const SuggestionsTab: FC<TabProps> = ({ view }) => {
                     progressLabel={progress ? t('WatchedPercent', progress) : undefined}
                     value={item}
                     onSelect={openItem}
+                    onPlay={isPlayableItem(item) ? playCard : undefined}
                 />
             );
         };
         return CardRenderer;
-    }, [ api, openItem, t ]);
+    }, [ api, openItem, playCard, t ]);
 
     const isEmpty = !resume.isPending && !latest.isPending && (!isSeries || !nextUp.isPending)
         && !resume.data?.length && !latest.data?.length && !nextUp.data?.length
@@ -141,7 +146,7 @@ const UpcomingTab: FC<TabProps> = ({ view }) => {
             </p>
         );
     }
-    if (upcoming.isPending) return <p className='pf-library__note' aria-busy='true'>{t('Loading')}</p>;
+    if (upcoming.isPending) return <TilesSkeleton />;
     if (!upcoming.data.length) return <p className='pf-library__note'>{t('LibraryNoUpcoming')}</p>;
 
     return (
@@ -205,7 +210,7 @@ const FilterTab: FC<FilterTabProps> = ({ view, itemTypes, choices, isPending, is
             </p>
         );
     }
-    if (isPending) return <p className='pf-library__note' aria-busy='true'>{t('Loading')}</p>;
+    if (isPending) return <CapsulesSkeleton count={8} />;
     if (!chosen) return <p className='pf-library__note'>{t(noChoiceKey)}</p>;
 
     return (
@@ -325,7 +330,7 @@ export const Component = () => {
     } else if (isUnknown) {
         content = <p className='pf-library__note'>{t('LibraryNotFound')}</p>;
     } else if (isViewPending || !view) {
-        content = <p className='pf-library__note' aria-busy='true'>{t('Loading')}</p>;
+        content = <GridSkeleton />;
     } else {
         content = <LibraryTabContent tab={tab} view={view} itemTypes={itemTypes} />;
     }

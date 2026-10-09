@@ -589,6 +589,27 @@ $skin: ':root.pf-form-skin';
         text-align: center;
     }
 
+    // The sign in page opens on its form alone: no logo above it, no "Please sign in".
+    // The title stays for screen readers, and the form sits in the middle of the screen
+    #loginPage.standalonePage {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 100vh;
+        padding-top: 2rem !important;
+    }
+
+    #loginPage .manualLoginForm .sectionTitle,
+    #loginPage .visualLoginForm h1 {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        clip: rect(0 0 0 0);
+    }
+
     // Users of the sign in page and servers of the server list: round portraits
     #loginPage,
     #selectServerPage {

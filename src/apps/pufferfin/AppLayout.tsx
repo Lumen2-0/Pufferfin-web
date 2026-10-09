@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { clearBackdrop } from 'components/backdrop/backdrop';
+import viewManager from 'components/viewManager/viewManager';
 
 import AppNav from './components/AppNav';
 import { useLiveRequests } from './features/requests/api/useLiveRequests';
@@ -24,6 +25,12 @@ export const Component = () => {
     useEffect(() => {
         clearBackdrop(true);
     }, []);
+
+    // A Pufferfin screen closes the upstream view left open, as the upstream pages do: the video
+    // player stops its playback when its view hides, else it plays on, unseen, after leaving it
+    useEffect(() => {
+        viewManager.hideView();
+    }, [ location.pathname ]);
 
     // Each screen starts at the top: the scroll container outlives the routes
     useEffect(() => {

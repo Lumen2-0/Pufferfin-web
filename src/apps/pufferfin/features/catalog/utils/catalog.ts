@@ -1,4 +1,4 @@
-import { getCatalogAudiobookPath, getCatalogBookPath, getCatalogTitlePath, getItemPath } from '../../../routes/paths';
+import { getCatalogAudiobookPath, getCatalogTitlePath, getItemPath } from '../../../routes/paths';
 import {
     CatalogAvailability,
     type CatalogItem,
@@ -36,10 +36,6 @@ export function getCatalogItemPath(item: CatalogItem): string | undefined {
     }
     if (item.Availability === CatalogAvailability.OnDisk && item.LocalItemId) {
         return getItemPath(item.LocalItemId);
-    }
-    // A book to read that the library lacks opens its catalog sheet, with Download
-    if (item.Kind === CatalogItemKind.Book) {
-        return item.BookProvider && item.BookId ? getCatalogBookPath(item.BookProvider, item.BookId) : undefined;
     }
     if ((item.Kind === CatalogItemKind.Movie || item.Kind === CatalogItemKind.Series) && item.TmdbId) {
         return getCatalogTitlePath(item.Kind, item.TmdbId);

@@ -18,7 +18,8 @@ import enUs from '../../../strings/en-us.json';
 describe('Pufferfin: Discover types', () => {
     it('reads the type of the address', () => {
         expect(parseDiscoverType('movies')).toBe(DiscoverType.Movies);
-        expect(parseDiscoverType('books')).toBe(DiscoverType.Books);
+        // Books to read are no longer offered: an old address falls back to All
+        expect(parseDiscoverType('books')).toBe(DiscoverType.All);
         expect(parseDiscoverType('documentaries')).toBe(DiscoverType.Documentaries);
     });
 
@@ -32,19 +33,13 @@ describe('Pufferfin: Discover types', () => {
         }
     });
 
-    it('gives every offered type at least one row', () => {
+    it('keeps above the genres only what is being watched, and live TV', () => {
+        expect(getDiscoverRows(DiscoverType.All)).toEqual([ DiscoverRow.ContinueWatching, DiscoverRow.NextUp ]);
+        expect(getDiscoverRows(DiscoverType.TvShows)).toEqual([ DiscoverRow.LiveTvOnNow, DiscoverRow.Recordings ]);
         for (const type of DISCOVER_TYPES) {
-            expect(getDiscoverRows(type).length).toBeGreaterThan(0);
+            expect(getDiscoverRows(type)).not.toContain(DiscoverRow.TrendingMovies);
+            expect(getDiscoverRows(type)).not.toContain(DiscoverRow.AudiobookBestSellers);
         }
-    });
-
-    it('mixes what is being watched and the catalog in All', () => {
-        expect(getDiscoverRows(DiscoverType.All)).toEqual(expect.arrayContaining([
-            DiscoverRow.ContinueWatching,
-            DiscoverRow.TrendingMovies,
-            DiscoverRow.TrendingShows,
-            DiscoverRow.AudiobookBestSellers
-        ]));
     });
 
     it('is for discovering: no row lists what the library already holds', () => {
@@ -53,22 +48,20 @@ describe('Pufferfin: Discover types', () => {
         }
     });
 
-    it('discovers audiobooks and books in their catalogs, not in the library', () => {
-        expect(getDiscoverRows(DiscoverType.Audiobooks)).toEqual([ DiscoverRow.AudiobookBestSellers, DiscoverRow.AudiobookNewReleases ]);
-        expect(getDiscoverRows(DiscoverType.Books)).toEqual([ DiscoverRow.TrendingBooks ]);
+    it('leaves audiobooks and documentaries to their genre rows', () => {
+        expect(getDiscoverRows(DiscoverType.Audiobooks)).toEqual([]);
+        expect(getDiscoverRows(DiscoverType.Documentaries)).toEqual([]);
     });
 
-    it('keeps the film recommendations out of Series and the series rows out of Movies', () => {
-        expect(getDiscoverRows(DiscoverType.Series)).not.toContain(DiscoverRow.RecommendedForYou);
+    it('keeps the series rows out of Movies', () => {
         expect(getDiscoverRows(DiscoverType.Movies)).not.toContain(DiscoverRow.NextUp);
-        expect(getDiscoverRows(DiscoverType.Movies)).not.toContain(DiscoverRow.TrendingShows);
     });
 
     it('opens on a featured title for the video types only', () => {
         expect(hasFeatured(DiscoverType.All)).toBe(true);
         expect(hasFeatured(DiscoverType.Movies)).toBe(true);
-        expect(hasFeatured(DiscoverType.Books)).toBe(false);
-        expect(hasFeatured(DiscoverType.TvShows)).toBe(false);
+        expect(hasFeatured(DiscoverType.TvShows)).toBe(true);
+        expect(hasFeatured(DiscoverType.Audiobooks)).toBe(false);
     });
 
     it('narrows the disk rows to the type', () => {
@@ -78,15 +71,12 @@ describe('Pufferfin: Discover types', () => {
         expect(getDiskItemTypes(DiscoverType.Audiobooks)).toEqual([ BaseItemKind.AudioBook ]);
     });
 
-    it('lists unscripted TMDB shows in TV Shows and keeps fiction out of it', () => {
-        expect(getDiscoverRows(DiscoverType.TvShows)).toContain(DiscoverRow.PopularTvShows);
+    it('keeps fiction out of TV Shows', () => {
         expect(TV_SHOW_TYPES).not.toContain('Scripted');
-        expect(getDiscoverRows(DiscoverType.Series)).not.toContain(DiscoverRow.PopularTvShows);
     });
 
-    it('offers documentaries, films and series, by their TMDB genre', () => {
+    it('offers documentaries by their TMDB genre', () => {
         expect(DISCOVER_TYPES).toContain(DiscoverType.Documentaries);
-        expect(getDiscoverRows(DiscoverType.Documentaries)).toEqual([ DiscoverRow.DocumentaryMovies, DiscoverRow.DocumentarySeries ]);
         expect(DOCUMENTARY_GENRE_ID).toBe(99);
     });
 });

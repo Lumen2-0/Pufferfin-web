@@ -5,7 +5,9 @@
 // their logic stay upstream, only their look changes here.
 
 @use '../../styles/tokens' as *;
+@use 'sass:map';
 @use '../dialogs/palette' as *;
+@use 'icons' as *;
 
 .pf-player-skin {
     @include pf-tokens;
@@ -18,96 +20,371 @@
         @include pf-overlay-palette;
     }
 
-    // Black veils under the controls instead of the upstream grey ones
+    // The player of the former Lumen app, measure for measure: no card, no
+    // glass. A black veil at the top with Back and the title; a black veil at
+    // the bottom with a thin timeline over the whole width, then one line of
+    // small round filled buttons: play, back and forward ten seconds and the
+    // time on the left; subtitles, audio, settings, picture in picture, mute,
+    // a thin separator and full screen on the right. No volume bar.
+    // Paused, a large round Play sits in the middle of the picture.
+    // The upstream markup and logic stay; only the layout and the icons change.
 
-    .videoOsdBottom {
-        background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
-    }
+    --pf-lumen-fill: #262626;
+    --pf-lumen-fill-hover: rgba(38, 38, 38, 0.8);
+    --pf-lumen-text: #fafafa;
+    --pf-lumen-muted: #a3a3a3;
 
     .skinHeader-withBackground.osdHeader {
-        background: linear-gradient(180deg, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 100%);
+        padding: 0.5rem clamp(0.5rem, 1.5vw, 1rem);
+        background: linear-gradient(180deg, rgba(10, 10, 10, 0.8) 0%, rgba(10, 10, 10, 0) 100%);
+        backdrop-filter: none;
+    }
+
+    .osdHeader .headerButton {
+        width: 2.25rem;
+        height: 2.25rem;
+        color: #d4d4d4;
+        border-radius: 50%;
+        transition:
+            color var(--pf-duration) var(--pf-ease),
+            background-color var(--pf-duration) var(--pf-ease);
+
+        &:hover {
+            color: var(--pf-lumen-text);
+            background: var(--pf-lumen-fill);
+        }
+    }
+
+    .videoOsd-appBar .MuiTypography-root {
+        overflow: hidden;
+        color: var(--pf-lumen-text);
+        font-weight: 500;
+        font-size: 1rem;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .videoOsdBottom {
+        padding: 5rem clamp(1rem, 2.5vw, 1.5rem) clamp(1rem, 2.5vw, 1.5rem);
+        background: linear-gradient(0deg, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.7) 50%, rgba(10, 10, 10, 0) 100%);
     }
 
     .osdControls {
-        padding: 0 var(--pf-gutter);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 0;
     }
 
-    .osdTitle {
-        font-weight: 700;
+    // The rows of the upstream markup step aside: their children line up in one flow
+    // Only the wrappers: the end time and the volume are blocks of their own
+    .osdControls > .flex,
+    .osdControls > .buttons,
+    .osdControls > .buttons > div[dir] {
+        display: contents;
     }
 
-    // Round glass buttons, the main one solid.
-    // Every state restates its colors: the theme's hover, active and
-    // .show-focus:focus rules load later in the page and would put the blue
-    // back on a tie, so these selectors stay more specific than them.
+    // The title is in the bar at the top
+    .osdMainTextContainer,
+    .osdSecondaryMediaInfo,
+    .osdControls .btnPreviousChapter,
+    .osdControls .btnNextChapter {
+        display: none;
+    }
 
-    .videoOsdBottom .paper-icon-button-light {
-        margin: 0 0.35em;
-        color: var(--pf-color-text);
-        background: var(--pf-glass-background);
-        border: 1px solid var(--pf-glass-border);
+    // Timeline: 4px, 6px under the pointer, its knob shown on hover
+
+    .osdControls > .flex > .sliderContainer {
+        flex: 0 0 100%;
+        order: 0;
+        margin: 0 0 0.5rem !important;
+    }
+
+    .sliderContainer .mdl-slider-background-flex-container {
+        padding: 0;
+    }
+
+    .mdl-slider-background-flex {
+        height: 4px;
+        margin-top: -2px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
         transition:
-            transform var(--pf-duration) var(--pf-ease),
-            box-shadow var(--pf-duration) var(--pf-ease);
-        backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+            height var(--pf-duration) var(--pf-ease),
+            margin var(--pf-duration) var(--pf-ease);
     }
 
-    .videoOsdBottom .paper-icon-button-light:hover:not(:disabled),
-    .videoOsdBottom .paper-icon-button-light:active:not(:disabled) {
-        color: var(--pf-color-text);
-        background: var(--pf-glass-background-strong);
+    .sliderContainer:hover .mdl-slider-background-flex {
+        height: 6px;
+        margin-top: -3px;
     }
-
-    // Very visible focus for the remote: halo plus a slight scale
-    .videoOsdBottom .paper-icon-button-light:focus:not(:disabled),
-    .videoOsdBottom .paper-icon-button-light.show-focus:focus {
-        color: var(--pf-color-text);
-        transform: scale(var(--pf-focus-scale));
-        box-shadow: var(--pf-focus-ring);
-    }
-
-    .videoOsdBottom .paper-icon-button-light.btnPause,
-    .videoOsdBottom .paper-icon-button-light.btnPause:hover:not(:disabled),
-    .videoOsdBottom .paper-icon-button-light.btnPause:active:not(:disabled),
-    :root.layout-tv .videoOsdBottom .paper-icon-button-light.btnPause:focus:not(:disabled),
-    :root.layout-tv .videoOsdBottom .paper-icon-button-light.btnPause.show-focus:focus {
-        color: var(--pf-color-on-accent);
-        background: var(--pf-color-accent);
-        border-color: transparent;
-    }
-
-    // Timeline: warm white instead of the upstream blue
 
     .mdl-slider {
-        color: var(--pf-color-accent);
+        color: var(--pf-lumen-text);
     }
 
     .mdl-slider-background-lower {
-        background-color: var(--pf-color-accent);
+        background-color: #f5f5f5;
+        border-radius: 999px;
+    }
+
+    // What is already loaded ahead
+    .mdl-slider-background-upper {
+        background: rgba(255, 255, 255, 0.4);
     }
 
     .mdl-slider::-webkit-slider-thumb {
-        background: var(--pf-color-accent);
+        width: 0.75rem;
+        height: 0.75rem;
+        background: #f5f5f5;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        transition: opacity var(--pf-duration) var(--pf-ease);
     }
 
     .mdl-slider::-moz-range-thumb {
-        background: var(--pf-color-accent);
+        width: 0.75rem;
+        height: 0.75rem;
+        background: #f5f5f5;
+        border: 0;
+        opacity: 0;
+        transition: opacity var(--pf-duration) var(--pf-ease);
     }
 
-    // Chapters: markers taller and brighter, so they read on any picture
+    .sliderContainer:hover .mdl-slider::-webkit-slider-thumb,
+    .sliderContainer .mdl-slider:focus::-webkit-slider-thumb {
+        opacity: 1;
+    }
 
+    .sliderContainer:hover .mdl-slider::-moz-range-thumb,
+    .sliderContainer .mdl-slider:focus::-moz-range-thumb {
+        opacity: 1;
+    }
+
+    // The time under the pointer: a small dark tag above the line
+    .sliderBubble {
+        color: #f5f5f5;
+        font-weight: 500;
+        font-size: 0.75rem;
+        background: #0a0a0a;
+        border: 1px solid rgba(64, 64, 64, 0.8);
+        border-radius: 6px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .sliderBubbleText {
+        padding: 0.25rem 0.5rem;
+    }
+
+    // Chapters: small notches on the line
     .sliderMarker {
-        width: 3px;
-        height: 14px;
+        width: 2px;
+        height: 8px;
         border-radius: 1px;
     }
 
     .sliderMarker.unwatched {
-        background-color: rgba(245, 242, 236, 0.55);
+        background-color: rgba(255, 255, 255, 0.55);
     }
 
     .sliderMarker.watched {
-        background-color: var(--pf-color-accent);
+        background-color: rgba(0, 0, 0, 0.45);
+    }
+
+    // "0:12 / 1:42:00", small and quiet next to the buttons
+    .osdControls .osdPositionText,
+    .osdControls .osdDurationText {
+        margin: 0 !important;
+        color: var(--pf-lumen-muted);
+        font-size: 0.75rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .osdControls .osdPositionText {
+        order: 8;
+        margin-left: 0.25rem !important;
+    }
+
+    .osdControls .osdDurationText {
+        order: 9;
+    }
+
+    // When it ends ("Ends at 22:30"): right after the time code, smaller and
+    // dimmer. It takes the free width of the line, which pushes the actions to
+    // the right edge
+    .osdControls .osdTimeText {
+        flex: 1;
+        order: 10;
+        min-width: 0.5rem;
+        margin: 0 0.6rem 0 0.25rem;
+        overflow: hidden;
+        color: #737373;
+        text-align: start;
+        text-overflow: ellipsis;
+        font-size: 0.6875rem;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    // Upstream hides it under 75em; here it shows down to tablets
+    @media (min-width: 40em) {
+        .videoOsdBottom .osdTimeText .endsAtText {
+            display: inline !important;
+        }
+    }
+
+    .osdControls .osdDurationText::before {
+        padding: 0 0.3em;
+        content: '/';
+    }
+
+    // Buttons: 36px filled circles, as the secondary buttons of Lumen
+
+    .videoOsdBottom .paper-icon-button-light {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        // 36px at the base size, as in Lumen; larger on large screens
+        width: 2.42rem;
+        height: 2.42rem;
+        margin: 0 0.135rem;
+        padding: 0;
+        color: var(--pf-lumen-text);
+        background: var(--pf-lumen-fill);
+        border: 0;
+        border-radius: 50%;
+        transition: background-color var(--pf-duration) var(--pf-ease);
+    }
+
+    .videoOsdBottom .paper-icon-button-light:hover:not(:disabled),
+    .videoOsdBottom .paper-icon-button-light:active:not(:disabled) {
+        color: var(--pf-lumen-text);
+        background: var(--pf-lumen-fill-hover);
+    }
+
+    .videoOsdBottom .paper-icon-button-light:focus:not(:disabled),
+    .videoOsdBottom .paper-icon-button-light.show-focus:focus {
+        color: var(--pf-lumen-text);
+        background: var(--pf-lumen-fill);
+        box-shadow: none;
+    }
+
+    // Icons: lucide drawings, 16px, play and pause 20px
+    .videoOsdBottom .material-icons {
+        width: 1rem;
+        height: 1rem;
+        font-size: 0;
+
+        &::before {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: currentColor;
+            mask: var(--pf-player-icon) center / contain no-repeat;
+            content: '';
+        }
+    }
+
+    .videoOsdBottom .btnPause .material-icons {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    @each $class, $icon in $pf-player-icon-classes {
+        .videoOsdBottom .material-icons.#{$class} {
+            --pf-player-icon: #{map.get($pf-player-icons, $icon)};
+        }
+    }
+
+    // Playback on the left, in the order of Lumen; the actions on the right
+    .osdControls .btnPause { order: 1; }
+    .osdControls .btnRewind { order: 2; }
+    .osdControls .btnFastForward { order: 3; }
+    .osdControls .btnPreviousTrack { order: 4; }
+    .osdControls .btnNextTrack { order: 5; }
+    .osdControls .btnRecord { order: 11; }
+    .osdControls .btnUserRating { order: 12; }
+    .osdControls .btnSubtitles { order: 13; }
+    .osdControls .btnAudio { order: 14; }
+    .osdControls .btnVideoOsdSettings { order: 15; }
+    .osdControls .btnAirPlay { order: 16; }
+    .osdControls .btnPip { order: 17; }
+
+    // The volume: the mute button alone, no bar
+    .osdControls .volumeButtons {
+        display: flex;
+        order: 18;
+        align-items: center;
+    }
+
+    .osdVolumeSliderContainer {
+        display: none;
+    }
+
+    // A thin separator, then full screen
+    .osdControls .btnFullscreen {
+        position: relative;
+        order: 19;
+        margin-left: 0.6rem;
+
+        &::before {
+            position: absolute;
+            top: 50%;
+            left: -0.45rem;
+            width: 1px;
+            height: 1.25rem;
+            background: #404040;
+            transform: translateY(-50%);
+            content: '';
+        }
+    }
+
+    // The volume indicator of the keys and the wheel does not show either
+    .iconOsd {
+        display: none;
+    }
+
+    // Paused: a large round Play in the middle of the picture, as in Lumen
+    #videoOsdPage:has(.btnPause .play_arrow)::after {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        z-index: 1;
+        width: 4rem;
+        height: 4rem;
+        background:
+            var(--pf-player-paused-play) center / 1.75rem no-repeat,
+            rgba(245, 245, 245, 0.9);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        content: '';
+    }
+
+    --pf-player-paused-play: #{map.get($pf-player-icons, 'play')};
+
+    @media (max-width: 40em) {
+        .videoOsdBottom .paper-icon-button-light {
+            margin: 0 0.0625rem;
+        }
+
+        .osdControls .btnPip,
+        .osdControls .btnAirPlay,
+        .osdControls .osdDurationText::before {
+            display: none;
+        }
+
+        // No room for the end time: it only keeps the actions on the right
+        .osdControls .osdTimeText {
+            visibility: hidden;
+        }
+
+        .osdControls .osdPositionText,
+        .osdControls .osdDurationText {
+            font-size: 0.6875rem;
+        }
     }
 
     // Skip intro: a round glass pill with the focus halo
@@ -182,25 +459,6 @@
         color: var(--pf-color-text-secondary);
     }
 
-    // Volume and brightness indicators: dark glass, a warm white bar instead of the upstream blue and orange
-
-    .iconOsd {
-        color: var(--pf-color-text);
-        background: var(--pf-glass-background-strong);
-        border: 1px solid var(--pf-glass-border);
-        border-radius: 20px;
-        backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
-    }
-
-    .iconOsdProgressOuter {
-        background: var(--pf-quiet-background-strong);
-    }
-
-    .iconOsdProgressInner,
-    .brightnessOsdProgressInner {
-        background: var(--pf-color-accent);
-    }
-
     // Up next: a glass card over the end credits, its two actions round buttons
 
     .upNextContainer {
@@ -248,6 +506,15 @@
         color: rgba(245, 242, 236, 0);
         background: rgba(245, 242, 236, 0);
         transform: scale(0.95);
+    }
+}
+
+:root.layout-tv.pf-player-skin {
+    .videoOsdBottom .paper-icon-button-light:focus:not(:disabled),
+    .videoOsdBottom .paper-icon-button-light.show-focus:focus {
+        color: var(--pf-color-on-accent);
+        background: var(--pf-color-accent);
+        box-shadow: var(--pf-focus-ring);
     }
 }
 

@@ -77,9 +77,9 @@ describe('Pufferfin: Discover type picker', () => {
     it('picks a type, closes and gives the focus back to the button', () => {
         render(DiscoverType.All);
         act(() => button().click());
-        const books = options().find(option => option.textContent === 'Books')!;
-        act(() => books.click());
-        expect(onChange).toHaveBeenCalledWith(DiscoverType.Books);
+        const audiobooks = options().find(option => option.textContent === 'Audiobooks')!;
+        act(() => audiobooks.click());
+        expect(onChange).toHaveBeenCalledWith(DiscoverType.Audiobooks);
         expect(options()).toHaveLength(0);
         expect(document.activeElement).toBe(button());
     });

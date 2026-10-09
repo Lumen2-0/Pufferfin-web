@@ -1,5 +1,3 @@
-import Cast from '@mui/icons-material/Cast';
-import CastConnected from '@mui/icons-material/CastConnected';
 import classNames from 'classnames';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
@@ -10,6 +8,7 @@ import Events from 'utils/events';
 
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
+import { Cast, CastConnected } from '../components/icons';
 
 /**
  * Cast entry of the upstream header, kept in the Pufferfin bar: picks the

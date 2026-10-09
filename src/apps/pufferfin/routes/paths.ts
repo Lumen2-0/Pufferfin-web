@@ -33,11 +33,6 @@ const MOVIE_SEGMENT = 'movie';
 const SERIES_SEGMENT = 'series';
 /** Audiobooks share the catalog sheet route: `title/audiobook/{asin}`. */
 export const AUDIOBOOK_SEGMENT = 'audiobook';
-/** Books to read too: `title/book/{provider}:{id}`, such as `title/book/openlibrary:OL82563W`. */
-export const BOOK_SEGMENT = 'book';
-const BOOK_ID_SEPARATOR = ':';
-const BOOK_PROVIDER_PATTERN = /^[a-z]{2,20}$/;
-const BOOK_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 const MARKET_PARAM = 'market';
 
 /** The title sheet of a movie or a series by TMDB id, on disk or not: the server tells which. */
@@ -49,19 +44,6 @@ export const getCatalogAudiobookPath = (asin: string, market?: string | null) =>
     const path = `/${PUFFERFIN_APP_PATH}/title/${AUDIOBOOK_SEGMENT}/${asin}`;
     return market ? `${path}?${MARKET_PARAM}=${encodeURIComponent(market)}` : path;
 };
-
-/** Catalog sheet of a book to read, by its metadata provider and its id there. */
-export const getCatalogBookPath = (provider: string, bookId: string) =>
-    `/${PUFFERFIN_APP_PATH}/title/${BOOK_SEGMENT}/${encodeURIComponent(provider + BOOK_ID_SEPARATOR + bookId)}`;
-
-/** Reads the provider and the id of a book sheet path; undefined when they are not well formed. */
-export function parseBookTarget(id: string): { provider: string, bookId: string } | undefined {
-    const separator = id.indexOf(BOOK_ID_SEPARATOR);
-    if (separator < 0) return undefined;
-    const provider = id.slice(0, separator);
-    const bookId = id.slice(separator + 1);
-    return BOOK_PROVIDER_PATTERN.test(provider) && BOOK_ID_PATTERN.test(bookId) ? { provider, bookId } : undefined;
-}
 
 /** Reads the Audible market of an audiobook sheet path. */
 export const getMarketParam = (searchParams: URLSearchParams) => searchParams.get(MARKET_PARAM) ?? undefined;
@@ -88,15 +70,20 @@ export const getMenuPath = () => `/${PUFFERFIN_APP_PATH}/menu`;
 /** Universal search. */
 export const getSearchPath = () => `/${PUFFERFIN_APP_PATH}/search`;
 
+/** Page of an audiobook of the library, laid out as an album: the book and every part of it. */
+export const getAudiobookPath = (itemId: string) => `/${PUFFERFIN_APP_PATH}/audiobook/${itemId}`;
+
 /** Person page: portrait, biography and filmography. */
 export const getPersonPath = (personId: string) => `/${PUFFERFIN_APP_PATH}/person/${personId}`;
+
+/** Person page of someone the library does not know yet, read from TMDB: a director, a cast member of a missing title. */
+export const getTmdbPersonPath = (tmdbId: number) => `/${PUFFERFIN_APP_PATH}/person/tmdb/${tmdbId}`;
 
 /** What a title sheet address points to. */
 export type SheetTarget =
     | { kind: 'item', itemId: string }
     | { kind: 'catalog', titleKind: CatalogTitleKind, tmdbId: number }
-    | { kind: 'audiobook', asin: string }
-    | { kind: 'book', provider: string, bookId: string };
+    | { kind: 'audiobook', asin: string };
 
 /**
  * Reads a title sheet address (`title/{segment}/{id}`): a library item, a
@@ -107,10 +94,6 @@ export function parseSheetTarget(segment: string | undefined, id: string | undef
     if (!segment || !id) return undefined;
     if (segment === ITEM_SEGMENT) return { kind: 'item', itemId: id };
     if (segment === AUDIOBOOK_SEGMENT) return isAsin(id) ? { kind: 'audiobook', asin: id } : undefined;
-    if (segment === BOOK_SEGMENT) {
-        const book = parseBookTarget(id);
-        return book ? { kind: 'book', ...book } : undefined;
-    }
     const titleKind = parseCatalogTitleKind(segment);
     const tmdbId = Number(id);
     if (!titleKind || !Number.isInteger(tmdbId) || tmdbId <= 0) return undefined;

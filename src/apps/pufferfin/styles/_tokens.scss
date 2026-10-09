@@ -47,6 +47,8 @@
     --pf-control-height: 2.25rem;
     // The glass capsules of the bar: the tabs and the type picker
     --pf-capsule-height: 2.375rem;
+    // The row of filters under the featured card of Discover
+    --pf-discover-bar: calc(var(--pf-capsule-height) + 1.75rem);
 }
 
 // The TV layout turns the focus on: the root sets it, every surface that

@@ -6,7 +6,7 @@ import { getCatalogItemPath } from '../../catalog/utils/catalog';
 import { type MediaRequest, RequestKind, RequestProblemCode, RequestState } from '../../requests/api/types';
 import { findAudiobookRequest } from '../../requests/utils/requests';
 import { getRequestProblemLabel, getRequestTitlePath } from '../../requests/utils/status';
-import { getAudiobookCaption, getAudiobookMeta, isAsin } from './audiobooks';
+import { getAudiobookCaption, getAudiobookMeta, getPartTitle, isAsin } from './audiobooks';
 
 const echo = (key: string, ...args: Array<string | number>) => [ key, ...args ].join(' ');
 
@@ -89,5 +89,21 @@ describe('Pufferfin: audiobooks', () => {
         expect(getRequestTitlePath(makeRequest({ Asin: null }))).toBeUndefined();
         expect(getRequestTitlePath(makeRequest({ Kind: RequestKind.Movie, TmdbId: 603 }))).toBe('/pufferfin/title/movie/603');
         expect(getRequestTitlePath(makeRequest({ Kind: RequestKind.Episode, TmdbId: 1399 }))).toBe('/pufferfin/title/series/1399');
+    });
+});
+
+describe('getPartTitle', () => {
+    it('drops the name of the book in front of the part', () => {
+        expect(getPartTitle('Dune - Partie 03', 'Dune', 2)).toBe('Partie 03');
+        expect(getPartTitle('dune_Part 1', 'Dune', 0)).toBe('Part 1');
+    });
+
+    it('keeps a name that does not start with the book', () => {
+        expect(getPartTitle('Chapitre 1', 'Dune', 0)).toBe('Chapitre 1');
+    });
+
+    it('falls back on the number when nothing is left', () => {
+        expect(getPartTitle('Dune', 'Dune', 4)).toBe('Dune');
+        expect(getPartTitle('', 'Dune', 4)).toBe('5');
     });
 });

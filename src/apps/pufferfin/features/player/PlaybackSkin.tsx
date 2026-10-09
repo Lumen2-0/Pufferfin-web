@@ -7,6 +7,7 @@ import '../dialogs/dialogs.scss';
 import './lyrics.scss';
 import './nowPlayingBar.scss';
 import './player.scss';
+import './playerMenus.scss';
 import './queue.scss';
 
 /**

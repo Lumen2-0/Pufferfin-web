@@ -1,6 +1,5 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models/base-item-dto';
 import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
-import DeleteIcon from '@mui/icons-material/Delete';
 import Alert from '@mui/material/Alert';
 import FormControl from '@mui/material/FormControl';
 import IconButton from '@mui/material/IconButton';
@@ -27,6 +26,7 @@ import { DELETABLE_KINDS, type DeletableKind, useLibraryTitles } from '../api/us
 import { countKeptUntilMinimum } from '../utils/deletion';
 import DeleteTitleDialog, { type DeletableTitle } from './DeleteTitleDialog';
 import { useTableTheme } from './useTableTheme';
+import { Delete as DeleteIcon } from '../../components/icons';
 
 const ALL_KINDS = 'all';
 

@@ -1,9 +1,3 @@
-import ArrowDownward from '@mui/icons-material/ArrowDownward';
-import ArrowUpward from '@mui/icons-material/ArrowUpward';
-import Block from '@mui/icons-material/Block';
-import Check from '@mui/icons-material/Check';
-import Close from '@mui/icons-material/Close';
-import Replay from '@mui/icons-material/Replay';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Chip, { type ChipProps } from '@mui/material/Chip';
@@ -26,6 +20,7 @@ import { RequestAction, useMoveRequest, useRequestAction, useRequests } from '..
 import { formatBytes, formatPercent } from '../utils/format';
 import { countWaiting, getRequestActions, getWaitingIndex } from '../utils/requests';
 import { useTableTheme } from './useTableTheme';
+import { ArrowDownward, ArrowUpward, Block, Check, Close, Replay } from '../../components/icons';
 
 const STATE_COLORS: Record<RequestState, ChipProps['color']> = {
     [RequestState.PendingApproval]: 'warning',

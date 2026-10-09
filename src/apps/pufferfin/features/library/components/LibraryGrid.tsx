@@ -1,6 +1,4 @@
 import type { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
-import ExpandMore from '@mui/icons-material/ExpandMore';
 import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useApi } from 'hooks/useApi';
@@ -14,9 +12,12 @@ import { FOCUSABLE_ATTRIBUTE, focusElement } from '../../../navigation/focus';
 import { getCardImageUrl } from '../../../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage } from '../../../utils/items';
 import { useOpenItem } from '../../../utils/navigation';
-import { playAudiobook } from '../../../utils/playback';
 import { isAudiobookEntry } from '../utils/library';
 import { type LibraryItemsFilter, useLibraryItems } from '../api/useLibraryItems';
+import { GridSkeleton } from '../../../components/Skeleton';
+import { isPlayableItem } from '../../../utils/playback';
+import { usePlayItem } from '../../../utils/usePlay';
+import { ErrorOutline, ExpandMore } from '../../../components/icons';
 
 interface LibraryGridProps {
     parentId: string | undefined
@@ -33,16 +34,10 @@ interface LibraryGridProps {
  */
 const LibraryGrid: FC<LibraryGridProps> = ({ parentId, itemTypes, filter, emptyKey }) => {
     const t = useTranslation();
-    const { api, user } = useApi();
-    const openItem = useOpenItem();
-    // A book plays from where the user stopped; the rest opens its page
-    const onSelect = useCallback((item: ItemDto) => {
-        if (isAudiobookEntry(item)) {
-            if (api && user?.Id) void playAudiobook(api, user.Id, item);
-        } else {
-            openItem(item);
-        }
-    }, [ api, openItem, user?.Id ]);
+    const { api } = useApi();
+    // A book opens its page, with every part of it; a title its sheet
+    const onSelect = useOpenItem();
+    const playCard = usePlayItem();
     const gridRef = useRef<HTMLUListElement>(null);
 
     const {
@@ -95,7 +90,7 @@ const LibraryGrid: FC<LibraryGridProps> = ({ parentId, itemTypes, filter, emptyK
             </p>
         );
     }
-    if (isPending) return <p className='pf-library__note' aria-busy='true'>{t('Loading')}</p>;
+    if (isPending) return <GridSkeleton />;
     if (!items.length) return <p className='pf-library__note'>{t(emptyKey)}</p>;
 
     return (
@@ -115,6 +110,7 @@ const LibraryGrid: FC<LibraryGridProps> = ({ parentId, itemTypes, filter, emptyK
                                 progressLabel={progress ? t(progressKey, progress) : undefined}
                                 value={item}
                                 onSelect={onSelect}
+                                onPlay={isPlayableItem(item) ? playCard : undefined}
                             />
                         </li>
                     );

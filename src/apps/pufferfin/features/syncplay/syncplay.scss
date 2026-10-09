@@ -1,0 +1,228 @@
+// The SyncPlay window: the panel of the settings window, one column, the
+// groups as quiet cards with their people and what they are doing.
+
+.pf-syncplay.pf-settings__panel {
+    flex-direction: column;
+    width: min(36rem, 100%);
+    height: auto;
+    max-height: min(42rem, 100%);
+}
+
+.pf-syncplay {
+    .pf-settings__header {
+        padding-left: 1.25rem;
+    }
+
+    .pf-settings__body {
+        padding: 1rem 1.25rem 1.25rem;
+    }
+}
+
+.pf-syncplay__icon {
+    display: inline-flex;
+    margin-right: 0.6rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.2rem;
+}
+
+.pf-syncplay__intro,
+.pf-syncplay__empty,
+.pf-syncplay__hint {
+    margin: 0 0 1rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.pf-syncplay__heading {
+    margin: 0 0 0.6rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.pf-syncplay__groups,
+.pf-syncplay__people {
+    margin: 0 0 1.25rem;
+    padding: 0;
+    list-style: none;
+}
+
+.pf-syncplay__group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 12px;
+}
+
+.pf-syncplay__group-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0 0.75rem;
+}
+
+.pf-syncplay__group-name {
+    overflow: hidden;
+    font-weight: 500;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-syncplay__group-people {
+    margin-top: 0.15rem;
+    overflow: hidden;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.78rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+// People: small round initials, overlapping in a group card
+.pf-syncplay__avatar {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    color: var(--pf-color-text);
+    font-weight: 600;
+    font-size: 0.7rem;
+    background: #2a2724;
+    border: 2px solid #0e0d0c;
+    border-radius: 50%;
+}
+
+.pf-syncplay__avatars {
+    display: inline-flex;
+    flex: none;
+
+    .pf-syncplay__avatar + .pf-syncplay__avatar {
+        margin-left: -0.45rem;
+    }
+}
+
+.pf-syncplay__avatar--more {
+    color: var(--pf-color-text-secondary);
+}
+
+// What a group is doing, in words, never in color alone
+.pf-syncplay__state {
+    flex: none;
+    margin-right: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.72rem;
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 999px;
+}
+
+.pf-syncplay__state--playing {
+    color: var(--pf-color-on-accent);
+    background: var(--pf-color-accent);
+    border-color: transparent;
+}
+
+// The group the user is in
+
+.pf-syncplay__current {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 12px;
+}
+
+.pf-syncplay__current-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.pf-syncplay__current-name {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.pf-syncplay__current-head .pf-syncplay__state {
+    margin-right: 0;
+}
+
+.pf-syncplay__person {
+    display: flex;
+    align-items: center;
+    padding: 0.35rem 0;
+    font-size: 0.875rem;
+
+    .pf-syncplay__person-avatar {
+        margin-right: 0.6rem;
+    }
+}
+
+.pf-syncplay__you {
+    margin-left: 0.5rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.75rem;
+}
+
+.pf-syncplay__actions {
+    display: flex;
+    flex-wrap: wrap;
+
+    .pf-syncplay__button-icon {
+        margin-right: 0.35rem;
+        font-size: 1rem;
+    }
+}
+
+.pf-syncplay__create {
+    margin-top: 0.5rem;
+}
+
+.pf-syncplay__number {
+    display: inline-flex;
+    align-items: center;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.8rem;
+
+    .pf-input {
+        width: 6rem;
+        margin-right: 0.4rem;
+        text-align: end;
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+// The fine timings of the synchronisation, folded away
+
+.pf-syncplay__disclosure {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.75rem 0;
+    color: var(--pf-color-text);
+    font: inherit;
+    font-weight: 500;
+    font-size: 0.875rem;
+    background: none;
+    border: 0;
+    border-top: 1px solid var(--pf-glass-border);
+    cursor: pointer;
+
+    .pf-syncplay__chevron {
+        color: var(--pf-color-text-secondary);
+        transition: transform var(--pf-duration) var(--pf-ease);
+    }
+
+    &[aria-expanded='true'] .pf-syncplay__chevron {
+        transform: rotate(180deg);
+    }
+}

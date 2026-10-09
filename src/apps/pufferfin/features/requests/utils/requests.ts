@@ -1,4 +1,9 @@
+import type { StringKey } from '../../../i18n/translate';
 import { type MediaRequest, RequestKind, RequestState } from '../api/types';
+
+import { getRequestStateText, isRequestStalled } from './status';
+
+type Translate = (key: StringKey, ...args: Array<string | number>) => string;
 
 /** States after which nothing moves anymore. */
 const FINAL_STATES = new Set<RequestState>([ RequestState.Available, RequestState.Cancelled, RequestState.Rejected ]);
@@ -89,17 +94,6 @@ export function splitRequests(requests: MediaRequest[] | undefined) {
 }
 
 /** The request that speaks for an audiobook, the same way as for a movie: active first, never a cancelled one. */
-/** The request of a book to read, by its provider and id: the active one, else the latest. */
-export function findEbookRequest(requests: MediaRequest[] | undefined, provider: string, bookId: string): MediaRequest | undefined {
-    const candidates = (requests ?? [])
-        .filter(request => request.Kind === RequestKind.Ebook
-            && request.BookProvider === provider
-            && request.BookId === bookId
-            && request.State !== RequestState.Cancelled)
-        .sort((a, b) => Date.parse(b.UpdatedAt) - Date.parse(a.UpdatedAt));
-    return candidates.find(isRequestActive) ?? candidates[0];
-}
-
 export function findAudiobookRequest(requests: MediaRequest[] | undefined, asin: string): MediaRequest | undefined {
     const candidates = (requests ?? [])
         .filter(request => request.Kind === RequestKind.Audiobook
@@ -107,4 +101,64 @@ export function findAudiobookRequest(requests: MediaRequest[] | undefined, asin:
             && request.State !== RequestState.Cancelled)
         .sort((a, b) => Date.parse(b.UpdatedAt) - Date.parse(a.UpdatedAt));
     return candidates.find(isRequestActive) ?? candidates[0];
+}
+
+/**
+ * The requests of the seasons and the episodes of a series, the latest first,
+ * without the cancelled ones: together they stand for the download of the series.
+ */
+export function findSeriesRequests(requests: MediaRequest[] | undefined, tmdbId: number): MediaRequest[] {
+    return (requests ?? [])
+        .filter(request => (request.Kind === RequestKind.Season || request.Kind === RequestKind.Episode)
+            && request.TmdbId === tmdbId
+            && request.State !== RequestState.Cancelled)
+        .sort((a, b) => Date.parse(b.UpdatedAt) - Date.parse(a.UpdatedAt));
+}
+
+/** What a tag shows: one request, or several of one title (the seasons of a series) summed up. */
+export interface DownloadTagState {
+    state: RequestState
+    /** 0 to 100 while downloading; undefined while the length of the wait is unknown. */
+    percent?: number
+    text: string
+    /** Stalled for want of seeds: the bar stands still and the words say why. */
+    isStalled?: boolean
+}
+
+/** The tag of one request: its words, and its percentage while downloading. */
+function getTagState(request: MediaRequest, t: Translate): DownloadTagState {
+    return {
+        state: request.State,
+        percent: request.State === RequestState.Downloading ? getProgressPercent(request) : undefined,
+        text: getRequestStateText(request, t),
+        isStalled: isRequestStalled(request)
+    };
+}
+
+/** States in which a request no longer stands for the title: it may be asked again. */
+export const isOver = (request: MediaRequest) =>
+    request.State === RequestState.Cancelled || request.State === RequestState.Rejected;
+
+/**
+ * Sums up the requests of one title in one tag: a movie has one, a series one
+ * per season. While any downloads, the tag says so with the mean progress of
+ * those still on their way.
+ */
+export function summarizeRequests(requests: MediaRequest[], t: Translate): DownloadTagState | undefined {
+    const live = requests.filter(request => !isOver(request) && request.State !== RequestState.Available);
+    if (!live.length) return undefined;
+    if (live.length === 1) return getTagState(live[0], t);
+
+    const downloading = live.filter(request => request.State === RequestState.Downloading);
+    // Every download stalled: the series says so rather than a mean progress that does not move
+    if (downloading.length && downloading.every(isRequestStalled)) {
+        return { state: RequestState.Downloading, percent: 0, text: t('RequestStalledNoSeeds'), isStalled: true };
+    }
+    if (downloading.length) {
+        const percent = Math.round(live.reduce((sum, request) => sum + getProgressPercent(request), 0) / live.length);
+        return { state: RequestState.Downloading, percent, text: t('RequestDownloadingPercent', percent) };
+    }
+    const failed = live.find(request => request.State === RequestState.Failed);
+    const first = failed ?? live[0];
+    return { state: first.State, text: getRequestStateText(first, t) };
 }

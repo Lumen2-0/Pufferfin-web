@@ -5,6 +5,7 @@ import ConnectionRequired from 'components/ConnectionRequired';
 import ErrorBoundary from 'components/router/ErrorBoundary';
 
 import { getHomePath, HOME_APP_PATH, LEGACY_ITEM_ROUTE, PUFFERFIN_APP_PATH } from './paths';
+import SearchRedirect from './SearchRedirect';
 
 /**
  * The Pufferfin home is mounted on `home`: a top level route outranks the
@@ -41,6 +42,14 @@ export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
                                 lazy: () => import('./title')
                             },
                             {
+                                path: 'audiobook/:itemId',
+                                lazy: () => import('./audiobook')
+                            },
+                            {
+                                path: 'person/tmdb/:tmdbId',
+                                lazy: () => import('./personTmdb')
+                            },
+                            {
                                 path: 'person/:personId',
                                 lazy: () => import('./person')
                             },
@@ -53,16 +62,18 @@ export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
                                 lazy: () => import('./libraryView')
                             },
                             {
+                                // Former search screen: the search is now a panel over the home
                                 path: 'search',
-                                lazy: () => import('./search')
+                                element: <SearchRedirect />
                             },
                             {
                                 path: 'downloads',
                                 lazy: () => import('./downloads')
                             },
                             {
+                                // Former menu screen: the menu is now a dropdown of the bar
                                 path: 'menu',
-                                lazy: () => import('./menu')
+                                element: <Navigate replace to={getHomePath()} />
                             }
                         ]
                     }

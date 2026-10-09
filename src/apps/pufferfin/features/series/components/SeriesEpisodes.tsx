@@ -1,4 +1,3 @@
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import { isAxiosError } from 'axios';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +19,7 @@ import { getCreateErrorLabel } from '../../requests/utils/status';
 import { useNow } from '../../requests/utils/useNow';
 import { findEpisodeRequest, getDefaultSeasonNumber, getEpisodeKey } from '../utils/episodes';
 import EpisodeCard, { type EpisodeAction, useLibraryImageUrl } from './EpisodeCard';
+import { ErrorOutline } from '../../../components/icons';
 
 interface SeriesEpisodesProps {
     seriesTmdbId: number
@@ -83,7 +83,7 @@ const SeriesEpisodes: FC<SeriesEpisodesProps> = ({ seriesTmdbId, seasons, series
     const playEpisode = useCallback((episode: CatalogEpisode) => {
         const libraryItem = episode.LocalItemId ? libraryById.get(episode.LocalItemId) : undefined;
         if (libraryItem) {
-            playItem(libraryItem);
+            void playItem(libraryItem);
         } else if (api && user?.Id && episode.LocalItemId) {
             void playItemById(api, user.Id, episode.LocalItemId);
         }

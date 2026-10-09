@@ -1,8 +1,5 @@
 import type { BaseItemPerson } from '@jellyfin/sdk/lib/generated-client/models/base-item-person';
 import { PersonKind } from '@jellyfin/sdk/lib/generated-client/models/person-kind';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
-import Movie from '@mui/icons-material/Movie';
-import PlayArrow from '@mui/icons-material/PlayArrow';
 import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 
@@ -20,15 +17,21 @@ import ChoicePicker from '../components/ChoicePicker';
 import { useEpisodes, useSeasons, useSeriesNextUp, useSimilarItems } from '../features/details/api/useDetails';
 import { useCanRequest } from '../features/requests/api/useCanRequest';
 import { useMergedSeasons } from '../features/series/api/useMergedSeasons';
+import SeasonDownloads from '../features/series/components/SeasonDownloads';
 import SeriesEpisodes from '../features/series/components/SeriesEpisodes';
+import { getLetterboxdUrl, TextLink } from '../components/TextAction';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { getBackdropUrl, getCardImageUrl, getPersonImageUrl } from '../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, getRuntime, isResumable } from '../utils/items';
 import { useOpenItem, useOpenPerson } from '../utils/navigation';
-import { playItem as play, playTrailers } from '../utils/playback';
-import { getItemPath } from './paths';
+import { isPlayableItem, playItem as play, playTrailers } from '../utils/playback';
+import { getItemPath, getPersonPath } from './paths';
+import { DetailsSkeleton } from '../components/Skeleton';
+import { usePlayItem } from '../utils/usePlay';
+import { ErrorOutline, Movie, PlayArrow } from '../components/icons';
+import { type CreditLink, HeroFacts } from '../components/CreditLine';
 
 const CAST_LIMIT = 24;
 const GENRE_LIMIT = 3;
@@ -38,7 +41,7 @@ const getCastKey = (person: BaseItemPerson) => `${person.Id ?? ''}-${person.Role
 
 // Play is rendered before a series knows its next episode: it is then disabled and has nothing to play
 const playIfAny = (target: ItemDto | undefined) => {
-    if (target) play(target);
+    if (target) void play(target);
 };
 
 /**
@@ -49,6 +52,7 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
     const t = useTranslation();
     const { api } = useApi();
     const openItem = useOpenItem();
+    const playCard = usePlayItem();
     const openPerson = useOpenPerson();
     const pageRef = useRef<HTMLDivElement>(null);
 
@@ -115,6 +119,13 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
         () => (item?.People ?? []).filter(person => person.Type === PersonKind.Actor).slice(0, CAST_LIMIT),
         [ item ]
     );
+    // The directors, each opening their page with all their films
+    const directors = useMemo<CreditLink[]>(
+        () => (item?.People ?? [])
+            .filter(person => person.Type === PersonKind.Director && !!person.Id)
+            .map(person => ({ key: person.Id!, name: person.Name ?? '', path: getPersonPath(person.Id!) })),
+        [ item ]
+    );
 
     const renderEpisode = useCallback((episode: ItemDto) => {
         const progress = getPlayedPercentage(episode);
@@ -149,16 +160,11 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
             shape='portrait'
             value={similarItem}
             onSelect={openItem}
+            onPlay={isPlayableItem(similarItem) ? playCard : undefined}
         />
-    ), [ api, openItem ]);
+    ), [ api, openItem, playCard ]);
 
-    if (isPending) {
-        return (
-            <div className='pf-status' aria-busy='true'>
-                <p>{t('Loading')}</p>
-            </div>
-        );
-    }
+    if (isPending) return <DetailsSkeleton />;
 
     if (isError || !item) {
         // Failure is told with an icon and words, never with color alone
@@ -171,16 +177,13 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
     }
 
     const hasTrailer = !!item.LocalTrailerCount || !!item.RemoteTrailers?.length;
+    const movieTmdbId = item.Type === ItemKind.Movie ? item.ProviderIds?.Tmdb : undefined;
 
     return (
         <div ref={pageRef} className='pf-details'>
             <Hero
                 title={getDisplayTitle(item)}
-                meta={meta.length > 0 && (
-                    <ul className='pf-meta'>
-                        {meta.map(value => <li key={value} className='pf-meta__item'>{value}</li>)}
-                    </ul>
-                )}
+                meta={<HeroFacts meta={meta} label={t('DirectedBy')} people={directors} />}
                 overview={item.Overview}
                 backdropUrl={api ? getBackdropUrl(api, item) : undefined}
                 actions={
@@ -193,6 +196,15 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                             value={playTarget}
                             onClick={playIfAny}
                         />
+                        {canRequestEpisodes && tmdbId && mergedSeasons && (
+                            <SeasonDownloads
+                                seriesTmdbId={tmdbId}
+                                seriesTitle={getDisplayTitle(item)}
+                                seasons={mergedSeasons}
+                                canRequest={canRequestEpisodes}
+                                asText
+                            />
+                        )}
                         {hasTrailer && (
                             <RoundButton
                                 icon={<Movie />}
@@ -201,6 +213,7 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                                 onClick={playTrailers}
                             />
                         )}
+                        {movieTmdbId && <TextLink href={getLetterboxdUrl(movieTmdbId)}>{t('SeeOnLetterboxd')}</TextLink>}
                     </>
                 }
             />

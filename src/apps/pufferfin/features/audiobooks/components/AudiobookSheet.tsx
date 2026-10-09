@@ -1,16 +1,12 @@
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
-import Headphones from '@mui/icons-material/Headphones';
 import { isAxiosError } from 'axios';
-import React, { type FC, useCallback, useMemo, useRef } from 'react';
-
-import { useApi } from 'hooks/useApi';
+import React, { type FC, useMemo, useRef } from 'react';
 
 import Hero from '../../../components/Hero';
-import RoundButton from '../../../components/RoundButton';
+import { DetailsSkeleton } from '../../../components/Skeleton';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../../../navigation/focus';
 import { useInitialFocus } from '../../../navigation/useInitialFocus';
-import { playAudiobookById } from '../../../utils/playback';
+import { AudiobookDetails } from '../../../routes/audiobook';
 import { CatalogAvailability, type CatalogAudiobookDetails } from '../../catalog/api/types';
 import { useAudiobook } from '../../catalog/api/useCatalog';
 import { type CreateMediaRequest, RequestKind } from '../../requests/api/types';
@@ -19,26 +15,15 @@ import { useMyRequests } from '../../requests/api/useRequests';
 import RequestActions, { useFocusFollowsButtons } from '../../requests/components/RequestActions';
 import { findAudiobookRequest } from '../../requests/utils/requests';
 import { getAudiobookMeta } from '../utils/audiobooks';
+import { ErrorOutline } from '../../../components/icons';
 
 const HTTP_SERVICE_UNAVAILABLE = 503;
 
-/**
- * Listen when the book is in the library, else Download and the state of its
- * request. Both live in one container, so when the request becomes available
- * and Download turns into Listen, the focus follows.
- */
+/** Download and the state of its request, for a book not in the library yet. */
 const AudiobookActions: FC<{ book: CatalogAudiobookDetails }> = ({ book }) => {
-    const t = useTranslation();
-    const { api, user } = useApi();
     const { containerRef, onFocus, onBlur } = useFocusFollowsButtons();
     const requests = useMyRequests();
     const { canRequest } = useCanRequest('Shelfmark');
-
-    const localItemId = book.Availability === CatalogAvailability.OnDisk ? book.LocalItemId : undefined;
-    const onListen = useCallback((itemId: string) => {
-        // A book in several files is its folder: its parts play in order, from where the user stopped
-        if (api && user?.Id) void playAudiobookById(api, user.Id, itemId);
-    }, [ api, user?.Id ]);
 
     // The server picks the version itself: the language from the settings, then the most seeders
     const requestInput = useMemo<CreateMediaRequest>(
@@ -48,24 +33,12 @@ const AudiobookActions: FC<{ book: CatalogAudiobookDetails }> = ({ book }) => {
 
     return (
         <div ref={containerRef} className='pf-request' onFocus={onFocus} onBlur={onBlur}>
-            {localItemId ? (
-                <div className='pf-button-row'>
-                    <RoundButton
-                        variant='primary'
-                        icon={<Headphones />}
-                        label={t('ActionListen')}
-                        value={localItemId}
-                        onClick={onListen}
-                    />
-                </div>
-            ) : (
-                <RequestActions
-                    requestInput={requestInput}
-                    request={findAudiobookRequest(requests.data, book.Asin)}
-                    canRequest={canRequest}
-                    lastSyncAt={requests.dataUpdatedAt}
-                />
-            )}
+            <RequestActions
+                requestInput={requestInput}
+                request={findAudiobookRequest(requests.data, book.Asin)}
+                canRequest={canRequest}
+                lastSyncAt={requests.dataUpdatedAt}
+            />
         </div>
     );
 };
@@ -73,7 +46,8 @@ const AudiobookActions: FC<{ book: CatalogAudiobookDetails }> = ({ book }) => {
 /**
  * Sheet of an audiobook, on the catalog sheet route: cover, authors and
  * narrators, series and position, length, summary. A complete edition says so
- * in words. Listen when the book is in the library, else Download.
+ * in words. A book in the library shows its library page instead, with every
+ * part of it; else Download.
  */
 const AudiobookSheet: FC<{ asin: string, market?: string }> = ({ asin, market }) => {
     const t = useTranslation();
@@ -88,13 +62,7 @@ const AudiobookSheet: FC<{ asin: string, market?: string }> = ({ asin, market })
 
     const meta = useMemo(() => (book ? getAudiobookMeta(book, t) : []), [ book, t ]);
 
-    if (isPending) {
-        return (
-            <div className='pf-status' aria-busy='true'>
-                <p>{t('Loading')}</p>
-            </div>
-        );
-    }
+    if (isPending) return <DetailsSkeleton withPoster />;
 
     if (isError || !book) {
         const isUnavailable = isAxiosError(error) && error.response?.status === HTTP_SERVICE_UNAVAILABLE;
@@ -104,6 +72,11 @@ const AudiobookSheet: FC<{ asin: string, market?: string }> = ({ asin, market })
                 <p>{isUnavailable ? t('AudiobookCatalogUnavailable') : t('ItemLoadError')}</p>
             </div>
         );
+    }
+
+    // In the library: the page of the book, with its parts. It also takes over once a download is imported
+    if (book.Availability === CatalogAvailability.OnDisk && book.LocalItemId) {
+        return <AudiobookDetails key={book.LocalItemId} itemId={book.LocalItemId} />;
     }
 
     let series: string | undefined;

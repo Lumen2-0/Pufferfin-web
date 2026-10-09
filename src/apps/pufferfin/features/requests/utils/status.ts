@@ -35,15 +35,21 @@ const PROBLEM_LABELS: Record<RequestProblemCode, StringKey> = {
     [RequestProblemCode.ImportBlocked]: 'RequestProblemImportBlocked',
     [RequestProblemCode.DownloadWarning]: 'RequestProblemDownloadWarning',
     [RequestProblemCode.OnlyCompleteEditions]: 'RequestProblemOnlyCompleteEditions',
-    [RequestProblemCode.FilesNotWritable]: 'RequestProblemFilesNotWritable'
+    [RequestProblemCode.FilesNotWritable]: 'RequestProblemFilesNotWritable',
+    [RequestProblemCode.StalledNoSeeds]: 'RequestProblemStalledNoSeeds'
 };
 
 /** Label of the state of a request. */
 export const getRequestStateLabel = (item: MediaRequest): StringKey => STATE_LABELS[item.State];
 
-/** Where a request stands, in words: the place in line while queued, the percentage while downloading. */
+/** Whether a download is stalled for want of seeds: it is said plainly, not shown as a progress at 0 %. */
+export const isRequestStalled = (item: MediaRequest) =>
+    item.State === RequestState.Downloading && item.Problem?.Code === RequestProblemCode.StalledNoSeeds;
+
+/** Where a request stands, in words: the place in line while queued, the percentage while downloading, a stall. */
 export function getRequestStateText(item: MediaRequest, t: Translate): string {
     if (item.State === RequestState.Queued && item.QueuePosition) return t('RequestQueuedPosition', item.QueuePosition);
+    if (isRequestStalled(item)) return t('RequestStalledNoSeeds');
     if (item.State === RequestState.Downloading) return t('RequestDownloadingPercent', getProgressPercent(item));
     return t(getRequestStateLabel(item));
 }

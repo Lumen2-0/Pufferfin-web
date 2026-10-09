@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { getCatalogBookPath, parseBookTarget, parseSheetTarget } from './paths';
+import { parseSheetTarget } from './paths';
 
 const isAsin = (value: string) => /^[A-Z0-9]{10}$/.test(value);
 
-describe('Pufferfin: book sheet paths', () => {
-    it('round-trips a book through its sheet path', () => {
-        const path = getCatalogBookPath('openlibrary', 'OL82563W');
-        expect(path).toBe('/pufferfin/title/book/openlibrary%3AOL82563W');
-        const id = decodeURIComponent(path.split('/').pop() ?? '');
-        expect(parseSheetTarget('book', id, isAsin)).toEqual({ kind: 'book', provider: 'openlibrary', bookId: 'OL82563W' });
+describe('Pufferfin: sheet paths', () => {
+    it('reads a film, an audiobook and a library item', () => {
+        expect(parseSheetTarget('movie', '603', isAsin)).toEqual({ kind: 'catalog', titleKind: 'Movie', tmdbId: 603 });
+        expect(parseSheetTarget('audiobook', 'B00LHPNBC6', isAsin)).toEqual({ kind: 'audiobook', asin: 'B00LHPNBC6' });
+        expect(parseSheetTarget('item', 'abc', isAsin)).toEqual({ kind: 'item', itemId: 'abc' });
     });
 
-    it.each([ 'OL82563W', ':OL82563W', 'openlibrary:', 'Open Library:OL1W', 'openlibrary:../etc' ])('refuses %s', id => {
-        expect(parseBookTarget(id)).toBeUndefined();
+    it('names nothing for a book to read: they are no longer offered', () => {
+        expect(parseSheetTarget('book', 'openlibrary:OL82563W', isAsin)).toBeUndefined();
     });
 });

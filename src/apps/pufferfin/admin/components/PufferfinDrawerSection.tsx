@@ -1,14 +1,3 @@
-import Download from '@mui/icons-material/Download';
-import Extension from '@mui/icons-material/Extension';
-import Hub from '@mui/icons-material/Hub';
-import ManageAccounts from '@mui/icons-material/ManageAccounts';
-import Movie from '@mui/icons-material/Movie';
-import Queue from '@mui/icons-material/Queue';
-import Storage from '@mui/icons-material/Storage';
-import Translate from '@mui/icons-material/Translate';
-import TravelExplore from '@mui/icons-material/TravelExplore';
-import Tune from '@mui/icons-material/Tune';
-import Tv from '@mui/icons-material/Tv';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -21,6 +10,7 @@ import ListItemLink from 'components/ListItemLink';
 
 import { getGroupPath, OVERVIEW_PATH, SETTINGS_GROUPS, SettingsGroupId } from '../constants/groups';
 import { ADMIN_PAGES, AdminPageId, getAdminPagePath } from '../constants/pages';
+import { Download, Extension, Hub, ManageAccounts, Movie, Queue, Storage, Translate, TravelExplore, Tune, Tv } from '../../components/icons';
 
 const PAGE_ICONS: Record<AdminPageId, React.ReactElement> = {
     [AdminPageId.Requests]: <Queue />,

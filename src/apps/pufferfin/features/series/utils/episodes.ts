@@ -42,3 +42,14 @@ export function getDefaultSeasonNumber(seasons: CatalogSeason[] | undefined, nex
 export const getEpisodeKey = (episode: CatalogEpisode) => (episode.EpisodeNumber != null ?
     `${episode.SeasonNumber}-${episode.EpisodeNumber}-${episode.EpisodeNumberEnd ?? ''}` :
     `${episode.SeasonNumber}-file-${episode.LocalItemId ?? ''}`);
+
+/**
+ * The seasons a series download asks for: the numbered ones (no specials),
+ * already started airing, with episodes missing from the library.
+ */
+export function getMissingSeasons(seasons: CatalogSeason[], today: Date): CatalogSeason[] {
+    return seasons.filter(season => season.SeasonNumber > 0
+        && !!season.AirDate
+        && Date.parse(season.AirDate) <= today.getTime()
+        && (season.EpisodeCount == null || season.LocalEpisodeCount < season.EpisodeCount));
+}

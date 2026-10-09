@@ -1,5 +1,3 @@
-import Check from '@mui/icons-material/Check';
-import ExpandMore from '@mui/icons-material/ExpandMore';
 import classNames from 'classnames';
 import React, { type FC, type FocusEvent, type KeyboardEvent, type MouseEvent, useCallback, useEffect, useId, useRef, useState } from 'react';
 
@@ -8,6 +6,7 @@ import { getKeyName } from 'scripts/keyboardNavigation';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE, focusElement } from '../../../navigation/focus';
 import { DISCOVER_TYPE_LABELS, DISCOVER_TYPES, type DiscoverType } from '../utils/discover';
+import { Check, ExpandMore } from '../../../components/icons';
 
 interface TypePickerProps {
     value: DiscoverType

@@ -1,4 +1,3 @@
-import Lock from '@mui/icons-material/Lock';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
@@ -12,6 +11,7 @@ import React, { type ChangeEvent, type FC, useCallback } from 'react';
 
 import { type PufferfinSetting, SettingKind } from 'apps/pufferfin/api/types';
 import { type PufferfinStringKey, translate } from 'apps/pufferfin/i18n';
+import { Lock } from '../../components/icons';
 
 export interface SettingFieldProps {
     setting: PufferfinSetting;

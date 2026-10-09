@@ -5,8 +5,8 @@ import { appRouter } from 'components/router/appRouter';
 import type { ItemDto } from 'types/base/models/item-dto';
 import { ItemKind } from 'types/base/models/item-kind';
 
-import { getViewItemTypes } from '../features/library/utils/library';
-import { getItemPath, getLibraryViewPath, getPersonPath } from '../routes/paths';
+import { getViewItemTypes, isAudiobookEntry } from '../features/library/utils/library';
+import { getAudiobookPath, getItemPath, getLibraryViewPath, getPersonPath } from '../routes/paths';
 
 /**
  * Id of the Pufferfin detail page that shows this item: the item itself for a
@@ -26,13 +26,18 @@ export function getDetailItemId(item: ItemDto): string | undefined {
     }
 }
 
-/** Opens the Pufferfin detail page, or the existing upstream page for other types. */
+/**
+ * Opens the Pufferfin detail page: an audiobook its page with every part, a
+ * film or a series its sheet. The existing upstream page for other types.
+ */
 export function useOpenItem() {
     const navigate = useNavigate();
 
     return useCallback((item: ItemDto) => {
         const detailId = getDetailItemId(item);
-        if (detailId) {
+        if (item.Id && isAudiobookEntry(item)) {
+            navigate(getAudiobookPath(item.Id));
+        } else if (detailId) {
             navigate(getItemPath(detailId));
         } else {
             appRouter.showItem(item);

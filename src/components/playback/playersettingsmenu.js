@@ -41,6 +41,8 @@ function showQualityMenu(player, btn) {
     const selectedBitrate = selectedId.length ? selectedId[0].bitrate : null;
 
     return actionsheet.show({
+        // PUFFERFIN: each submenu names itself
+        title: globalize.translate('Quality'),
         items: menuItems,
         positionTo: btn
     }).then(function (id) {
@@ -77,6 +79,8 @@ function showRepeatModeMenu(player, btn) {
     });
 
     return actionsheet.show({
+        // PUFFERFIN: each submenu names itself
+        title: globalize.translate('RepeatMode'),
         items: menuItems,
         positionTo: btn
     }).then(function (mode) {
@@ -141,6 +145,8 @@ function showAspectRatioMenu(player, btn) {
         }));
 
     return actionsheet.show({
+        // PUFFERFIN: each submenu names itself
+        title: globalize.translate('AspectRatio'),
         items: menuItems,
         positionTo: btn
     }).then(function (id) {
@@ -163,6 +169,8 @@ function showPlaybackRateMenu(player, btn) {
     }));
 
     return actionsheet.show({
+        // PUFFERFIN: each submenu names itself
+        title: globalize.translate('PlaybackRate'),
         items: menuItems,
         positionTo: btn
     }).then(function (id) {
@@ -241,6 +249,8 @@ function showWithUser(options, player, user) {
     }
 
     return actionsheet.show({
+        // PUFFERFIN: the settings menu names itself, as its submenus do
+        title: globalize.translate('Settings'),
         items: menuItems,
         positionTo: options.positionTo
     }).then(function (id) {

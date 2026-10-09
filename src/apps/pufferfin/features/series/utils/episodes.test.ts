@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CatalogAvailability, type CatalogEpisode, type CatalogSeason, CatalogSource } from '../../catalog/api/types';
 import { type MediaRequest, RequestKind, RequestState } from '../../requests/api/types';
-import { findEpisodeRequest, getDefaultSeasonNumber, getEpisodeKey } from './episodes';
+import { findEpisodeRequest, getDefaultSeasonNumber, getEpisodeKey, getMissingSeasons } from './episodes';
 
 const makeEpisode = (overrides: Partial<CatalogEpisode> = {}): CatalogEpisode => ({
     SeasonNumber: 1,
@@ -82,5 +82,27 @@ describe('Pufferfin: series episodes', () => {
             makeEpisode({ EpisodeNumber: null, LocalItemId: 'b' })
         ].map(getEpisodeKey);
         expect(new Set(keys).size).toBe(keys.length);
+    });
+});
+
+describe('getMissingSeasons', () => {
+    const season = (number: number, airDate: string | null, local: number, count: number | null) => ({
+        SeasonNumber: number,
+        AirDate: airDate,
+        LocalEpisodeCount: local,
+        EpisodeCount: count,
+        Availability: CatalogAvailability.Missing,
+        Sources: []
+    });
+
+    it('asks for the aired numbered seasons with episodes missing', () => {
+        const seasons = [
+            season(0, '2020-01-01', 0, 3),
+            season(1, '2020-01-01', 10, 10),
+            season(2, '2021-01-01', 2, 10),
+            season(3, '2099-01-01', 0, 8),
+            season(4, null, 0, 8)
+        ];
+        expect(getMissingSeasons(seasons, new Date('2026-10-08')).map(item => item.SeasonNumber)).toEqual([ 2 ]);
     });
 });

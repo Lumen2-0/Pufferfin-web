@@ -1,8 +1,8 @@
-import Check from '@mui/icons-material/Check';
 import classNames from 'classnames';
 import React, { type FC, type MouseEvent, useCallback } from 'react';
 
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
+import { Check } from './icons';
 
 interface ChoiceOption {
     id: string

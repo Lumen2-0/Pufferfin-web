@@ -1,6 +1,3 @@
-import CloudOutlined from '@mui/icons-material/CloudOutlined';
-import Download from '@mui/icons-material/Download';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import React, { type FC, type ReactNode, useCallback } from 'react';
 
 import { useApi } from 'hooks/useApi';
@@ -15,6 +12,7 @@ import { CatalogAvailability, type CatalogEpisode } from '../../catalog/api/type
 import { type MediaRequest, RequestState } from '../../requests/api/types';
 import { getProgressPercent } from '../../requests/utils/requests';
 import { getRequestStateText } from '../../requests/utils/status';
+import { CloudOutlined, Download, ErrorOutline } from '../../../components/icons';
 
 type Translate = (key: StringKey, ...args: Array<string | number>) => string;
 

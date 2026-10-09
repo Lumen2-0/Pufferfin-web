@@ -32,3 +32,20 @@ export function getAudiobookCaption(item: CatalogItem, t: Translate): string | u
     ].filter((value): value is string => !!value);
     return parts.length ? parts.join(', ') : undefined;
 }
+
+const PART_SEPARATORS = /^[\s\-–—_.:,|]+/;
+
+/**
+ * Name of a part of a book in the list of its parts: the file name without the
+ * name of the book in front (`Dune - Partie 03` becomes `Partie 03`), or the
+ * part number when nothing else is left.
+ */
+export function getPartTitle(partName: string, bookName: string, index: number): string {
+    const name = partName.trim();
+    const book = bookName.trim();
+    let rest = name;
+    if (book && name.toLowerCase().startsWith(book.toLowerCase())) {
+        rest = name.slice(book.length).replace(PART_SEPARATORS, '').trim();
+    }
+    return rest || name || String(index + 1);
+}

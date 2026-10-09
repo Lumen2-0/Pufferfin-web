@@ -41,7 +41,9 @@ export enum RequestProblemCode {
     DownloadWarning = 'DownloadWarning',
     /** The volume exists only inside a complete edition: a complete edition is never taken for one volume. */
     OnlyCompleteEditions = 'OnlyCompleteEditions',
-    FilesNotWritable = 'FilesNotWritable'
+    FilesNotWritable = 'FilesNotWritable',
+    /** The download is stalled: no seed shares it, or the tracker refuses it. It starts on its own when a seed comes back. */
+    StalledNoSeeds = 'StalledNoSeeds'
 }
 
 export interface RequestProblem {

@@ -1,10 +1,5 @@
-import CloudOutlined from '@mui/icons-material/CloudOutlined';
-import Close from '@mui/icons-material/Close';
-import Download from '@mui/icons-material/Download';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
-import Refresh from '@mui/icons-material/Refresh';
 import { isAxiosError } from 'axios';
-import React, { type FC, type FocusEvent, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { type FC, type FocusEvent, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { queryClient } from 'utils/query/queryClient';
 
@@ -13,9 +8,10 @@ import { useTranslation } from '../../../i18n/useTranslation';
 import { focusFirst } from '../../../navigation/focus';
 import { type CreateMediaRequest, type MediaRequest, RequestState } from '../api/types';
 import { useChangeRequest, useCreateRequest } from '../api/useRequests';
-import { isRequestCancellable } from '../utils/requests';
-import { getCreateErrorLabel } from '../utils/status';
-import RequestStatus from './RequestStatus';
+import { isOver, isRequestCancellable, summarizeRequests } from '../utils/requests';
+import { getCreateErrorLabel, getRequestProblemLabel } from '../utils/status';
+import DownloadTag from './DownloadTag';
+import { Close, Download, ErrorOutline, Refresh } from '../../../components/icons';
 
 /**
  * Keeps the focus inside the container when the focused button goes away,
@@ -46,91 +42,112 @@ export const useFocusFollowsButtons = () => {
     return { containerRef, onFocus, onBlur };
 };
 
+const SECONDS_PER_MINUTE = 60;
+
 interface RequestActionsProps {
-    /** What Download asks for: a movie by TMDB id, an audiobook by ASIN. */
-    requestInput: CreateMediaRequest
-    /** The current request of the title, if any: see `findMovieRequest` and `findAudiobookRequest`. */
-    request?: MediaRequest
+    /** What Download asks for: a movie by TMDB id, an audiobook by ASIN, or every season of a series. */
+    requestInput: CreateMediaRequest | CreateMediaRequest[]
+    /** The current request of the title, if any, or every request of a series. */
+    request?: MediaRequest | MediaRequest[]
     /** The download service is enabled and the account may request: otherwise no Download button is shown. */
     canRequest: boolean
     /** When the request list was last read or pushed, to tell an old state from a live one. */
     lastSyncAt: number
+    /** Words of the Download button, such as Download all seasons. */
+    downloadLabel?: string
+    /** More actions in the same row, after the download ones: Trailer, Download a season. */
+    children?: ReactNode
 }
 
 /**
- * Download button of a title that is not in the library, then the state of
- * its request with Cancel or Try Again. When the request becomes available,
- * the catalog is read again and the sheet shows what plays it.
+ * Download button of a title not in the library. Once asked, the button turns
+ * into a tag of the same shape that tells where the download stands, with a
+ * thin progress bar, next to a small Cancel. When the request becomes
+ * available, the catalog is read again and the sheet shows what plays it.
  */
-const RequestActions: FC<RequestActionsProps> = ({ requestInput, request, canRequest, lastSyncAt }) => {
+const RequestActions: FC<RequestActionsProps> = ({ requestInput, request, canRequest, lastSyncAt, downloadLabel, children }) => {
     const t = useTranslation();
     const { containerRef, onFocus, onBlur } = useFocusFollowsButtons();
     const createRequest = useCreateRequest();
     const changeRequest = useChangeRequest();
-    const state = request?.State;
+
+    const requests = useMemo(() => {
+        if (Array.isArray(request)) return request;
+        return request ? [ request ] : [];
+    }, [ request ]);
+    const inputs = useMemo(() => (Array.isArray(requestInput) ? requestInput : [ requestInput ]), [ requestInput ]);
+    const tag = summarizeRequests(requests, t);
+    const live = requests.filter(item => !isOver(item) && item.State !== RequestState.Available);
+    const isAvailable = requests.some(item => item.State === RequestState.Available) && !live.length;
 
     // Imported: the catalog is read again, finds the library item and the sheet opens its page
     useEffect(() => {
-        if (state === RequestState.Available) {
+        if (isAvailable) {
             void queryClient.invalidateQueries({ queryKey: [ 'Pufferfin', 'Catalog' ] });
         }
-    }, [ state ]);
+    }, [ isAvailable ]);
 
-    const { isPending: isCreating, mutate: create } = createRequest;
+    const { isPending: isCreating, mutateAsync: create } = createRequest;
     const onDownload = useCallback(() => {
         // Not disabled while sending: a disabled button would drop the focus
-        if (!isCreating) create(requestInput);
-    }, [ create, isCreating, requestInput ]);
+        if (isCreating) return;
+        void (async () => {
+            for (const input of inputs) {
+                await create(input).catch(() => undefined);
+            }
+        })();
+    }, [ create, inputs, isCreating ]);
 
     const { isPending: isChanging, mutate: change } = changeRequest;
-    const onCancel = useCallback((requestId: string) => {
-        if (!isChanging) change({ requestId, change: 'Cancel' });
-    }, [ change, isChanging ]);
-    const onRetry = useCallback((requestId: string) => {
-        if (!isChanging) change({ requestId, change: 'Retry' });
-    }, [ change, isChanging ]);
+    const onCancel = useCallback(() => {
+        if (isChanging) return;
+        live.filter(isRequestCancellable).forEach(item => {
+            change({ requestId: item.Id, change: 'Cancel' });
+        });
+    }, [ change, isChanging, live ]);
+    const onRetry = useCallback(() => {
+        if (isChanging) return;
+        live.filter(item => item.State === RequestState.Failed).forEach(item => {
+            change({ requestId: item.Id, change: 'Retry' });
+        });
+    }, [ change, isChanging, live ]);
 
-    // A refused request may be asked again: the administrator decides again
-    const showDownload = canRequest && (!request || state === RequestState.Rejected);
+    const isFailed = tag?.state === RequestState.Failed;
+    const showDownload = canRequest && !tag && !isAvailable;
     const createStatus = isAxiosError(createRequest.error) ? createRequest.error.response?.status : undefined;
+
+    // Under the tag: the time left while downloading, else what went wrong
+    const single = live.length === 1 ? live[0] : undefined;
+    let detail: string | undefined;
+    if (single?.State === RequestState.Downloading && single.EtaSeconds) {
+        const minutes = Math.ceil(single.EtaSeconds / SECONDS_PER_MINUTE);
+        detail = minutes <= 1 ? t('RequestEtaUnderMinute') : t('RequestEtaMinutes', minutes);
+    } else if (single) {
+        const problem = getRequestProblemLabel(single);
+        detail = problem ? t(problem) : undefined;
+    }
 
     return (
         <div ref={containerRef} className='pf-request' onFocus={onFocus} onBlur={onBlur}>
-            {request ? (
-                <RequestStatus request={request} lastSyncAt={lastSyncAt} />
-            ) : (
-                <p className='pf-availability'>
-                    <CloudOutlined className='pf-availability__icon' fontSize='inherit' aria-hidden='true' />
-                    {t('NotInLibrary')}
-                </p>
-            )}
             <div className='pf-button-row'>
                 {showDownload && (
                     <RoundButton
                         variant='primary'
                         icon={<Download />}
-                        label={isCreating ? t('Loading') : t('ActionDownload')}
+                        label={downloadLabel ?? t('ActionDownload')}
                         onClick={onDownload}
                     />
                 )}
-                {request && state === RequestState.Failed && (
-                    <RoundButton
-                        variant='primary'
-                        icon={<Refresh />}
-                        label={t('ActionRetry')}
-                        value={request.Id}
-                        onClick={onRetry}
-                    />
+                {tag && <DownloadTag tag={tag} lastSyncAt={lastSyncAt} />}
+                {isFailed && (
+                    <RoundButton icon={<Refresh />} ariaLabel={t('ActionRetry')} onClick={onRetry} />
                 )}
-                {request && isRequestCancellable(request) && (
-                    <RoundButton
-                        icon={<Close />}
-                        label={t('ActionCancelRequest')}
-                        value={request.Id}
-                        onClick={onCancel}
-                    />
+                {tag && live.some(isRequestCancellable) && (
+                    <RoundButton icon={<Close />} ariaLabel={t('ActionCancelRequest')} onClick={onCancel} />
                 )}
+                {children}
             </div>
+            {detail && <p className='pf-request__detail'>{detail}</p>}
             {createRequest.isError && (
                 <p className='pf-row__error' role='alert'>
                     <ErrorOutline aria-hidden='true' />

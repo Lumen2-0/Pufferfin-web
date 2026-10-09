@@ -87,11 +87,38 @@
         [dir="rtl"] .mainDrawerHandle {
             left: 0;
         }
+
+        /* PUFFERFIN: the loading arc of the splash, before the stylesheets arrive */
+        .splashLogo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 1.75rem;
+            height: 1.75rem;
+            margin: -0.875rem 0 0 -0.875rem;
+            color: rgba(245, 242, 236, 0.68);
+        }
+
+        .splashLogo svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            animation: splash-spin 0.8s linear infinite;
+        }
+
+        @keyframes splash-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body dir="ltr">
     <div id="reactRoot">
-        <div class="splashLogo"></div>
+        <!-- PUFFERFIN: a small turning arc while the app loads, drawn inline so it shows before the bundles -->
+        <div class="splashLogo" role="status" aria-label="Loading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        </div>
     </div>
 </body>
 </html>

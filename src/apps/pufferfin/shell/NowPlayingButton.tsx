@@ -1,4 +1,3 @@
-import MusicNote from '@mui/icons-material/MusicNote';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
 import { playbackManager } from 'components/playback/playbackmanager';
@@ -7,6 +6,7 @@ import Events from 'utils/events';
 
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
+import { MusicNote } from '../components/icons';
 
 interface PlaybackStopInfo {
     nextMediaType?: string

@@ -17,7 +17,7 @@ export interface MenuAction {
 
 export type MenuEntry = MenuLink | MenuAction;
 
-export type MenuActionId = 'downloadManager' | 'clientSettings' | 'selectServer' | 'signOut' | 'exitApp';
+export type MenuActionId = 'settings' | 'downloadManager' | 'clientSettings' | 'selectServer' | 'signOut' | 'exitApp';
 
 export interface MenuContext {
     userId?: string
@@ -37,18 +37,13 @@ export interface MenuContext {
 export function getAccountEntries(context: MenuContext): MenuEntry[] {
     const entries: MenuEntry[] = [];
 
-    if (context.userId) {
-        entries.push({ kind: 'link', id: 'profile', labelKey: 'MenuProfile', path: `/userprofile?userId=${context.userId}` });
-    }
-    entries.push({ kind: 'link', id: 'settings', labelKey: 'MenuSettings', path: '/mypreferencesmenu' });
+    // One settings window: the profile at its top, every setting, Quick Connect
+    entries.push({ kind: 'action', id: 'settings', labelKey: 'MenuSettings' });
     if (context.supportsDownloadManager) {
         entries.push({ kind: 'action', id: 'downloadManager', labelKey: 'MenuDownloadManager' });
     }
     if (context.supportsClientSettings) {
         entries.push({ kind: 'action', id: 'clientSettings', labelKey: 'MenuClientSettings' });
-    }
-    if (context.isQuickConnectEnabled) {
-        entries.push({ kind: 'link', id: 'quickConnect', labelKey: 'MenuQuickConnect', path: '/quickconnect' });
     }
     if (context.supportsMultiServer) {
         entries.push({ kind: 'action', id: 'selectServer', labelKey: 'MenuSelectServer' });

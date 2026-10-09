@@ -1,4 +1,3 @@
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import React, { type FC, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +10,7 @@ import { useMyRequests } from '../api/useRequests';
 import { getProgressPercent, isRequestStale, splitRequests } from '../utils/requests';
 import { getRequestPartText, getRequestStateText, getRequestTitlePath } from '../utils/status';
 import { useNow } from '../utils/useNow';
+import { ErrorOutline } from '../../../components/icons';
 
 const getKey = (item: MediaRequest) => item.Id;
 

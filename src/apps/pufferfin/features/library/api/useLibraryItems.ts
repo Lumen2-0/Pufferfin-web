@@ -1,4 +1,5 @@
 import { BaseItemKind as BaseItemKindValue, type BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
+import { CollectionType } from '@jellyfin/sdk/lib/generated-client/models/collection-type';
 import { ImageType } from '@jellyfin/sdk/lib/generated-client/models/image-type';
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
 import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
@@ -24,10 +25,18 @@ interface BooksPage {
     TotalRecordCount?: number
 }
 
-/** The plain listing of a library of books, without a genre, a studio or a sort: that one comes book by book. */
+/** Newest first, the one order other than by name the books of a library come in. */
+const isNewestFirst = (sortBy: ItemSortBy[] | undefined) =>
+    sortBy?.length === 1 && sortBy[0] === ItemSortBy.DateCreated;
+
+/** The listing of a library of books, by name or newest first, without a genre or a studio: that one comes book by book. */
 const isBookListing = (itemTypes: BaseItemKind[] | null, filter: LibraryItemsFilter) =>
     !!itemTypes?.includes(BaseItemKindValue.AudioBook)
-    && !filter.genreId && !filter.studioId && !filter.sortBy && !filter.isServerWide;
+    && !filter.genreId && !filter.studioId && !filter.isServerWide
+    && (!filter.sortBy || isNewestFirst(filter.sortBy));
+
+/** Sort of the Pufferfin books endpoint. */
+const BOOKS_NEWEST_FIRST = 'DateCreated';
 
 const ROW_LIMIT = 20;
 const FIELDS = [ ItemFields.Overview, ItemFields.PrimaryImageAspectRatio ];
@@ -59,7 +68,12 @@ export const useLibraryItems = (
             // A library of books lists one entry per book: the server groups the files of a book told in parts
             if (isBookListing(itemTypes, filter)) {
                 const books = await getPufferfin<BooksPage>(api!, BOOKS_PATH, {
-                    params: { parentId, startIndex: pageParam, limit: LIBRARY_PAGE_SIZE },
+                    params: {
+                        parentId,
+                        sortBy: filter.sortBy ? BOOKS_NEWEST_FIRST : undefined,
+                        startIndex: pageParam,
+                        limit: LIBRARY_PAGE_SIZE
+                    },
                     signal
                 });
                 return {
@@ -97,12 +111,25 @@ export const useLibraryItems = (
     });
 };
 
-/** The newest titles of one library, as the upstream home shows them; episodes come grouped by series. */
-export const useLatestInLibrary = (parentId: string) => {
+/**
+ * The newest titles of one library, as the upstream home shows them; episodes
+ * come grouped by series, and the files of a book in parts as that one book.
+ */
+export const useLatestInLibrary = (view: ItemDto) => {
     const { api, user } = useApi();
+    const parentId = view.Id ?? '';
+    const isBooks = view.CollectionType === CollectionType.Books;
     return useQuery({
-        queryKey: [ 'Pufferfin', 'Library', 'Latest', parentId, user?.Id ],
+        queryKey: [ 'Pufferfin', 'Library', 'Latest', parentId, isBooks, user?.Id ],
         queryFn: async ({ signal }) => {
+            if (isBooks) {
+                const books = await getPufferfin<BooksPage>(api!, BOOKS_PATH, {
+                    params: { parentId, sortBy: BOOKS_NEWEST_FIRST, limit: ROW_LIMIT },
+                    signal
+                });
+                return books.Items ?? [];
+            }
+
             const response = await getLibraryApi(api!).getLatestMedia({
                 userId: user!.Id!,
                 parentId,
@@ -113,7 +140,7 @@ export const useLatestInLibrary = (parentId: string) => {
             }, { signal });
             return response.data as ItemDto[];
         },
-        enabled: !!api && !!user?.Id
+        enabled: !!api && !!user?.Id && !!parentId
     });
 };
 

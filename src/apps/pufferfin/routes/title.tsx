@@ -1,12 +1,9 @@
-import CloudOutlined from '@mui/icons-material/CloudOutlined';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import { isAxiosError } from 'axios';
 import React, { type FC, useMemo, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import CatalogCard from '../components/CatalogCard';
 import AudiobookSheet from '../features/audiobooks/components/AudiobookSheet';
-import BookSheet from '../features/books/components/BookSheet';
 import { isAsin } from '../features/audiobooks/utils/audiobooks';
 import Hero from '../components/Hero';
 import MediaRow from '../components/MediaRow';
@@ -17,13 +14,21 @@ import RequestActions from '../features/requests/components/RequestActions';
 import { useCanRequest } from '../features/requests/api/useCanRequest';
 import { useMyRequests } from '../features/requests/api/useRequests';
 import { RequestKind } from '../features/requests/api/types';
-import { findMovieRequest } from '../features/requests/utils/requests';
+import { findMovieRequest, findSeriesRequests, isRequestActive } from '../features/requests/utils/requests';
+import { getMissingSeasons } from '../features/series/utils/episodes';
+import SeasonDownloads, { getListedSeasons } from '../features/series/components/SeasonDownloads';
 import SeriesEpisodes from '../features/series/components/SeriesEpisodes';
+import TrailerButton from '../features/trailers/TrailerButton';
+import { getLetterboxdUrl, TextLink } from '../components/TextAction';
+import type { StringKey } from '../i18n/translate';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { ItemDetails } from './item';
-import { type CatalogTitleKind, getMarketParam, parseSheetTarget } from './paths';
+import { type CatalogTitleKind, getMarketParam, getTmdbPersonPath, parseSheetTarget } from './paths';
+import { DetailsSkeleton } from '../components/Skeleton';
+import { ErrorOutline } from '../components/icons';
+import { type CreditLink, HeroFacts } from '../components/CreditLine';
 
 const GENRE_LIMIT = 3;
 const HTTP_SERVICE_UNAVAILABLE = 503;
@@ -50,6 +55,15 @@ function getTitleMeta(kind: CatalogTitleKind, title: CatalogTitleDetails, t: Ret
         .filter((value, index, values) => values.indexOf(value) === index);
 }
 
+/** The directors of a film, the creators of a series, with the words that name them: each opens their page with all their titles. */
+function getMakers(kind: CatalogTitleKind, title: CatalogTitleDetails | undefined): { labelKey: StringKey, people: CreditLink[] } {
+    const isMovie = kind === CatalogItemKind.Movie;
+    const people = (title?.Crew ?? [])
+        .filter(credit => credit.Role === (isMovie ? 'Director' : 'Creator'))
+        .map(credit => ({ key: String(credit.TmdbId), name: credit.Name, path: getTmdbPersonPath(credit.TmdbId) }));
+    return { labelKey: isMovie ? 'DirectedBy' : 'CreatedBy', people };
+}
+
 /**
  * Title sheet opened by TMDB id. The server tells whether the title is on
  * disk: then the sheet is the library one, with Play. Otherwise it is built
@@ -68,9 +82,16 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
     // Buttons of services that are not configured never show: Radarr for a movie, Sonarr for the episodes of a series
     const rights = useCanRequest(isMovie ? 'Radarr' : 'Sonarr');
     const request = isMovie ? findMovieRequest(requests.data, tmdbId) : undefined;
-    const movieRequestInput = useMemo(() => ({ Kind: RequestKind.Movie, TmdbId: tmdbId }), [ tmdbId ]);
     // A series lists its seasons and episodes from TMDB, each missing episode downloadable on its own
     const seriesSeasons = useSeriesSeasons(isMovie ? undefined : tmdbId);
+    const movieRequestInput = useMemo(() => ({ Kind: RequestKind.Movie, TmdbId: tmdbId }), [ tmdbId ]);
+    // A series downloads season by season: every season already aired with episodes missing
+    const seasonRequestInputs = useMemo(
+        () => getMissingSeasons(seriesSeasons.data?.Seasons ?? [], new Date())
+            .map(season => ({ Kind: RequestKind.Season, TmdbId: tmdbId, SeasonNumber: season.SeasonNumber })),
+        [ seriesSeasons.data, tmdbId ]
+    );
+    const seriesRequests = useMemo(() => findSeriesRequests(requests.data, tmdbId), [ requests.data, tmdbId ]);
     const isContentSettled = isMovie ? !requests.isPending : !seriesSeasons.isPending;
     const areActionsSettled = rights.isSettled && isContentSettled;
 
@@ -78,14 +99,9 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
     useInitialFocus(pageRef, [ title, areActionsSettled ], !!title && areActionsSettled);
 
     const meta = useMemo(() => (title ? getTitleMeta(kind, title, t) : []), [ kind, t, title ]);
+    const makers = useMemo(() => getMakers(kind, title), [ kind, title ]);
 
-    if (isPending) {
-        return (
-            <div className='pf-status' aria-busy='true'>
-                <p>{t('Loading')}</p>
-            </div>
-        );
-    }
+    if (isPending) return <DetailsSkeleton />;
 
     if (isError || !title) {
         const isUnavailable = isAxiosError(error) && error.response?.status === HTTP_SERVICE_UNAVAILABLE;
@@ -111,11 +127,7 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
             <Hero
                 title={title.Title}
                 eyebrow={title.Tagline ?? undefined}
-                meta={meta.length > 0 && (
-                    <ul className='pf-meta'>
-                        {meta.map(value => <li key={value} className='pf-meta__item'>{value}</li>)}
-                    </ul>
-                )}
+                meta={<HeroFacts meta={meta} label={t(makers.labelKey)} people={makers.people} />}
                 overview={title.Overview}
                 backdropUrl={title.BackdropUrl ?? title.PosterUrl ?? undefined}
                 actions={isMovie ? (
@@ -124,13 +136,29 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                         request={request}
                         canRequest={rights.canRequest}
                         lastSyncAt={requests.dataUpdatedAt}
-                    />
+                    >
+                        <TrailerButton videos={title.Trailers} title={title.Title} />
+                        <TextLink href={getLetterboxdUrl(tmdbId)}>{t('SeeOnLetterboxd')}</TextLink>
+                    </RequestActions>
                 ) : (
-                    // A state, not a button: told by an icon and words, never by color alone
-                    <p className='pf-availability'>
-                        <CloudOutlined className='pf-availability__icon' fontSize='inherit' aria-hidden='true' />
-                        {t('NotInLibrary')}
-                    </p>
+                    <RequestActions
+                        requestInput={seasonRequestInputs}
+                        request={seriesRequests}
+                        canRequest={rights.canRequest && seasonRequestInputs.length > 0}
+                        lastSyncAt={requests.dataUpdatedAt}
+                        downloadLabel={t('ActionDownloadAllSeasons')}
+                    >
+                        {rights.canRequest && seriesSeasons.data && getListedSeasons(seriesSeasons.data.Seasons).length > 1 && (
+                            <SeasonDownloads
+                                seriesTmdbId={tmdbId}
+                                seriesTitle={title.Title}
+                                seasons={seriesSeasons.data.Seasons}
+                                canRequest={rights.canRequest}
+                                asText={seriesRequests.some(isRequestActive)}
+                            />
+                        )}
+                        <TrailerButton videos={title.Trailers} title={title.Title} />
+                    </RequestActions>
                 )}
             />
 
@@ -216,8 +244,6 @@ export const Component = () => {
             return <CatalogTitle key={`${target.titleKind}-${target.tmdbId}`} kind={target.titleKind} tmdbId={target.tmdbId} />;
         case 'audiobook':
             return <AudiobookSheet key={target.asin} asin={target.asin} market={getMarketParam(searchParams)} />;
-        case 'book':
-            return <BookSheet key={`${target.provider}-${target.bookId}`} provider={target.provider} bookId={target.bookId} />;
         default:
             return (
                 <div className='pf-status' role='status'>

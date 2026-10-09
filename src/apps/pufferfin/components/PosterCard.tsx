@@ -1,8 +1,10 @@
 import classNames from 'classnames';
 import React, { type ReactNode, useCallback } from 'react';
 
+import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import type { CardShape } from '../utils/images';
+import { PlayArrow } from './icons';
 
 interface PosterCardProps<T> {
     title: string
@@ -18,6 +20,11 @@ interface PosterCardProps<T> {
     value: T
     /** Without it, the card is a plain tile: shown, read by screen readers, but not a focus stop with nothing to do. */
     onSelect?: (value: T) => void
+    /**
+     * For a title on disk: a small round Play shows at the bottom right of the
+     * art under the pointer, and plays without opening the page.
+     */
+    onPlay?: (value: T) => void
 }
 
 const PosterCard = <T, >({
@@ -29,9 +36,12 @@ const PosterCard = <T, >({
     progressLabel,
     badge,
     value,
-    onSelect
+    onSelect,
+    onPlay
 }: PosterCardProps<T>) => {
+    const t = useTranslation();
     const onClick = useCallback(() => onSelect?.(value), [ onSelect, value ]);
+    const onPlayClick = useCallback(() => onPlay?.(value), [ onPlay, value ]);
     const accessibleName = [ title, subtitle, progressLabel, badge?.label ].filter(Boolean).join(', ');
 
     const content = (
@@ -70,7 +80,7 @@ const PosterCard = <T, >({
         );
     }
 
-    return (
+    const card = (
         <button
             type='button'
             className={classNames('pf-card', `pf-card--${shape}`)}
@@ -80,6 +90,27 @@ const PosterCard = <T, >({
         >
             {content}
         </button>
+    );
+
+    if (!onPlay) return card;
+
+    // Two buttons side by side, not one in the other: the card opens the page, Play plays
+    return (
+        <span className={classNames('pf-card-play', `pf-card-play--${shape}`)}>
+            {card}
+            <span className='pf-card-play__zone'>
+                <button
+                    type='button'
+                    className='pf-card-play__button'
+                    aria-label={t('ActionPlayTitle', title)}
+                    title={t('ActionPlay')}
+                    onClick={onPlayClick}
+                    tabIndex={-1}
+                >
+                    <PlayArrow fontSize='inherit' aria-hidden='true' />
+                </button>
+            </span>
+        </span>
     );
 };
 

@@ -1,0 +1,442 @@
+// The menus and the hints of the video player, in the manner of shadcn/ui on
+// its dark neutral theme: subtitles, audio and settings open above their
+// button as a popover on a large screen, as a dialog over a dimmed picture on
+// a phone; the volume button opens a horizontal panel with a slider; each
+// button names itself in a small tooltip. No blue: neutral grays and white.
+
+$check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+$chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+
+:root.pf-player-skin {
+    --pf-menu-background: #0a0a0a;
+    --pf-menu-border: #262626;
+    --pf-menu-accent: #262626;
+    --pf-menu-text: #fafafa;
+    --pf-menu-muted: #a3a3a3;
+    --pf-menu-ring: #a3a3a3;
+    --pf-menu-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+
+    // The heart is gone from the player
+    .osdControls .btnUserRating {
+        display: none !important;
+    }
+
+    // The button of an open menu or of the open volume panel keeps a ring
+    .videoOsdBottom .paper-icon-button-light.pf-osd-button--open,
+    .videoOsdBottom .pf-volume--open > .buttonMute {
+        box-shadow: 0 0 0 2px var(--pf-menu-ring);
+    }
+
+    // Menus: one sheet, a popover or a dialog
+
+    .dialog.pf-player-menu {
+        display: flex;
+        flex-direction: column;
+        min-width: 15rem;
+        max-width: min(20rem, calc(100vw - 1.5rem));
+        padding: 0.25rem;
+        overflow: hidden;
+        color: var(--pf-menu-text);
+        font-size: 0.875rem;
+        background: var(--pf-menu-background);
+        border: 1px solid var(--pf-menu-border);
+        border-radius: 0.75rem;
+        box-shadow: var(--pf-menu-shadow);
+        animation: pf-menu-popover-in 140ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        transform-origin: bottom right;
+    }
+
+    .dialog.pf-player-menu--dialog {
+        width: calc(100vw - 2rem);
+        max-width: 24rem;
+        max-height: min(75vh, 34rem);
+        padding: 0.5rem;
+        border-radius: 1rem;
+        animation: pf-menu-dialog-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        transform-origin: center;
+    }
+
+    // A popover leaves the picture as it is; a dialog dims it
+    .dialogBackdropOpened:has(+ .dialogContainer > .pf-player-menu--popover) {
+        opacity: 0;
+    }
+
+    .dialogBackdropOpened:has(+ .dialogContainer > .pf-player-menu--dialog) {
+        background: #000;
+        opacity: 0.6;
+    }
+
+    .pf-player-menu {
+        .actionSheetContent {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            margin: 0;
+            padding: 0 !important;
+            text-align: start;
+            align-items: stretch;
+        }
+
+        .actionSheetTitle {
+            margin: 0 -0.25rem 0.25rem;
+            padding: 0.5rem 0.75rem 0.625rem;
+            color: var(--pf-menu-text);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-align: start;
+            border-bottom: 1px solid var(--pf-menu-border);
+        }
+
+        .actionSheetScroller {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            max-height: none;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #404040 transparent;
+        }
+
+        .actionSheetMenuItem {
+            display: flex;
+            flex: none;
+            gap: 0.5rem;
+            align-items: center;
+            width: 100%;
+            min-height: 2.25rem;
+            margin: 0;
+            padding: 0.375rem 0.5rem;
+            color: #d4d4d4;
+            font-size: 0.875rem;
+            text-align: start;
+            background: transparent;
+            border: 0;
+            border-radius: 0.5rem;
+            box-shadow: none;
+            cursor: pointer;
+            transition: background-color 120ms ease, color 120ms ease;
+        }
+
+        // On a phone the choices are larger, for a thumb
+        &.pf-player-menu--dialog .actionSheetTitle {
+            padding: 0.5rem 0.75rem 0.75rem;
+            font-size: 1rem;
+        }
+
+        &.pf-player-menu--dialog .actionSheetMenuItem {
+            min-height: 3rem;
+            padding: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .actionSheetMenuItem:hover,
+        .actionSheetMenuItem:focus-visible,
+        .actionSheetMenuItem.show-focus:focus-visible {
+            color: var(--pf-menu-text);
+            background: var(--pf-menu-accent);
+            outline: none;
+        }
+
+        .actionSheetMenuItem:focus:not(:focus-visible, :hover) {
+            background: transparent;
+        }
+
+        .listItemBody.actionsheetListItemBody {
+            flex: 1;
+            min-width: 0;
+            padding: 0 !important;
+        }
+
+        .actionSheetItemText {
+            overflow: hidden;
+            font-weight: 400;
+            font-size: inherit;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .listItemBodyText.secondary {
+            margin-top: 0.125rem;
+            color: var(--pf-menu-muted);
+            font-size: 0.75rem;
+        }
+
+        // The current choice: a check on the right, in white
+        .actionsheetMenuItemIcon {
+            order: 3;
+            flex: none;
+            width: 1rem;
+            min-width: 0;
+            height: 1rem;
+            margin: 0;
+            padding: 0;
+            font-size: 0;
+            background: none;
+
+            &::before {
+                display: block;
+                width: 100%;
+                height: 100%;
+                background-color: var(--pf-menu-text);
+                mask: $check center / contain no-repeat;
+                content: '';
+            }
+        }
+
+        .actionsheetMenuItemIcon:not(.check) {
+            display: none;
+        }
+
+        .actionSheetMenuItem:has(.actionsheetMenuItemIcon.check:not([style*='hidden'])) {
+            color: var(--pf-menu-text);
+            font-weight: 500;
+        }
+
+        // A setting tells its value, and the chevron of its submenu
+        .actionSheetItemAsideText {
+            display: inline-flex;
+            flex: none;
+            gap: 0.25rem;
+            align-items: center;
+            margin: 0 0 0 1rem !important;
+            padding: 0;
+            color: var(--pf-menu-muted);
+            font-size: 0.8125rem;
+
+            &::after {
+                width: 0.875rem;
+                height: 0.875rem;
+                background-color: currentColor;
+                mask: $chevron center / contain no-repeat;
+                content: '';
+            }
+        }
+
+        .actionSheetMenuItem:focus-visible .secondary,
+        .actionSheetMenuItem:focus-visible .actionSheetItemAsideText {
+            color: var(--pf-menu-muted);
+            opacity: 1;
+        }
+
+        .actionsheetDivider {
+            height: 1px;
+            margin: 0.25rem -0.25rem;
+            background: var(--pf-menu-border);
+        }
+
+        .buttons {
+            display: none;
+        }
+    }
+
+    // Volume: a horizontal panel above the button
+
+    .osdControls .volumeButtons {
+        position: relative;
+    }
+
+    .pf-volume {
+        position: absolute;
+        right: -0.5rem;
+        bottom: calc(100% + 0.75rem);
+        z-index: 2;
+        display: none;
+        gap: 0.75rem;
+        align-items: center;
+        width: 15rem;
+        height: 3rem;
+        padding: 0 1rem 0 0.375rem;
+        color: var(--pf-menu-text);
+        background: var(--pf-menu-background);
+        border: 1px solid var(--pf-menu-border);
+        border-radius: 0.75rem;
+        box-shadow: var(--pf-menu-shadow);
+        transform-origin: bottom right;
+    }
+
+    .pf-volume--open .pf-volume {
+        display: flex;
+        animation: pf-menu-popover-in 140ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .pf-volume__mute {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+        color: var(--pf-menu-text);
+        background: transparent;
+        border: 0;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background-color 120ms ease;
+
+        &:hover,
+        &:focus-visible {
+            background: var(--pf-menu-accent);
+            outline: none;
+        }
+    }
+
+    // The slider of shadcn/ui: a thin rounded track, white up to the level, a round thumb
+    .pf-volume__range {
+        --pf-volume-fill: 100%;
+
+        flex: 1;
+        min-width: 0;
+        height: 1.25rem;
+        margin: 0;
+        background: transparent;
+        cursor: pointer;
+        appearance: none;
+
+        &:focus {
+            outline: none;
+        }
+
+        &::-webkit-slider-runnable-track {
+            height: 0.375rem;
+            background: linear-gradient(90deg, var(--pf-menu-text) var(--pf-volume-fill), var(--pf-menu-accent) var(--pf-volume-fill));
+            border-radius: 999px;
+        }
+
+        &::-moz-range-track {
+            height: 0.375rem;
+            background: var(--pf-menu-accent);
+            border-radius: 999px;
+        }
+
+        &::-moz-range-progress {
+            height: 0.375rem;
+            background: var(--pf-menu-text);
+            border-radius: 999px;
+        }
+
+        &::-webkit-slider-thumb {
+            width: 1rem;
+            height: 1rem;
+            margin-top: -0.3125rem;
+            background: var(--pf-menu-text);
+            border: 2px solid var(--pf-menu-background);
+            border-radius: 50%;
+            box-shadow: 0 0 0 1px rgba(250, 250, 250, 0.5);
+            transition: box-shadow 120ms ease;
+            appearance: none;
+        }
+
+        &::-moz-range-thumb {
+            width: 0.75rem;
+            height: 0.75rem;
+            background: var(--pf-menu-text);
+            border: 2px solid var(--pf-menu-background);
+            border-radius: 50%;
+            box-shadow: 0 0 0 1px rgba(250, 250, 250, 0.5);
+        }
+
+        &:hover::-webkit-slider-thumb,
+        &:focus-visible::-webkit-slider-thumb {
+            box-shadow: 0 0 0 4px rgba(250, 250, 250, 0.18);
+        }
+
+        &:hover::-moz-range-thumb,
+        &:focus-visible::-moz-range-thumb {
+            box-shadow: 0 0 0 4px rgba(250, 250, 250, 0.18);
+        }
+    }
+
+    .pf-volume__value {
+        flex: none;
+        width: 1.75rem;
+        color: var(--pf-menu-muted);
+        font-size: 0.8125rem;
+        text-align: end;
+        font-variant-numeric: tabular-nums;
+    }
+
+    // Hints: a small light pill above the button, after a short pause
+
+    @media (hover: hover) {
+        .osdControls .paper-icon-button-light[data-pf-hint] {
+            position: relative;
+        }
+
+        .osdControls .paper-icon-button-light[data-pf-hint]::after {
+            position: absolute;
+            bottom: calc(100% + 0.625rem);
+            left: 50%;
+            z-index: 3;
+            padding: 0.3rem 0.6rem;
+            color: #0a0a0a;
+            font-weight: 500;
+            font-size: 0.75rem;
+            line-height: 1.2;
+            white-space: nowrap;
+            background: var(--pf-menu-text);
+            border-radius: 0.375rem;
+            transform: translate(-50%, 0.125rem);
+            opacity: 0;
+            transition: opacity 120ms ease, transform 120ms ease;
+            pointer-events: none;
+            content: attr(data-pf-hint);
+        }
+
+        .osdControls .paper-icon-button-light[data-pf-hint]:hover::after {
+            transform: translate(-50%, 0);
+            opacity: 1;
+            transition-delay: 400ms;
+        }
+
+        // At the right edge the pill keeps inside the screen
+        .osdControls .btnFullscreen[data-pf-hint]::after {
+            right: 0;
+            left: auto;
+            transform: translateY(0.125rem);
+        }
+
+        .osdControls .btnFullscreen[data-pf-hint]:hover::after {
+            transform: none;
+        }
+
+        // No hint over an open menu or panel
+        .osdControls .pf-osd-button--open[data-pf-hint]::after,
+        .osdControls .pf-volume--open > .buttonMute[data-pf-hint]::after {
+            display: none;
+        }
+    }
+}
+
+@keyframes pf-menu-popover-in {
+    from {
+        transform: translateY(0.25rem) scale(0.97);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@keyframes pf-menu-dialog-in {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root.pf-player-skin {
+        .dialog.pf-player-menu,
+        .pf-volume--open .pf-volume {
+            animation: none !important;
+        }
+    }
+}

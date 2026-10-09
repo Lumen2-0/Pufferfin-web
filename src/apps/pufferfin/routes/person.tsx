@@ -1,4 +1,3 @@
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import React, { type FC, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -6,7 +5,10 @@ import { useApi } from 'hooks/useApi';
 import { useItem } from 'hooks/useItem';
 import datetime from 'scripts/datetime';
 
+import CatalogCard from '../components/CatalogCard';
 import PosterCard from '../components/PosterCard';
+import { useCatalogPerson } from '../features/catalog/api/useCatalog';
+import { getOpenableItems } from '../features/catalog/utils/catalog';
 import { useFilmography } from '../features/person/api/useFilmography';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
@@ -14,6 +16,10 @@ import { useInitialFocus } from '../navigation/useInitialFocus';
 import { getCardImageUrl } from '../utils/images';
 import { getDisplayTitle } from '../utils/items';
 import { useOpenItem } from '../utils/navigation';
+import { GridSkeleton, PersonSkeleton } from '../components/Skeleton';
+import { isPlayableItem } from '../utils/playback';
+import { usePlayItem } from '../utils/usePlay';
+import { ErrorOutline } from '../components/icons';
 
 const formatDate = (iso: string | null | undefined) => {
     if (!iso) return undefined;
@@ -25,13 +31,20 @@ const PersonDetails: FC<{ personId: string }> = ({ personId }) => {
     const t = useTranslation();
     const { api } = useApi();
     const openItem = useOpenItem();
+    const playCard = usePlayItem();
     const pageRef = useRef<HTMLDivElement>(null);
 
     const { data: person, isPending, isError } = useItem(personId);
-    const filmography = useFilmography(personId);
+    // The whole filmography comes from TMDB, each title on disk or not; the library one stands in without TMDB
+    const tmdbId = Number(person?.ProviderIds?.Tmdb) || undefined;
+    const catalogPerson = useCatalogPerson(tmdbId);
+    const hasCatalog = !!tmdbId && !catalogPerson.isError;
+    const filmography = useFilmography(person && !hasCatalog ? personId : undefined);
+    const catalogTitles = useMemo(() => getOpenableItems(catalogPerson.data?.Filmography) ?? [], [ catalogPerson.data ]);
+    const isFilmographyPending = hasCatalog ? catalogPerson.isPending : filmography.isPending;
 
     // The first title of the filmography takes the focus once it is there
-    useInitialFocus(pageRef, [ person, filmography.isPending ], !!person && !filmography.isPending);
+    useInitialFocus(pageRef, [ person, isFilmographyPending ], !!person && !isFilmographyPending);
 
     const lifeFacts = useMemo(() => {
         if (!person) return [];
@@ -44,13 +57,7 @@ const PersonDetails: FC<{ personId: string }> = ({ personId }) => {
             .filter((value): value is string => !!value);
     }, [ person, t ]);
 
-    if (isPending) {
-        return (
-            <div className='pf-status' aria-busy='true'>
-                <p>{t('Loading')}</p>
-            </div>
-        );
-    }
+    if (isPending) return <PersonSkeleton />;
 
     if (isError || !person) {
         return (
@@ -64,8 +71,18 @@ const PersonDetails: FC<{ personId: string }> = ({ personId }) => {
     const portraitUrl = api ? getCardImageUrl(api, person, 'portrait') : undefined;
 
     let filmographyContent: React.ReactNode;
-    if (filmography.isPending) {
-        filmographyContent = <p className='pf-person-page__note' aria-busy='true'>{t('Loading')}</p>;
+    if (isFilmographyPending) {
+        filmographyContent = <GridSkeleton count={12} />;
+    } else if (hasCatalog) {
+        filmographyContent = catalogTitles.length ? (
+            <ul className='pf-grid'>
+                {catalogTitles.map(title => (
+                    <li key={title.Key} className='pf-grid__item'>
+                        <CatalogCard item={title} />
+                    </li>
+                ))}
+            </ul>
+        ) : <p className='pf-person-page__note'>{t('PersonNoFilmography')}</p>;
     } else if (filmography.isError) {
         filmographyContent = (
             <p className='pf-row__error' role='status'>
@@ -87,6 +104,7 @@ const PersonDetails: FC<{ personId: string }> = ({ personId }) => {
                             shape='portrait'
                             value={title}
                             onSelect={openItem}
+                            onPlay={isPlayableItem(title) ? playCard : undefined}
                         />
                     </li>
                 ))}

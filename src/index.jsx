@@ -1,5 +1,7 @@
 // Import legacy browser polyfills
 import 'lib/legacy';
+// PUFFERFIN: the URLs of the API client carry the token as ApiKey, which the server accepts
+import 'lib/jellyfin-apiclient/authCompat';
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';

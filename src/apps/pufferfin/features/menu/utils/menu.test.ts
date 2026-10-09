@@ -15,13 +15,12 @@ const BROWSER_USER: MenuContext = {
 const ids = (entries: { id: string }[]) => entries.map(entry => entry.id);
 
 describe('Pufferfin: menu', () => {
-    it('always offers the profile, the settings and sign out', () => {
-        expect(ids(getAccountEntries(BROWSER_USER))).toEqual([ 'profile', 'settings', 'signOut' ]);
+    it('always offers the settings window and sign out', () => {
+        expect(ids(getAccountEntries(BROWSER_USER))).toEqual([ 'settings', 'signOut' ]);
     });
 
-    it('links the profile of the signed in user', () => {
-        const profile = getAccountEntries(BROWSER_USER)[0];
-        expect(profile).toMatchObject({ kind: 'link', path: '/userprofile?userId=user' });
+    it('opens the settings as a window, the profile at its top, not as a page', () => {
+        expect(getAccountEntries(BROWSER_USER)[0]).toMatchObject({ kind: 'action', id: 'settings' });
     });
 
     it('adds the host features only when the host supports them', () => {
@@ -34,7 +33,7 @@ describe('Pufferfin: menu', () => {
             supportsExit: true
         });
         expect(ids(entries)).toEqual([
-            'profile', 'settings', 'downloadManager', 'clientSettings', 'quickConnect', 'selectServer', 'signOut', 'exitApp'
+            'settings', 'downloadManager', 'clientSettings', 'selectServer', 'signOut', 'exitApp'
         ]);
     });
 

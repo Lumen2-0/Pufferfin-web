@@ -1,9 +1,3 @@
-import CheckCircle from '@mui/icons-material/CheckCircle';
-import CloudOff from '@mui/icons-material/CloudOff';
-import KeyOff from '@mui/icons-material/KeyOff';
-import NetworkCheck from '@mui/icons-material/NetworkCheck';
-import RemoveCircleOutline from '@mui/icons-material/RemoveCircleOutline';
-import WarningAmber from '@mui/icons-material/WarningAmber';
 import Button from '@mui/material/Button';
 import Chip, { type ChipProps } from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -14,6 +8,7 @@ import { ConnectionStatus, type PufferfinService } from 'apps/pufferfin/api/type
 import { type PufferfinStringKey, translate } from 'apps/pufferfin/i18n';
 
 import { useConnectionTest } from '../api/useConnectionTest';
+import { CheckCircle, CloudOff, KeyOff, NetworkCheck, RemoveCircleOutline, WarningAmber } from '../../components/icons';
 
 type StatusState = 'Disabled' | 'Testing' | 'Connected' | 'Unreachable' | 'KeyRejected' | 'TestFailed';
 

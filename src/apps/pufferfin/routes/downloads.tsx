@@ -1,4 +1,3 @@
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import { getUserApi } from '@jellyfin/sdk/lib/utils/api/user-api';
 import { useQuery } from '@tanstack/react-query';
 import React, { type FC, type FocusEvent, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
@@ -12,6 +11,8 @@ import { getMoveIndex, isSameId, type MoveDirection, normalizeId, splitRequests 
 import { useTranslation } from '../i18n/useTranslation';
 import { focusElement, focusFirst, getFocusables } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
+import { DownloadsSkeleton } from '../components/Skeleton';
+import { Download as DownloadIcon, ErrorOutline } from '../components/icons';
 
 /** How many finished requests the panel keeps on screen. */
 const FINISHED_LIMIT = 20;
@@ -76,7 +77,10 @@ const RequestList: FC<{
     actions: DownloadRowActions
 }> = ({ title, titleId, requests, allRequests, lastSyncAt, isAdministrator, userId, ownerNames, actions }) => (
     <section className='pf-downloads__section' aria-labelledby={titleId}>
-        <h2 id={titleId} className='pf-row__title'>{title}</h2>
+        <h2 id={titleId} className='pf-downloads__heading'>
+            {title}
+            <span className='pf-downloads__count'>{requests.length}</span>
+        </h2>
         <ul className='pf-downloads__list'>
             {requests.map(item => (
                 <DownloadRow
@@ -147,7 +151,7 @@ export const Component = () => {
 
     let content: React.ReactNode;
     if (query.isPending) {
-        content = <p className='pf-library__note' aria-busy='true'>{t('Loading')}</p>;
+        content = <DownloadsSkeleton />;
     } else if (query.isError) {
         // Failure is told with an icon and words, never with color alone
         content = (
@@ -157,7 +161,12 @@ export const Component = () => {
             </p>
         );
     } else if (!current.length && !finished.length) {
-        content = <p className='pf-library__note'>{t('DownloadsEmpty')}</p>;
+        content = (
+            <div className='pf-downloads__empty'>
+                <span className='pf-downloads__empty-icon' aria-hidden='true'><DownloadIcon /></span>
+                <p>{t('DownloadsEmpty')}</p>
+            </div>
+        );
     } else {
         const listProps = {
             allRequests: allRequests ?? [],
@@ -172,7 +181,7 @@ export const Component = () => {
                 {current.length > 0 ? (
                     <RequestList title={t('DownloadsCurrent')} titleId='pf-downloads-current' requests={current} {...listProps} />
                 ) : (
-                    <p className='pf-library__note'>{t('DownloadsNothingCurrent')}</p>
+                    <p className='pf-downloads__note'>{t('DownloadsNothingCurrent')}</p>
                 )}
                 {finished.length > 0 && (
                     <RequestList
@@ -188,7 +197,8 @@ export const Component = () => {
 
     return (
         <div ref={pageRef} className='pf-library pf-downloads'>
-            <h1 className='pf-library__title'>{t('NavDownloads')}</h1>
+            {/* The tab says where we are: the title is for assistive technologies only */}
+            <h1 className='pf-visually-hidden'>{t('NavDownloads')}</h1>
             {(isChangeError || isMoveError) && (
                 <p className='pf-row__error' role='alert'>
                     <ErrorOutline aria-hidden='true' />

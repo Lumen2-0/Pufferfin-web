@@ -9,8 +9,7 @@ export enum DiscoverType {
     Series = 'series',
     TvShows = 'tvshows',
     Documentaries = 'documentaries',
-    Audiobooks = 'audiobooks',
-    Books = 'books'
+    Audiobooks = 'audiobooks'
 }
 
 /**
@@ -30,7 +29,6 @@ export enum DiscoverRow {
     AudiobookNewReleases = 'audiobookNewReleases',
     LiveTvOnNow = 'liveTvOnNow',
     Recordings = 'recordings',
-    TrendingBooks = 'trendingBooks',
     DocumentaryMovies = 'documentaryMovies',
     DocumentarySeries = 'documentarySeries',
     PopularTvShows = 'popularTvShows'
@@ -54,8 +52,7 @@ export const DISCOVER_TYPES: DiscoverType[] = [
     DiscoverType.Series,
     DiscoverType.TvShows,
     DiscoverType.Documentaries,
-    DiscoverType.Audiobooks,
-    DiscoverType.Books
+    DiscoverType.Audiobooks
 ];
 
 export const DISCOVER_TYPE_LABELS: Record<DiscoverType, StringKey> = {
@@ -64,55 +61,27 @@ export const DISCOVER_TYPE_LABELS: Record<DiscoverType, StringKey> = {
     [DiscoverType.Series]: 'DiscoverTypeSeries',
     [DiscoverType.TvShows]: 'DiscoverTypeTvShows',
     [DiscoverType.Documentaries]: 'DiscoverTypeDocumentaries',
-    [DiscoverType.Audiobooks]: 'DiscoverTypeAudiobooks',
-    [DiscoverType.Books]: 'DiscoverTypeBooks'
+    [DiscoverType.Audiobooks]: 'DiscoverTypeAudiobooks'
 };
 
+/**
+ * The rows above the genre rows: only what is being watched, and live TV.
+ * Everything else on Discover is a genre and its variants.
+ */
 const ROWS: Record<DiscoverType, DiscoverRow[]> = {
-    [DiscoverType.All]: [
-        DiscoverRow.ContinueWatching,
-        DiscoverRow.NextUp,
-        DiscoverRow.RecommendedForYou,
-        DiscoverRow.TrendingMovies,
-        DiscoverRow.TrendingShows,
-        DiscoverRow.Downloads,
-        DiscoverRow.AudiobookBestSellers
-    ],
-    [DiscoverType.Movies]: [
-        DiscoverRow.ContinueWatching,
-        DiscoverRow.RecommendedForYou,
-        DiscoverRow.TrendingMovies
-    ],
-    [DiscoverType.Series]: [
-        DiscoverRow.ContinueWatching,
-        DiscoverRow.NextUp,
-        DiscoverRow.TrendingShows
-    ],
-    // Fiction goes to Series; here the unscripted shows, then live TV
-    [DiscoverType.TvShows]: [
-        DiscoverRow.PopularTvShows,
-        DiscoverRow.LiveTvOnNow,
-        DiscoverRow.Recordings
-    ],
-    [DiscoverType.Documentaries]: [
-        DiscoverRow.DocumentaryMovies,
-        DiscoverRow.DocumentarySeries
-    ],
-    [DiscoverType.Audiobooks]: [
-        DiscoverRow.AudiobookBestSellers,
-        DiscoverRow.AudiobookNewReleases
-    ],
-    [DiscoverType.Books]: [
-        DiscoverRow.TrendingBooks
-    ]
+    [DiscoverType.All]: [ DiscoverRow.ContinueWatching, DiscoverRow.NextUp ],
+    [DiscoverType.Movies]: [ DiscoverRow.ContinueWatching ],
+    [DiscoverType.Series]: [ DiscoverRow.ContinueWatching, DiscoverRow.NextUp ],
+    [DiscoverType.TvShows]: [ DiscoverRow.LiveTvOnNow, DiscoverRow.Recordings ],
+    [DiscoverType.Documentaries]: [],
+    [DiscoverType.Audiobooks]: []
 };
 
 /** The rows of a Discover screen, top to bottom. */
 export const getDiscoverRows = (type: DiscoverType) => ROWS[type];
 
-/** Whether the screen opens on a featured title: the video types only. */
-export const hasFeatured = (type: DiscoverType) =>
-    type === DiscoverType.All || type === DiscoverType.Movies || type === DiscoverType.Series;
+/** Whether the screen opens on the featured carousel: every type but the audiobooks. */
+export const hasFeatured = (type: DiscoverType) => type !== DiscoverType.Audiobooks;
 
 /** Reads the type of the address; an unknown or unavailable value falls back to All. */
 export function parseDiscoverType(value: string | null | undefined): DiscoverType {
@@ -131,8 +100,6 @@ export function getDiskItemTypes(type: DiscoverType): BaseItemKind[] | undefined
             return [ BaseItemKind.Episode ];
         case DiscoverType.Audiobooks:
             return [ BaseItemKind.AudioBook ];
-        case DiscoverType.Books:
-            return [ BaseItemKind.Book ];
         default:
             return undefined;
     }

@@ -1,0 +1,26 @@
+// The Lucide icons of the interface, sized as the Material icons they replace
+
+.pf-icon {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+    user-select: none;
+}
+
+.pf-icon--medium {
+    font-size: 1.5rem;
+}
+
+.pf-icon--small {
+    font-size: 1.25rem;
+}
+
+.pf-icon--large {
+    font-size: 2.1875rem;
+}
+
+.pf-icon--inherit {
+    font-size: inherit;
+}

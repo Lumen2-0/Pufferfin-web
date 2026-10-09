@@ -127,6 +127,30 @@ function getPosition(positionTo: Element, options: Options, dlg: HTMLElement) {
     return pos;
 }
 
+// PUFFERFIN: the menus of the video player (subtitles, audio, settings) open
+// above their button as a popover on a large screen, as a dialog on a phone
+const PLAYER_MENU_GAP = 10;
+const PLAYER_MENU_MARGIN = 12;
+const PHONE_QUERY = '(max-width: 640px), (pointer: coarse) and (max-height: 500px)';
+
+function isPlayerMenu(options: Options) {
+    return !!options.positionTo?.closest?.('.videoOsdBottom');
+}
+
+function placePlayerMenu(positionTo: Element, dlg: HTMLElement) {
+    const anchor = positionTo.getBoundingClientRect();
+    const windowSize = dom.getWindowSize();
+    const width = dlg.offsetWidth;
+    // Its right edge on the right edge of the button, inside the screen
+    const left = Math.min(Math.max(anchor.right - width, PLAYER_MENU_MARGIN), windowSize.innerWidth - width - PLAYER_MENU_MARGIN);
+    dlg.style.position = 'fixed';
+    dlg.style.margin = '0';
+    dlg.style.left = left + 'px';
+    dlg.style.top = 'auto';
+    dlg.style.bottom = (windowSize.innerHeight - anchor.top + PLAYER_MENU_GAP) + 'px';
+    dlg.style.maxHeight = Math.max(anchor.top - PLAYER_MENU_GAP - PLAYER_MENU_MARGIN, 160) + 'px';
+}
+
 function centerFocus(elem: Element, horiz: boolean, on: boolean) {
     import('../../scripts/scrollHelper').then((scrollHelper) => {
         const fn = on ? 'on' : 'off';
@@ -149,6 +173,8 @@ export function show(options: Options) {
     };
 
     let isFullscreen;
+    const playerMenu = !layoutManager.tv && isPlayerMenu(options);
+    const playerDialog = playerMenu && window.matchMedia(PHONE_QUERY).matches;
 
     if (layoutManager.tv) {
         dialogOptions.size = 'fullscreen';
@@ -164,7 +190,19 @@ export function show(options: Options) {
         dialogOptions.autoFocus = true;
     }
 
+    if (playerMenu) {
+        // A phone gets a dialog over a dimmed picture; a large screen a light popover
+        dialogOptions.modal = playerDialog;
+        // The entry is drawn by the style sheet; the exit is immediate, nothing to wait for
+        dialogOptions.entryAnimation = 'none';
+        dialogOptions.exitAnimation = 'none';
+    }
+
     const dlg = dialogHelper.createDialog(dialogOptions);
+
+    if (playerMenu) {
+        dlg.classList.add('pf-player-menu', playerDialog ? 'pf-player-menu--dialog' : 'pf-player-menu--popover');
+    }
 
     if (isFullscreen) {
         dlg.classList.add('actionsheet-fullscreen');
@@ -347,7 +385,23 @@ export function show(options: Options) {
             }
         });
 
+        // PUFFERFIN: the button of an open player menu stays lit
+        const anchor = playerMenu ? options.positionTo : null;
+        anchor?.classList.add('pf-osd-button--open');
+
+        // PUFFERFIN: Escape always closes a player menu, whatever the player does with the key
+        const onPlayerMenuKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' || e.key === 'Backspace' || e.key === 'BrowserBack' || e.key === 'GoBack') {
+                e.preventDefault();
+                e.stopPropagation();
+                dialogHelper.close(dlg);
+            }
+        };
+        if (playerMenu) document.addEventListener('keydown', onPlayerMenuKeyDown, true);
+
         dlg.addEventListener('close', function () {
+            anchor?.classList.remove('pf-osd-button--open');
+            document.removeEventListener('keydown', onPlayerMenuKeyDown, true);
             if (layoutManager.tv) {
                 const scroller = dlg.querySelector('.actionSheetScroller');
                 if (scroller) {
@@ -376,6 +430,11 @@ export function show(options: Options) {
         dialogHelper.open(dlg).catch(e => {
             console.warn('DialogHelper.open error', e);
         });
+
+        if (playerMenu) {
+            if (!playerDialog && options.positionTo) placePlayerMenu(options.positionTo, dlg);
+            return;
+        }
 
         const pos = options.positionTo && dialogOptions.size !== 'fullscreen' ? getPosition(options.positionTo, options, dlg) : null;
 

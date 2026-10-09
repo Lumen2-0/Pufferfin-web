@@ -78,6 +78,10 @@ export interface CatalogCountry {
 
 /** The sheet of a film or a series, from TMDB. */
 export interface CatalogTitleDetails {
+    /** The cast, in billing order. */
+    Cast?: CatalogCredit[];
+    /** The key crew: directors, writers, creators. */
+    Crew?: CatalogCredit[];
     Kind: CatalogItemKind;
     TmdbId: number;
     Title: string;
@@ -92,8 +96,21 @@ export interface CatalogTitleDetails {
     Genres: CatalogGenre[];
     Countries: CatalogCountry[];
     Recommendations: CatalogItem[];
+    /** Trailers and teasers, the preferred language first. */
+    Trailers?: CatalogVideo[];
     Availability: CatalogAvailability;
     LocalItemId?: string | null;
+}
+
+/** A video of a title on a hosting site, such as a YouTube trailer. */
+export interface CatalogVideo {
+    Name?: string | null;
+    Site?: string | null;
+    Key?: string | null;
+    Type?: string | null;
+    Language?: string | null;
+    Official: boolean;
+    Url?: string | null;
 }
 
 /** A source that knows a catalog entry. `Library` alone marks an entry on disk that TMDB does not list. */
@@ -186,4 +203,31 @@ export interface CatalogAudiobookDetails {
     Year?: number | null;
     Availability: CatalogAvailability;
     LocalItemId?: string | null;
+}
+
+/** A person read from TMDB, with every film and series they worked on. */
+export interface CatalogPersonDetails {
+    TmdbId: number;
+    Name: string;
+    Biography?: string | null;
+    Birthday?: string | null;
+    Deathday?: string | null;
+    PlaceOfBirth?: string | null;
+    KnownForDepartment?: string | null;
+    ImageUrl?: string | null;
+    /** Films and series, best known first, each marked on disk or missing. */
+    Filmography: CatalogItem[];
+    /** In the library as a person: their library page shows them. */
+    Availability?: CatalogAvailability;
+    LocalItemId?: string | null;
+}
+
+/** A cast or crew member of a catalog title. */
+export interface CatalogCredit {
+    TmdbId: number;
+    Name: string;
+    /** The character for the cast, the job for the crew ("Director"). */
+    Role?: string | null;
+    Department?: string | null;
+    ImageUrl?: string | null;
 }
