@@ -55,6 +55,9 @@ function requireHlsPlayer(callback) {
         hls.DefaultConfig.lowLatencyMode = false;
         hls.DefaultConfig.backBufferLength = Infinity;
         hls.DefaultConfig.liveBackBufferLength = 90;
+        // PUFFERFIN: the demuxing worker loads from its own file: the one hls.js builds from its minified code fails
+        // ("e is not defined") and the work falls back to the page, which can stutter
+        hls.DefaultConfig.workerPath = 'libraries/hls.worker.js';
         window.Hls = hls;
         callback();
     });
