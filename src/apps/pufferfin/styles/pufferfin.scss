@@ -2264,9 +2264,46 @@ body,
     }
 }
 
-// A play started from Pufferfin just starts: no loader over the page behind
+// A play started from Pufferfin just starts: no loader over the page behind,
+// only a thin bar running along the top of the page until the player opens
 .pf-quiet-loading .docspinner {
     display: none;
+}
+
+@keyframes pf-starting {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(250%);
+    }
+}
+
+.pf-quiet-loading {
+    cursor: progress;
+
+    &::after {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 2147483647;
+        width: 40%;
+        height: 2px;
+        background: var(--pf-color-text, #fafafa);
+        border-radius: 0 2px 2px 0;
+        animation: pf-starting 1.1s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        pointer-events: none;
+        content: '';
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-quiet-loading::after {
+        width: 100%;
+        opacity: 0.6;
+        animation: none;
+    }
 }
 
 // The loader of the player and of the upstream pages: the same small arc,

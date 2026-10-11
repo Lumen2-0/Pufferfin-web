@@ -2906,6 +2906,12 @@ export class PlaybackManager {
 
                     if (mediaSource.TranscodingSubProtocol === 'hls') {
                         contentType = 'application/x-mpegURL';
+
+                        // PUFFERFIN: the server starts the transcode where a resumed play starts, not at the
+                        // beginning to be killed and started again a moment later
+                        if (startPosition > 0) {
+                            mediaUrl += `${mediaUrl.includes('?') ? '&' : '?'}PufferfinStartTicks=${Math.floor(startPosition)}`;
+                        }
                     } else {
                         contentType = getMimeType(type.toLowerCase(), mediaSource.TranscodingContainer);
 
