@@ -48,6 +48,17 @@ const Dot: FC<DotProps> = ({ index, count, isActive, onSelect, onDone }) => {
     );
 };
 
+// Whether the last input was a key rather than a pointer: only then does a focus on the carousel hold it
+let hasUsedKeys = false;
+if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', () => {
+        hasUsedKeys = true;
+    }, true);
+    window.addEventListener('pointerdown', () => {
+        hasUsedKeys = false;
+    }, true);
+}
+
 /**
  * The featured titles of Discover, one screen high: a large card whose art
  * fades from one title to the next. It moves on by itself, also under the
@@ -65,9 +76,10 @@ const HeroCarousel: FC<{ slides: HeroSlide[] }> = ({ slides }) => {
     // pauses while held, and never runs when the user asked for less motion
     const next = useCallback(() => setIndex(current => (current + 1) % count), [ count ]);
 
-    // Only the keyboard and the remote hold it: under the mouse it keeps turning
-    const holdForKeyboard = useCallback((event: React.FocusEvent<HTMLElement>) => {
-        if (event.target.matches(':focus-visible')) setIsHeld(true);
+    // Only the keyboard and the remote hold it: under the mouse it keeps turning, and the focus
+    // the page itself puts on the hero when it opens is no reason to stop either
+    const holdForKeyboard = useCallback(() => {
+        if (hasUsedKeys || document.documentElement.classList.contains('layout-tv')) setIsHeld(true);
     }, []);
     const onBlur = useCallback((event: React.FocusEvent<HTMLElement>) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsHeld(false);
