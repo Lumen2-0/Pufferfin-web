@@ -22,7 +22,7 @@ export function playItem(item: ItemDto) {
     return quietPlay(() => playbackManager.play({
         items: [ item ],
         startPositionTicks: startPositionOf(item)
-    })).catch((err: unknown) => {
+    }), `item:${item.Id ?? ''}`).catch((err: unknown) => {
         console.error('[Pufferfin] Failed to start playback', err);
     });
 }
@@ -35,7 +35,7 @@ export function playItemById(api: Api, userId: string, itemId: string) {
             items: [ response.data as ItemDto ],
             startPositionTicks: startPositionOf(response.data as ItemDto)
         });
-    }).catch((err: unknown) => {
+    }, `item:${itemId}`).catch((err: unknown) => {
         console.error('[Pufferfin] Failed to read the item to play', err);
     });
 }
@@ -53,7 +53,7 @@ export function playAudiobookParts(parts: ItemDto[], startIndex: number) {
         items: parts,
         startIndex,
         startPositionTicks: startPositionOf(start)
-    })).catch((err: unknown) => {
+    }), `book:${start?.Id ?? ''}`).catch((err: unknown) => {
         console.error('[Pufferfin] Failed to play the audiobook', err);
     });
 }
@@ -73,7 +73,7 @@ export function playAudiobookById(api: Api, itemId: string) {
             startIndex,
             startPositionTicks: startPositionOf(parts[startIndex])
         });
-    }).catch((err: unknown) => {
+    }, `book:${itemId}`).catch((err: unknown) => {
         console.error('[Pufferfin] Failed to play the audiobook', err);
     });
 }
@@ -107,7 +107,7 @@ export function playTitle(api: Api, userId: string, item: ItemDto) {
             console.error('[Pufferfin] Failed to find the next episode', err);
         }
         await playbackManager.play({ items: [ next ], startPositionTicks: startPositionOf(next) });
-    }).catch((err: unknown) => {
+    }, `title:${item.Id}`).catch((err: unknown) => {
         console.error('[Pufferfin] Failed to start playback', err);
     });
 }

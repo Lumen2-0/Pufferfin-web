@@ -181,6 +181,7 @@ const SeriesEpisodes: FC<SeriesEpisodesProps> = ({ seriesTmdbId, seasons, series
                 options={seasonOptions}
                 selectedId={seasonNumber !== undefined ? String(seasonNumber) : undefined}
                 onSelect={onSeasonSelect}
+                isRail
             />
             <div className='pf-episodes__head'>
                 <h2 id={headingId} className='pf-episodes__title'>{seasonName}</h2>

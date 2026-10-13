@@ -5,7 +5,7 @@
  * arrow keys move between its choices, so it works with a keyboard and a remote.
  */
 
-export type PanelKind = 'tracks' | 'settings' | 'episodes';
+export type PanelKind = 'tracks' | 'settings' | 'episodes' | 'syncplay';
 
 export interface PanelHostOptions {
     /** The element the panels are placed in: the player page. */

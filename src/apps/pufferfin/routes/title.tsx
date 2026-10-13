@@ -148,6 +148,7 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                         request={request}
                         canRequest={rights.canRequest}
                         lastSyncAt={requests.dataUpdatedAt}
+                        allowTemporary
                     >
                         <BookmarkButton bookmark={bookmark} withLabel />
                         <TrailerButton videos={title.Trailers} title={title.Title} />

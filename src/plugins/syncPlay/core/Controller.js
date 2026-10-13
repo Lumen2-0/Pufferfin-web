@@ -4,6 +4,7 @@
  */
 
 import * as Helper from './Helper';
+import { findStartIndex } from './playlist';
 
 /**
  * Class that exposes SyncPlay calls to external modules.
@@ -69,11 +70,18 @@ class Controller {
      */
     play(options) {
         const apiClient = this.manager.getApiClient();
+        // PUFFERFIN: the title chosen, before the choice is turned into a queue
+        const requestedIndex = options.startIndex ? options.startIndex : 0;
+        const chosenId = options.items ? options.items[requestedIndex]?.Id : options.ids?.[requestedIndex];
         const sendPlayRequest = (items) => {
-            const queue = items.map(item => item.Id);
+            const queue = items.map(item => item.Id).filter(Boolean);
+            if (!queue.length) {
+                return Promise.reject(new Error('SyncPlay play: nothing to play'));
+            }
             return apiClient.requestSyncPlaySetNewQueue({
                 PlayingQueue: queue,
-                PlayingItemPosition: options.startIndex ? options.startIndex : 0,
+                // The group starts on the title chosen, wherever the queue put it
+                PlayingItemPosition: findStartIndex(queue, chosenId, options.startIndex ? options.startIndex : 0),
                 StartPositionTicks: options.startPositionTicks ? options.startPositionTicks : 0
             });
         };

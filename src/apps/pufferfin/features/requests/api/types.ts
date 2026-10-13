@@ -85,6 +85,24 @@ export interface MediaRequest {
     UpdatedAt: string;
     /** When the server searches again a request waiting for sources. */
     NextAttemptAt?: string | null;
+    /** A film downloaded for a while only: it leaves the library seven days after its import. */
+    Temporary?: boolean;
+    /** When a temporary film leaves the library, once it is available. */
+    ExpiresAt?: string | null;
+    /** What the expiry of a temporary film did, once it ran. */
+    ExpiryOutcome?: TemporaryExpiryOutcome | null;
+}
+
+/** What the expiry of a temporary film did. */
+export enum TemporaryExpiryOutcome {
+    /** The film left the library; a private torrent seeds until its minimum, then goes with its files. */
+    Removed = 'Removed',
+    /** The film was already gone: nothing was deleted. */
+    AlreadyGone = 'AlreadyGone',
+    /** Another request wants the film to stay. */
+    Kept = 'Kept',
+    /** What was found did not match the download: nothing was deleted, an administrator decides. */
+    NeedsAttention = 'NeedsAttention'
 }
 
 export interface CreateMediaRequest {
@@ -102,6 +120,8 @@ export interface CreateMediaRequest {
     AirDate?: string;
     /** Omitted: the server picks the remembered or preferred language, else the original version. */
     Language?: string;
+    /** A film downloaded for seven days only, then removed with its torrent. Ignored for anything else. */
+    Temporary?: boolean;
 }
 
 /** What the current user may request. */

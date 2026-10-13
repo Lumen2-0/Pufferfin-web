@@ -3,6 +3,7 @@ import React, { type FC, type MouseEvent, useCallback } from 'react';
 
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { Check } from './icons';
+import Rail from './Rail';
 
 interface ChoiceOption {
     id: string
@@ -14,43 +15,56 @@ interface ChoicePickerProps {
     options: ChoiceOption[]
     selectedId: string | undefined
     onSelect: (id: string) => void
+    /** One line that scrolls sideways, with arrows, rather than lines that wrap. */
+    isRail?: boolean
 }
 
 /**
  * Row of round toggle buttons, one per choice (a season, a kind of title). The selected one is told by
  * `aria-pressed`, a check mark and a firmer outline, never by color alone.
  */
-const ChoicePicker: FC<ChoicePickerProps> = ({ label, options, selectedId, onSelect }) => {
+const ChoicePicker: FC<ChoicePickerProps> = ({ label, options, selectedId, onSelect, isRail = false }) => {
     // One handler for every button: the choice id travels in a data attribute
     const onClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
         const { choiceId } = event.currentTarget.dataset;
         if (choiceId) onSelect(choiceId);
     }, [ onSelect ]);
 
+    const buttons = options.map(option => {
+        const isSelected = option.id === selectedId;
+        return (
+            <button
+                key={option.id}
+                type='button'
+                className={classNames('pf-button', 'pf-button--quiet', 'pf-choices__choice', { 'pf-button--selected': isSelected })}
+                aria-pressed={isSelected}
+                data-choice-id={option.id}
+                onClick={onClick}
+                {...{ [FOCUSABLE_ATTRIBUTE]: true }}
+            >
+                {isSelected && <span className='pf-button__icon' aria-hidden='true'><Check /></span>}
+                <span className='pf-button__label'>{option.name}</span>
+            </button>
+        );
+    });
+
+    const groupProps = {
+        role: 'group',
+        'aria-label': label,
+        [FOCUS_GROUP_ATTRIBUTE]: true
+    };
+
+    if (isRail) {
+        return (
+            <Rail as='div' className='pf-choices pf-choices--rail' {...groupProps}>
+                {buttons}
+            </Rail>
+        );
+    }
+
     return (
-        <div
-            className='pf-choices pf-button-row'
-            role='group'
-            aria-label={label}
-            {...{ [FOCUS_GROUP_ATTRIBUTE]: true }}
-        >
-            {options.map(option => {
-                const isSelected = option.id === selectedId;
-                return (
-                    <button
-                        key={option.id}
-                        type='button'
-                        className={classNames('pf-button', 'pf-button--quiet', { 'pf-button--selected': isSelected })}
-                        aria-pressed={isSelected}
-                        data-choice-id={option.id}
-                        onClick={onClick}
-                        {...{ [FOCUSABLE_ATTRIBUTE]: true }}
-                    >
-                        {isSelected && <span className='pf-button__icon' aria-hidden='true'><Check /></span>}
-                        <span className='pf-button__label'>{option.name}</span>
-                    </button>
-                );
-            })}
+        <div className='pf-choices pf-button-row' {...groupProps}>
+            {buttons}
         </div>
     );
 };

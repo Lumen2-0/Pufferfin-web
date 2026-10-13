@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { Timer } from 'lucide-react';
 import React, { type FC } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -8,15 +9,15 @@ import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../../../navigation/
 import { CatalogItemKind } from '../../catalog/api/types';
 import { useAudiobook, useCatalogTitle } from '../../catalog/api/useCatalog';
 import { type MediaRequest, RequestKind, RequestState } from '../api/types';
-import { getProgressPercent, isRequestCancellable, isRequestStale } from '../utils/requests';
+import { isRequestCancellable, isRequestStale, summarizeRequests } from '../utils/requests';
+import { getTemporaryState, type TemporaryState } from '../utils/temporary';
 import { getRequestPartText, getRequestProblemLabel, getRequestStateText, getRequestTitlePath, isRequestStalled } from '../utils/status';
+import RequestStatus from './RequestStatus';
 import { useNow } from '../utils/useNow';
-import { ArrowDownward, ArrowUpward, Block, Check, Close, Refresh, WarningAmber } from '../../../components/icons';
+import { ArrowDownward, ArrowUpward, Block, Check, Close, Refresh } from '../../../components/icons';
 
 /** Attribute naming the request of a row, so the focus can find the row again after it moved. */
 export const REQUEST_ROW_ATTRIBUTE = 'data-pf-request';
-
-const SECONDS_PER_MINUTE = 60;
 
 export interface DownloadRowActions {
     onCancel: (requestId: string) => void
@@ -55,6 +56,18 @@ function useRequestArt(request: MediaRequest): { url?: string, isCover: boolean 
     return { isCover: false };
 }
 
+/** The words of the temporary chip of a downloads card. */
+function getTemporaryText(state: TemporaryState, t: ReturnType<typeof useTranslation>): string {
+    switch (state.kind) {
+        case 'until':
+            return state.daysLeft <= 1 ? t('TemporaryLastDay') : t('TemporaryDaysLeft', state.daysLeft);
+        case 'kept':
+            return t('TemporaryKept');
+        default:
+            return t('RequestTemporary');
+    }
+}
+
 /**
  * One request of the downloads page, as a wide card: the art of the title,
  * its name opening its sheet, where it stands with a thin bar and the time
@@ -80,18 +93,12 @@ const DownloadRow: FC<DownloadRowProps> = ({
     const isStalled = isRequestStalled(request);
     const isActive = isRequestCancellable(request) && request.State !== RequestState.Failed;
     const isFailed = request.State === RequestState.Failed || request.State === RequestState.Rejected;
-    const percent = getProgressPercent(request);
     const part = getRequestPartText(request, t);
     const problem = getRequestProblemLabel(request);
     const isPendingApproval = request.State === RequestState.PendingApproval;
-
-    let detail: string | undefined;
-    if (isStale) {
-        detail = t('RequestStale');
-    } else if (isDownloading && request.EtaSeconds) {
-        const minutes = Math.ceil(request.EtaSeconds / SECONDS_PER_MINUTE);
-        detail = minutes <= 1 ? t('RequestEtaUnderMinute') : t('RequestEtaMinutes', minutes);
-    }
+    // On its way or failed: the status with its bar; finished: its words only
+    const tag = summarizeRequests([ request ], t);
+    const temporary = getTemporaryState(request, Date.now());
     const subtitle = [ part, ownerName ? t('DownloadsRequestedBy', ownerName) : undefined ].filter(Boolean).join(' · ');
 
     return (
@@ -117,24 +124,19 @@ const DownloadRow: FC<DownloadRowProps> = ({
                 )}
                 {subtitle && <p className='pf-download__subtitle'>{subtitle}</p>}
 
-                <div className='pf-download__state' role='status'>
-                    {isStalled && <WarningAmber className='pf-download__state-icon' fontSize='inherit' aria-hidden='true' />}
-                    <span className='pf-download__state-text'>{getRequestStateText(request, t)}</span>
-                    {detail && <span className='pf-download__detail'>{detail}</span>}
-                </div>
-                {isActive && (
-                    <span
-                        className={classNames('pf-download__track', {
-                            'pf-download__track--indeterminate': !isDownloading,
-                            'pf-download__track--stale': isStale || isStalled
-                        })}
-                        role='progressbar'
-                        aria-label={t('RequestProgressLabel')}
-                        aria-valuemin={isDownloading ? 0 : undefined}
-                        aria-valuemax={isDownloading ? 100 : undefined}
-                        aria-valuenow={isDownloading ? percent : undefined}
-                    >
-                        <span className='pf-download__fill' style={isDownloading ? { width: `${percent}%` } : undefined} />
+                {tag ? (
+                    <RequestStatus tag={tag} variant='row' isStale={isStale} />
+                ) : (
+                    <div className='pf-download__state' role='status'>
+                        <span className='pf-download__state-text'>
+                            {temporary?.kind === 'removed' ? t('TemporaryRemoved') : getRequestStateText(request, t)}
+                        </span>
+                    </div>
+                )}
+                {temporary && (
+                    <span className='pf-download__temporary'>
+                        <Timer className='pf-temporary-note__icon' size='1em' aria-hidden='true' focusable='false' />
+                        {getTemporaryText(temporary, t)}
                     </span>
                 )}
                 {problem && <p className='pf-download__problem'>{t(problem)}</p>}

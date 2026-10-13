@@ -1,0 +1,449 @@
+// Downloads in the new look: the status of a request, the split Download button
+// and the notes of the temporary films. Margins rather than flex gap, which older
+// TV engines lack.
+
+$pf-req-ghost-border: rgba(245, 242, 236, 0.3);
+$pf-req-ghost-background: rgba(0, 0, 0, 0.4);
+$pf-req-track: rgba(255, 255, 255, 0.2);
+$pf-req-soft: #a3a3a3;
+$pf-req-sheet: #141414;
+$pf-req-sheet-border: rgba(255, 255, 255, 0.12);
+$pf-req-option-hover: #262626;
+
+// Status of a request
+
+.pf-req-status {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    color: var(--pf-color-text);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+}
+
+// In the place of the Download button: a ghost pill of the hero's height
+.pf-req-status--pill {
+    display: inline-flex;
+    max-width: 100%;
+    height: 3rem;
+    margin: 0 0.75rem 0.75rem 0;
+    padding: 0 1.25rem 0 1rem;
+    background: $pf-req-ghost-background;
+    border: 1px solid $pf-req-ghost-border;
+    border-radius: 1.5rem;
+
+    [dir='rtl'] & {
+        margin: 0 0 0.75rem 0.75rem;
+        padding: 0 1rem 0 1.25rem;
+    }
+}
+
+// A line of a downloads card: the words, the percentage at the end, the bar under them
+.pf-req-status--row {
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.pf-req-status__icon {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    margin-right: 0.5rem;
+    font-size: 1.125rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.5rem;
+    }
+
+    &:empty {
+        display: none;
+    }
+}
+
+.pf-req-status__label {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-req-status__bar {
+    position: relative;
+    display: block;
+    flex: 1 1 6rem;
+    min-width: 4rem;
+    max-width: 10rem;
+    height: 4px;
+    margin: 0 0.75rem;
+    overflow: hidden;
+    background: $pf-req-track;
+    border-radius: 999px;
+}
+
+.pf-req-status--row .pf-req-status__bar {
+    flex-basis: 100%;
+    order: 3;
+    max-width: none;
+    margin: 0.5rem 0 0;
+}
+
+.pf-req-status__fill {
+    display: block;
+    height: 100%;
+    background: var(--pf-color-text);
+    border-radius: 999px;
+    transition: width 600ms var(--pf-ease);
+}
+
+.pf-req-status__meta {
+    flex: none;
+    color: $pf-req-soft;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.pf-req-status--row .pf-req-status__meta {
+    margin-left: auto;
+    padding-left: 0.75rem;
+
+    [dir='rtl'] & {
+        margin-right: auto;
+        margin-left: 0;
+        padding-right: 0.75rem;
+        padding-left: 0;
+    }
+}
+
+.pf-req-status--stale .pf-req-status__fill {
+    opacity: 0.45;
+}
+
+.pf-req-status--failed,
+.pf-req-status--stalled {
+    color: $pf-req-soft;
+}
+
+// While it waits on something with no length yet: three dots breathe in turn
+
+.pf-req-status__dots {
+    display: inline-flex;
+    align-items: center;
+    width: 1.125rem;
+    justify-content: space-between;
+
+    span {
+        width: 0.25rem;
+        height: 0.25rem;
+        background: currentcolor;
+        border-radius: 50%;
+        opacity: 0.25;
+        animation: pf-req-breathe 1.2s ease-in-out infinite;
+    }
+
+    span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+}
+
+@keyframes pf-req-breathe {
+    0%,
+    100% {
+        opacity: 0.25;
+        transform: scale(0.85);
+    }
+
+    40% {
+        opacity: 1;
+        transform: scale(1.15);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-req-status__dots span {
+        opacity: 0.7;
+        animation: none;
+    }
+
+    .pf-req-status__fill {
+        transition: none;
+    }
+}
+
+// In the list of the seasons of a series: the size of the buttons of the list
+.pf-season-line .pf-req-status--pill {
+    height: var(--pf-control-height);
+    margin: 0;
+    padding: 0 0.9rem;
+    font-size: 0.875rem;
+
+    .pf-req-status__bar {
+        max-width: 5rem;
+    }
+}
+
+// Download as a split button: the main part, a thin line, the chevron of the menu
+
+.pf-split {
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+    height: 3rem;
+    margin: 0 0.75rem 0.75rem 0;
+    color: var(--pf-color-on-accent);
+    background: var(--pf-color-accent);
+    border-radius: 1.5rem;
+
+    [dir='rtl'] & {
+        margin: 0 0 0.75rem 0.75rem;
+    }
+}
+
+.pf-split__main,
+.pf-split__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    color: inherit;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    font-family: inherit;
+    background: transparent;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pf-split__main {
+    padding: 0 1rem 0 1.125rem;
+    border-radius: 1.5rem 0 0 1.5rem;
+
+    [dir='rtl'] & {
+        padding: 0 1.125rem 0 1rem;
+        border-radius: 0 1.5rem 1.5rem 0;
+    }
+}
+
+.pf-split__icon {
+    margin-right: 0.5rem;
+    font-size: 1.125rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.5rem;
+    }
+}
+
+.pf-split__divider {
+    flex: none;
+    align-self: center;
+    width: 1px;
+    height: 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.pf-split__toggle {
+    width: 2.75rem;
+    border-radius: 0 1.5rem 1.5rem 0;
+
+    [dir='rtl'] & {
+        border-radius: 1.5rem 0 0 1.5rem;
+    }
+}
+
+.pf-split__main:hover,
+.pf-split__toggle:hover {
+    background: rgba(0, 0, 0, 0.07);
+}
+
+.pf-split__main:focus-visible,
+.pf-split__toggle:focus-visible {
+    box-shadow: 0 0 0 2px var(--pf-color-text);
+}
+
+:root.layout-tv .pf-split__main:focus,
+:root.layout-tv .pf-split__toggle:focus {
+    box-shadow: var(--pf-focus-ring);
+}
+
+.pf-split__chevron {
+    font-size: 1.125rem;
+    transition: transform 0.2s ease;
+
+    .pf-split__toggle[aria-expanded='true'] & {
+        transform: rotate(180deg);
+    }
+}
+
+.pf-split__menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    z-index: 30;
+    min-width: 19rem;
+    padding: 0.5rem;
+    color: var(--pf-color-text);
+    background: $pf-req-sheet;
+    border: 1px solid $pf-req-sheet-border;
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    animation: pf-split-in 0.16s ease-out;
+    transform-origin: top left;
+
+    [dir='rtl'] & {
+        right: 0;
+        left: auto;
+    }
+}
+
+.pf-split__menu--up {
+    top: auto;
+    bottom: calc(100% + 0.5rem);
+    transform-origin: bottom left;
+}
+
+@keyframes pf-split-in {
+    from {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.pf-split__option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 2.75rem;
+    margin: 0;
+    padding: 0.5rem 0.875rem;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-radius: 12px;
+    outline: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+        background: $pf-req-option-hover;
+    }
+
+    [dir='rtl'] & {
+        text-align: right;
+    }
+
+    :root.layout-tv &:focus {
+        background: $pf-req-option-hover;
+        box-shadow: var(--pf-focus-ring);
+    }
+}
+
+.pf-split__option-icon {
+    flex: none;
+    margin-right: 0.75rem;
+    font-size: 1.125rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.75rem;
+    }
+}
+
+.pf-split__option-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pf-split__option-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+}
+
+.pf-split__option-hint {
+    margin-top: 0.125rem;
+    color: $pf-req-soft;
+    font-size: 0.8125rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-split__menu {
+        animation: none;
+    }
+
+    .pf-split__chevron {
+        transition: none;
+    }
+}
+
+// A temporary film: until when it stays, on its sheet and on its downloads card
+
+.pf-temporary-note {
+    display: inline-flex;
+    align-items: center;
+    height: 3rem;
+    margin: 0 0.75rem 0.75rem 0;
+    padding: 0 1.125rem 0 1rem;
+    color: #d4d4d4;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    border: 1px solid $pf-req-ghost-border;
+    border-radius: 1.5rem;
+
+    [dir='rtl'] & {
+        margin: 0 0 0.75rem 0.75rem;
+    }
+}
+
+.pf-temporary-note__icon {
+    flex: none;
+    margin-right: 0.5rem;
+    font-size: 1.0625rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.5rem;
+    }
+}
+
+.pf-download__temporary {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 0.5rem;
+    padding: 0.125rem 0.625rem;
+    color: #d4d4d4;
+    font-weight: 600;
+    font-size: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+
+    .pf-temporary-note__icon {
+        margin-right: 0.375rem;
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 40em) {
+    .pf-split__menu {
+        min-width: min(19rem, calc(100vw - 2rem));
+    }
+
+    .pf-req-status--pill .pf-req-status__bar {
+        min-width: 3rem;
+    }
+}

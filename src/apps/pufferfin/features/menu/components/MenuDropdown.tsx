@@ -1,29 +1,12 @@
 import classNames from 'classnames';
-import React, { type FC, type KeyboardEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-
-import { appHost } from 'components/apphost';
-import { AppFeature } from 'constants/appFeature';
-import { useApi } from 'hooks/useApi';
-import { useQuickConnectEnabled } from 'hooks/useQuickConnect';
-import shell from 'scripts/shell';
-import Dashboard from 'utils/dashboard';
+import React, { type FC, type KeyboardEvent, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import { useTranslation } from '../../../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE, focusElement } from '../../../navigation/focus';
-import { getAvatarUrl } from '../../settings/api';
-import { openSettings } from '../../settings/store';
-import { getAccountEntries, getAdminEntries, type MenuActionId, type MenuEntry } from '../utils/menu';
+import { useMenuEntries } from '../useMenuEntries';
+import type { MenuEntry } from '../utils/menu';
 import { Menu as MenuIcon } from '../../../components/icons';
-
-const MENU_ACTIONS: Record<MenuActionId, () => void> = {
-    settings: () => openSettings(),
-    downloadManager: () => shell.openDownloadManager(),
-    clientSettings: () => shell.openClientSettings(),
-    selectServer: () => Dashboard.selectServer(),
-    signOut: () => Dashboard.logout(),
-    exitApp: () => appHost.exit()
-};
 
 const MenuItem: FC<{ entry: MenuEntry, onChoose: (entry: MenuEntry) => void }> = ({ entry, onChoose }) => {
     const t = useTranslation();
@@ -50,28 +33,13 @@ const MenuItem: FC<{ entry: MenuEntry, onChoose: (entry: MenuEntry) => void }> =
  */
 const MenuDropdown: FC = () => {
     const t = useTranslation();
-    const { api, user } = useApi();
-    const navigate = useNavigate();
     const { pathname } = useLocation();
     const menuId = useId();
     const rootRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [ isOpen, setIsOpen ] = useState(false);
-    const { data: isQuickConnectEnabled } = useQuickConnectEnabled();
     // The account picture stands for the menu of the account, the three lines without one
-    const avatarUrl = getAvatarUrl(api, user);
-
-    const context = useMemo(() => ({
-        userId: user?.Id,
-        isAdministrator: !!user?.Policy?.IsAdministrator,
-        isQuickConnectEnabled: !!isQuickConnectEnabled,
-        supportsDownloadManager: appHost.supports(AppFeature.DownloadManagement),
-        supportsClientSettings: appHost.supports(AppFeature.ClientSettings),
-        supportsMultiServer: appHost.supports(AppFeature.MultiServer),
-        supportsExit: appHost.supports(AppFeature.ExitMenu)
-    }), [ user, isQuickConnectEnabled ]);
-    const accountEntries = useMemo(() => getAccountEntries(context), [ context ]);
-    const adminEntries = useMemo(() => getAdminEntries(context), [ context ]);
+    const { userName, avatarUrl, accountEntries, adminEntries, choose } = useMenuEntries();
 
     const close = useCallback((restoreFocus = false) => {
         setIsOpen(false);
@@ -96,9 +64,8 @@ const MenuDropdown: FC = () => {
 
     const onChoose = useCallback((entry: MenuEntry) => {
         setIsOpen(false);
-        if (entry.kind === 'link') navigate(entry.path);
-        else MENU_ACTIONS[entry.id]();
-    }, [ navigate ]);
+        choose(entry);
+    }, [ choose ]);
 
     const onKeyDown = useCallback((event: KeyboardEvent) => {
         if (!isOpen) return;
@@ -139,7 +106,7 @@ const MenuDropdown: FC = () => {
             </button>
             {isOpen && (
                 <div id={menuId} className='pf-dropdown__panel' role='menu' aria-label={t('NavMenu')}>
-                    {user?.Name && <p className='pf-dropdown__header'>{user.Name}</p>}
+                    {userName && <p className='pf-dropdown__header'>{userName}</p>}
                     <ul className='pf-dropdown__list' role='none'>
                         {accountEntries.map(entry => <MenuItem key={entry.id} entry={entry} onChoose={onChoose} />)}
                     </ul>

@@ -108,8 +108,22 @@ export function renderEpisodesPanel(panel: HTMLElement, model: EpisodesModel) {
         setChildren(body, el('p', 'pf-osd-drawer__message', text));
     };
 
+    // Rows shaped like the real ones: a still and three lines, spaced as the list
     const showSkeleton = () => {
-        setChildren(body, ...Array.from({ length: 4 }, () => el('div', 'pf-osd-episode pf-osd-episode--skeleton')));
+        const list = el('div', 'pf-osd-episodes');
+        list.setAttribute('aria-hidden', 'true');
+        list.append(...Array.from({ length: 5 }, () => {
+            const row = el('div', 'pf-osd-episode pf-osd-episode--skeleton');
+            const text = el('div', 'pf-osd-episode__text pf-osd-bones');
+            text.append(
+                el('span', 'pf-osd-bone pf-osd-bone--number'),
+                el('span', 'pf-osd-bone pf-osd-bone--title'),
+                el('span', 'pf-osd-bone pf-osd-bone--status')
+            );
+            row.append(el('div', 'pf-osd-episode__art pf-osd-bone'), text);
+            return row;
+        }));
+        setChildren(body, list);
     };
 
     const updateSeasonButton = () => {

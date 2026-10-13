@@ -3,9 +3,9 @@ import Fade from '@mui/material/Fade/Fade';
 import React, { useRef, type FC, useEffect, useState } from 'react';
 
 import RemotePlayButton from 'apps/modern/components/AppToolbar/RemotePlayButton';
-import SyncPlayButton from 'apps/modern/components/AppToolbar/SyncPlayButton';
 // PUFFERFIN: the header of the player: Back, the title, Episodes, SyncPlay and cast
 import EpisodesButton from 'apps/pufferfin/features/player/osd/EpisodesButton';
+import PlayerSyncPlayButton from 'apps/pufferfin/features/syncplay/PlayerSyncPlayButton';
 import { appRouter } from 'components/router/appRouter';
 import ViewManagerPage from 'components/viewManager/ViewManagerPage';
 import { EventType } from 'constants/eventType';
@@ -85,7 +85,7 @@ const VideoPage: FC = () => {
                         </div>
                         <div className='pf-osd-top__actions'>
                             <EpisodesButton />
-                            <SyncPlayButton />
+                            <PlayerSyncPlayButton />
                             <RemotePlayButton />
                         </div>
                     </div>

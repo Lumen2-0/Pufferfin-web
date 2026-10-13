@@ -46,6 +46,11 @@ import { createPanelHost, PANEL_OPEN_CLASS, PANEL_TOGGLE_ATTRIBUTE } from 'apps/
 import { renderSettingsPanel } from 'apps/pufferfin/features/player/osd/settingsPanel';
 import { loadPlayerText, playerText } from 'apps/pufferfin/features/player/osd/strings';
 import { renderTracksPanel } from 'apps/pufferfin/features/player/osd/tracksPanel';
+import { statusForAction, statusForGroupState } from 'apps/pufferfin/features/syncplay/model';
+import { createSyncPlayStatus } from 'apps/pufferfin/features/syncplay/playerStatus';
+import { syncPlayControl } from 'apps/pufferfin/features/syncplay/syncPlayControl';
+import { createSyncPlayPanel } from 'apps/pufferfin/features/syncplay/syncPlayPanel';
+import { syncPlayStore } from 'apps/pufferfin/features/syncplay/syncPlayStore';
 import qualityoptions from 'components/qualityOptions';
 
 function getOpenedDialog() {
@@ -1682,8 +1687,32 @@ export default function (view) {
                 resetIdle();
             }
             episodesControl.setOpen(isOpen && panels.isOpen('episodes'));
+            syncPlayControl.setOpen(isOpen && panels.isOpen('syncplay'));
         }
     });
+
+    // PUFFERFIN: the SyncPlay panel, opened by the SyncPlay button of the header
+    let syncPlayUser = null;
+    const syncPlayPanel = createSyncPlayPanel({
+        snapshot: syncPlayStore.getSnapshot,
+        userName: () => syncPlayUser?.Name,
+        canCreate: () => syncPlayUser?.Policy?.SyncPlayAccess === 'CreateAndJoinGroups',
+        refresh: () => {
+            if (panels.isOpen('syncplay')) panels.refresh();
+        }
+    });
+    function toggleSyncPlay(trigger) {
+        panels.toggle('syncplay', trigger, playerText('SyncPlayTitle'), syncPlayPanel);
+    }
+    let unsubscribeSyncPlay = null;
+    // The legacy header of a TV keeps its SyncPlay button: it opens the same panel
+    const onHeaderSyncClick = (event) => {
+        const button = event.target?.closest?.('.headerSyncButton');
+        if (!button) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        toggleSyncPlay(button);
+    };
 
     // PUFFERFIN: the header of the legacy layouts gets its own Episodes button;
     // the header of the other layouts draws it with React
@@ -1722,6 +1751,16 @@ export default function (view) {
                 if (legacyEpisodesButton) legacyEpisodesButton.querySelector('.pf-headerEpisodes__text').textContent = playerText('Player.Episodes');
             });
             episodesControl.setToggleHandler(toggleEpisodes);
+            syncPlayControl.setToggleHandler(toggleSyncPlay);
+            unsubscribeSyncPlay?.();
+            unsubscribeSyncPlay = syncPlayStore.subscribe(() => {
+                if (panels.isOpen('syncplay')) panels.refresh();
+            });
+            headerElement?.querySelector('.headerSyncButton')?.setAttribute(PANEL_TOGGLE_ATTRIBUTE, '');
+            headerElement?.addEventListener('click', onHeaderSyncClick, true);
+            ServerConnections.currentApiClient()?.getCurrentUser().then((user) => {
+                syncPlayUser = user;
+            }).catch(() => undefined);
             Events.on(playbackManager, 'playerchange', onPlayerChange);
             bindToPlayer(playbackManager.getCurrentPlayer());
             /* eslint-disable-next-line compat/compat */
@@ -1772,6 +1811,12 @@ export default function (view) {
         panels.close(false);
         episodesControl.setToggleHandler(null);
         episodesControl.setAvailable(false);
+        syncPlayControl.setToggleHandler(null);
+        syncPlayControl.setOpen(false);
+        unsubscribeSyncPlay?.();
+        unsubscribeSyncPlay = null;
+        headerElement?.removeEventListener('click', onHeaderSyncClick, true);
+        headerElement?.querySelector('.headerSyncButton')?.removeAttribute(PANEL_TOGGLE_ATTRIBUTE);
         if (statsOverlay) {
             statsOverlay.enabled(false);
         }
@@ -2030,84 +2075,22 @@ export default function (view) {
     });
     view.querySelector('.btnSubtitles').addEventListener('click', showTracksPanel);
 
-    // Register to SyncPlay playback events and show big animated icon
+    // PUFFERFIN: the state of the SyncPlay group over the picture, in words: a
+    // quiet pill at the top, in place of the large pulsing icon
+    const syncPlayStatus = createSyncPlayStatus(view);
+    view.querySelector('.syncPlayContainer')?.classList.add('hide');
     const showIcon = (action) => {
-        let primaryIconName = '';
-        let secondaryIconName = '';
-        let animationClass = 'oneShotPulse';
-        let iconVisibilityTime = 1500;
-        const syncPlayIcon = view.querySelector('#syncPlayIcon');
-
-        switch (action) {
-            case 'schedule-play':
-                primaryIconName = 'sync spin';
-                secondaryIconName = 'play_arrow centered';
-                animationClass = 'infinitePulse';
-                iconVisibilityTime = -1;
-                hideOsd();
-                break;
-            case 'unpause':
-                primaryIconName = 'play_circle_outline';
-                break;
-            case 'pause':
-                primaryIconName = 'pause_circle_outline';
-                showOsd();
-                break;
-            case 'seek':
-                primaryIconName = 'update';
-                animationClass = 'infinitePulse';
-                iconVisibilityTime = -1;
-                break;
-            case 'buffering':
-                primaryIconName = 'schedule';
-                animationClass = 'infinitePulse';
-                iconVisibilityTime = -1;
-                break;
-            case 'wait-pause':
-                primaryIconName = 'schedule';
-                secondaryIconName = 'pause shifted';
-                animationClass = 'infinitePulse';
-                iconVisibilityTime = -1;
-                break;
-            case 'wait-unpause':
-                primaryIconName = 'schedule';
-                secondaryIconName = 'play_arrow shifted';
-                animationClass = 'infinitePulse';
-                iconVisibilityTime = -1;
-                break;
-            default: {
-                syncPlayIcon.style.visibility = 'hidden';
-                return;
-            }
-        }
-
-        syncPlayIcon.setAttribute('class', 'syncPlayIconCircle ' + animationClass);
-
-        const primaryIcon = syncPlayIcon.querySelector('.primary-icon');
-        primaryIcon.setAttribute('class', 'primary-icon material-icons ' + primaryIconName);
-
-        const secondaryIcon = syncPlayIcon.querySelector('.secondary-icon');
-        secondaryIcon.setAttribute('class', 'secondary-icon material-icons ' + secondaryIconName);
-
-        const clone = syncPlayIcon.cloneNode(true);
-        clone.style.visibility = 'visible';
-        syncPlayIcon.parentNode.replaceChild(clone, syncPlayIcon);
-
-        if (iconVisibilityTime < 0) {
-            return;
-        }
-
-        setTimeout(() => {
-            clone.style.visibility = 'hidden';
-        }, iconVisibilityTime);
+        const status = statusForAction(action);
+        if (status === 'starting') hideOsd();
+        if (status === 'paused') showOsd();
+        syncPlayStatus.show(status);
     };
 
     const SyncPlay = pluginManager.firstOfType(PluginType.SyncPlay)?.instance;
     if (SyncPlay) {
         Events.on(SyncPlay.Manager, 'enabled', (_event, enabled) => {
             if (!enabled) {
-                const syncPlayIcon = view.querySelector('#syncPlayIcon');
-                syncPlayIcon.style.visibility = 'hidden';
+                syncPlayStatus.show(null);
             }
         });
 
@@ -2116,23 +2099,11 @@ export default function (view) {
         });
 
         Events.on(SyncPlay.Manager, 'group-state-update', (_event, state, reason) => {
-            if (state === 'Playing' && reason === 'Unpause') {
-                showIcon('schedule-play');
-            } else if (state === 'Playing' && reason === 'Ready') {
-                showIcon('schedule-play');
-            } else if (state === 'Paused' && reason === 'Pause') {
-                showIcon('pause');
-            } else if (state === 'Paused' && reason === 'Ready') {
-                showIcon('clear');
-            } else if (state === 'Waiting' && reason === 'Seek') {
-                showIcon('seek');
-            } else if (state === 'Waiting' && reason === 'Buffer') {
-                showIcon('buffering');
-            } else if (state === 'Waiting' && reason === 'Pause') {
-                showIcon('wait-pause');
-            } else if (state === 'Waiting' && reason === 'Unpause') {
-                showIcon('wait-unpause');
-            }
+            const status = statusForGroupState(state, reason);
+            if (status === undefined) return;
+            if (status === 'starting') hideOsd();
+            if (status === 'paused') showOsd();
+            syncPlayStatus.show(status);
         });
     }
 }

@@ -373,7 +373,6 @@ const FilterChip: FC<{ value: SpotlightFilter, isSelected: boolean, onSelect: (v
             onClick={onClick}
             tabIndex={-1}
         >
-            {isSelected && <Check className='pf-spotlight__chip-check' fontSize='inherit' aria-hidden='true' />}
             {t(FILTER_LABELS[value])}
         </button>
     );

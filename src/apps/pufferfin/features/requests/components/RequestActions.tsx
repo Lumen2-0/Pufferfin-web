@@ -10,6 +10,7 @@ import { type CreateMediaRequest, type MediaRequest, RequestState } from '../api
 import { useChangeRequest, useCreateRequest } from '../api/useRequests';
 import { isOver, isRequestCancellable, summarizeRequests } from '../utils/requests';
 import { getCreateErrorLabel, getRequestProblemLabel } from '../utils/status';
+import DownloadSplitButton from './DownloadSplitButton';
 import DownloadTag from './DownloadTag';
 import { Close, Download, ErrorOutline, Refresh } from '../../../components/icons';
 
@@ -42,8 +43,6 @@ export const useFocusFollowsButtons = () => {
     return { containerRef, onFocus, onBlur };
 };
 
-const SECONDS_PER_MINUTE = 60;
-
 interface RequestActionsProps {
     /** What Download asks for: a movie by TMDB id, an audiobook by ASIN, or every season of a series. */
     requestInput: CreateMediaRequest | CreateMediaRequest[]
@@ -55,6 +54,8 @@ interface RequestActionsProps {
     lastSyncAt: number
     /** Words of the Download button, such as Download all seasons. */
     downloadLabel?: string
+    /** Download is a split button whose menu also offers to download for seven days only (a film). */
+    allowTemporary?: boolean
     /** More actions in the same row, after the download ones: Trailer, Download a season. */
     children?: ReactNode
 }
@@ -65,7 +66,7 @@ interface RequestActionsProps {
  * thin progress bar, next to a small Cancel. When the request becomes
  * available, the catalog is read again and the sheet shows what plays it.
  */
-const RequestActions: FC<RequestActionsProps> = ({ requestInput, request, canRequest, lastSyncAt, downloadLabel, children }) => {
+const RequestActions: FC<RequestActionsProps> = ({ requestInput, request, canRequest, lastSyncAt, downloadLabel, allowTemporary, children }) => {
     const t = useTranslation();
     const { containerRef, onFocus, onBlur } = useFocusFollowsButtons();
     const createRequest = useCreateRequest();
@@ -78,7 +79,8 @@ const RequestActions: FC<RequestActionsProps> = ({ requestInput, request, canReq
     const inputs = useMemo(() => (Array.isArray(requestInput) ? requestInput : [ requestInput ]), [ requestInput ]);
     const tag = summarizeRequests(requests, t);
     const live = requests.filter(item => !isOver(item) && item.State !== RequestState.Available);
-    const isAvailable = requests.some(item => item.State === RequestState.Available) && !live.length;
+    // A temporary film that already left the library no longer counts: it can be asked again
+    const isAvailable = requests.some(item => item.State === RequestState.Available && !isOver(item)) && !live.length;
 
     // Imported: the catalog is read again, finds the library item and the sheet opens its page
     useEffect(() => {
@@ -88,15 +90,17 @@ const RequestActions: FC<RequestActionsProps> = ({ requestInput, request, canReq
     }, [ isAvailable ]);
 
     const { isPending: isCreating, mutateAsync: create } = createRequest;
-    const onDownload = useCallback(() => {
+    const download = useCallback((temporary: boolean) => {
         // Not disabled while sending: a disabled button would drop the focus
         if (isCreating) return;
         void (async () => {
             for (const input of inputs) {
-                await create(input).catch(() => undefined);
+                await create(temporary ? { ...input, Temporary: true } : input).catch(() => undefined);
             }
         })();
     }, [ create, inputs, isCreating ]);
+    const onDownload = useCallback(() => download(false), [ download ]);
+    const onDownloadTemporary = useCallback(() => download(true), [ download ]);
 
     const { isPending: isChanging, mutate: change } = changeRequest;
     const onCancel = useCallback(() => {
@@ -116,21 +120,22 @@ const RequestActions: FC<RequestActionsProps> = ({ requestInput, request, canReq
     const showDownload = canRequest && !tag && !isAvailable;
     const createStatus = isAxiosError(createRequest.error) ? createRequest.error.response?.status : undefined;
 
-    // Under the tag: the time left while downloading, else what went wrong
+    // Under the status: what went wrong, if anything; the time left is in the status itself
     const single = live.length === 1 ? live[0] : undefined;
-    let detail: string | undefined;
-    if (single?.State === RequestState.Downloading && single.EtaSeconds) {
-        const minutes = Math.ceil(single.EtaSeconds / SECONDS_PER_MINUTE);
-        detail = minutes <= 1 ? t('RequestEtaUnderMinute') : t('RequestEtaMinutes', minutes);
-    } else if (single) {
-        const problem = getRequestProblemLabel(single);
-        detail = problem ? t(problem) : undefined;
-    }
+    const problem = single ? getRequestProblemLabel(single) : undefined;
+    const detail = problem ? t(problem) : undefined;
 
     return (
         <div ref={containerRef} className='pf-request' onFocus={onFocus} onBlur={onBlur}>
             <div className='pf-button-row'>
-                {showDownload && (
+                {showDownload && allowTemporary && (
+                    <DownloadSplitButton
+                        label={downloadLabel ?? t('ActionDownload')}
+                        onDownload={onDownload}
+                        onDownloadTemporary={onDownloadTemporary}
+                    />
+                )}
+                {showDownload && !allowTemporary && (
                     <RoundButton
                         variant='primary'
                         icon={<Download />}

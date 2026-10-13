@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { type MediaRequest, RequestKind, RequestProblemCode, RequestState } from '../api/types';
+import { type MediaRequest, RequestKind, RequestProblemCode, RequestState, TemporaryExpiryOutcome } from '../api/types';
 
-import { summarizeRequests } from './requests';
+import { isOver, summarizeRequests } from './requests';
 
 const echo = (key: string, ...args: Array<string | number>) => [ key, ...args ].join(' ');
 
@@ -30,7 +30,7 @@ describe('summarizeRequests', () => {
             request('b', RequestState.Queued),
             request('c', RequestState.Available)
         ], echo);
-        expect(tag).toEqual({ state: RequestState.Downloading, percent: 25, text: 'RequestDownloadingPercent 25' });
+        expect(tag).toEqual({ state: RequestState.Downloading, percent: 25, text: 'RequestDownloadingPercent 25', label: 'RequestDownloading' });
     });
 
     it('shows a failure first when nothing downloads', () => {
@@ -40,8 +40,13 @@ describe('summarizeRequests', () => {
 
     it('says a download is stalled for want of seeds instead of a progress at 0 %', () => {
         const stalled = { ...request('a', RequestState.Downloading, 0), Problem: { Code: RequestProblemCode.StalledNoSeeds, Message: 'stalled' } };
-        expect(summarizeRequests([ stalled ], echo)).toEqual({ state: RequestState.Downloading, percent: 0, text: 'RequestStalledNoSeeds', isStalled: true });
+        expect(summarizeRequests([ stalled ], echo)).toEqual({ state: RequestState.Downloading, percent: 0, text: 'RequestStalledNoSeeds', label: 'RequestStalledNoSeeds', isStalled: true });
         expect(summarizeRequests([ stalled, { ...stalled, Id: 'b' } ], echo)?.isStalled).toBe(true);
     });
-});
 
+    it('drops a temporary film that already left the library, so it can be asked again', () => {
+        const expired = { ...request('a', RequestState.Available), Temporary: true, ExpiryOutcome: TemporaryExpiryOutcome.Removed };
+        expect(isOver(expired)).toBe(true);
+        expect(summarizeRequests([ expired ], echo)).toBeUndefined();
+    });
+});

@@ -13,9 +13,8 @@ $pf-lib-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
     gap: 2.5rem;
+    // Edge to edge with the same gutter as Discover: the two tabs line up
     width: 100%;
-    max-width: 90rem;
-    margin: 0 auto;
     padding: calc(var(--pf-nav-height) + 1.5rem) var(--pf-gutter) 4rem;
 
     *,
@@ -55,6 +54,11 @@ $pf-lib-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
 
 // Resume: wide stills side by side, scrolling sideways
+
+.pf-lib-resume-row {
+    // The cards start at the very edge of the list: the arrows sit just inside it
+    --pf-rail-inset: 1.125rem;
+}
 
 .pf-lib-resume-row__list {
     display: flex;

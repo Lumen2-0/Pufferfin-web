@@ -11,6 +11,8 @@ import Controller from './Controller';
 import toast from '../../../components/toast/toast';
 import globalize from '../../../lib/globalize';
 import Events from '../../../utils/events.ts';
+// PUFFERFIN: the notices of the group in the style of the panels
+import { showSyncPlayNotice } from '../../../apps/pufferfin/features/syncplay/notice';
 
 /**
  * Class that manages the SyncPlay feature.
@@ -78,8 +80,41 @@ class Manager {
             throw new Error('ApiClient is null!');
         }
 
+        if (this.apiClient && this.apiClient !== apiClient) {
+            Events.off(this.apiClient, 'websocketopen', this.onWebSocketOpen);
+        }
         this.apiClient = apiClient;
+        // PUFFERFIN: after the connection to the server came back, check the group
+        Events.off(apiClient, 'websocketopen', this.onWebSocketOpen);
+        Events.on(apiClient, 'websocketopen', this.onWebSocketOpen);
     }
+
+    /**
+     * PUFFERFIN: the socket came back after a cut. The server may have let the
+     * session go from its group meanwhile: when it is no longer in it, SyncPlay
+     * stops here too instead of waiting for a group that forgot it; else the
+     * clocks are synced again.
+     */
+    onWebSocketOpen = () => {
+        if (!this.isSyncPlayEnabled() || !this.groupInfo) return;
+        const apiClient = this.getApiClient();
+        const groupId = this.groupInfo.GroupId;
+        apiClient.getSyncPlayGroups().then((groups) => {
+            if (!this.isSyncPlayEnabled() || !this.groupInfo || this.groupInfo.GroupId !== groupId) return;
+            const group = (groups || []).find(candidate => candidate.GroupId === groupId);
+            if (!group) {
+                console.warn('[SyncPlay.Manager] the group is gone after a reconnection');
+                this.disableSyncPlay(true);
+                Events.trigger(this, 'group-update', []);
+                return;
+            }
+            this.groupInfo = { ...this.groupInfo, ...group };
+            Events.trigger(this, 'group-update', [{ ...this.groupInfo }]);
+            this.timeSyncCore.forceUpdate();
+        }).catch((error) => {
+            console.warn('[SyncPlay.Manager] could not check the group after a reconnection', error);
+        });
+    };
 
     /**
      * Gets the time sync core.
@@ -194,7 +229,8 @@ class Manager {
                 this.queueCore.updatePlayQueue(apiClient, cmd.Data);
                 break;
             case 'UserJoined':
-                toast(globalize.translate('MessageSyncPlayUserJoined', cmd.Data));
+                showSyncPlayNotice(globalize.translate('MessageSyncPlayUserJoined', cmd.Data), cmd.Data);
+                if (!this.groupInfo) break;
                 if (!this.groupInfo.Participants) {
                     this.groupInfo.Participants = [cmd.Data];
                 } else {
@@ -203,7 +239,8 @@ class Manager {
                 Events.trigger(this, 'group-update', [{ ...this.groupInfo }]);
                 break;
             case 'UserLeft':
-                toast(globalize.translate('MessageSyncPlayUserLeft', cmd.Data));
+                showSyncPlayNotice(globalize.translate('MessageSyncPlayUserLeft', cmd.Data), cmd.Data);
+                if (!this.groupInfo) break;
                 if (this.groupInfo.Participants) {
                     this.groupInfo.Participants = this.groupInfo.Participants.filter((user) => user !== cmd.Data);
                 }
@@ -375,6 +412,8 @@ class Manager {
         }
 
         this.groupInfo = groupInfo;
+        // PUFFERFIN: a new group starts from its own queue, never the last one
+        this.queueCore.reset();
 
         this.syncPlayEnabledAt = groupInfo.LastUpdatedAt;
         this.playerWrapper.bindToPlayer();
@@ -394,7 +433,7 @@ class Manager {
         this.timeSyncCore.forceUpdate();
 
         if (showMessage) {
-            toast(globalize.translate('MessageSyncPlayEnabled'));
+            showSyncPlayNotice(globalize.translate('MessageSyncPlayEnabled'));
         }
     }
 
@@ -409,11 +448,14 @@ class Manager {
         this.lastPlaybackCommand = null;
         this.queuedCommand = null;
         this.playbackCore.syncEnabled = false;
+        // PUFFERFIN: the queue of the group left is forgotten with it
+        this.queueCore.reset();
+        this.groupInfo = null;
         Events.trigger(this, 'enabled', [false]);
         this.playerWrapper.unbindFromPlayer();
 
         if (showMessage) {
-            toast(globalize.translate('MessageSyncPlayDisabled'));
+            showSyncPlayNotice(globalize.translate('MessageSyncPlayDisabled'));
         }
     }
 

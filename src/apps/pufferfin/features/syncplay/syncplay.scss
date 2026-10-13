@@ -1,228 +1,599 @@
-// The SyncPlay window: the panel of the settings window, one column, the
-// groups as quiet cards with their people and what they are doing.
+// The SyncPlay window: the solid sheet of the panels (#141414, a hairline,
+// 18px corners, a deep shadow, no frosted glass) over the dimmed page. Rows
+// of 44px with 12px corners, white pills for what matters, hairline pills
+// for the rest. A sheet from the bottom on a phone.
 
-.pf-syncplay.pf-settings__panel {
+.pf-spm {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 96px 24px 24px;
+    font-family: 'Noto Sans', system-ui, sans-serif;
+    background: rgba(0, 0, 0, 0.72);
+    animation: pf-spm-fade 160ms ease-out both;
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+}
+
+.pf-spm-dialog {
+    display: flex;
     flex-direction: column;
-    width: min(36rem, 100%);
-    height: auto;
-    max-height: min(42rem, 100%);
-}
+    width: min(520px, 100%);
+    max-height: calc(100vh - 120px);
+    color: #fff;
+    background: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    animation: pf-spm-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
 
-.pf-syncplay {
-    .pf-settings__header {
-        padding-left: 1.25rem;
+    &:focus {
+        outline: none;
     }
+}
 
-    .pf-settings__body {
-        padding: 1rem 1.25rem 1.25rem;
+.pf-spm-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px 4px 20px;
+}
+
+.pf-spm-dialog__title {
+    margin: 0;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+}
+
+.pf-spm-close {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    color: #fff;
+    font-size: 20px;
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 120ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
     }
 }
 
-.pf-syncplay__icon {
-    display: inline-flex;
-    margin-right: 0.6rem;
-    color: var(--pf-color-text-secondary);
-    font-size: 1.2rem;
+.pf-spm-dialog__body {
+    padding: 4px 16px 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: #3a3a3a transparent;
+    scrollbar-width: thin;
 }
 
-.pf-syncplay__intro,
-.pf-syncplay__empty,
-.pf-syncplay__hint {
-    margin: 0 0 1rem;
-    color: var(--pf-color-text-secondary);
-    font-size: 0.85rem;
-    line-height: 1.45;
-}
-
-.pf-syncplay__heading {
-    margin: 0 0 0.6rem;
-    color: var(--pf-color-text-secondary);
-    font-weight: 600;
-    font-size: 0.7rem;
+.pf-spm-heading {
+    margin: 14px 4px 6px;
+    color: #a3a3a3;
+    font-weight: 700;
+    font-size: 11px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
-.pf-syncplay__groups,
-.pf-syncplay__people {
-    margin: 0 0 1.25rem;
-    padding: 0;
-    list-style: none;
+.pf-spm-note {
+    margin: 4px 4px 12px;
+    color: #a3a3a3;
+    font-size: 13px;
+    line-height: 1.5;
 }
 
-.pf-syncplay__group {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    padding: 0.75rem;
-    border: 1px solid var(--pf-glass-border);
-    border-radius: 12px;
+.pf-spm-note--error {
+    color: #fff;
 }
 
-.pf-syncplay__group-text {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-width: 0;
-    margin: 0 0.75rem;
-}
-
-.pf-syncplay__group-name {
+.pf-spm-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
     overflow: hidden;
-    font-weight: 500;
-    font-size: 0.9rem;
+    clip: rect(0 0 0 0);
     white-space: nowrap;
-    text-overflow: ellipsis;
 }
 
-.pf-syncplay__group-people {
-    margin-top: 0.15rem;
-    overflow: hidden;
-    color: var(--pf-color-text-secondary);
-    font-size: 0.78rem;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
+// People: round initials, overlapping in a group row
 
-// People: small round initials, overlapping in a group card
-.pf-syncplay__avatar {
+.pf-spm-avatar {
     display: inline-flex;
     flex: none;
     align-items: center;
     justify-content: center;
-    width: 1.9rem;
-    height: 1.9rem;
-    color: var(--pf-color-text);
-    font-weight: 600;
-    font-size: 0.7rem;
-    background: #2a2724;
-    border: 2px solid #0e0d0c;
-    border-radius: 50%;
-}
-
-.pf-syncplay__avatars {
-    display: inline-flex;
-    flex: none;
-
-    .pf-syncplay__avatar + .pf-syncplay__avatar {
-        margin-left: -0.45rem;
-    }
-}
-
-.pf-syncplay__avatar--more {
-    color: var(--pf-color-text-secondary);
-}
-
-// What a group is doing, in words, never in color alone
-.pf-syncplay__state {
-    flex: none;
-    margin-right: 0.75rem;
-    padding: 0.15rem 0.5rem;
-    color: var(--pf-color-text-secondary);
-    font-size: 0.72rem;
-    border: 1px solid var(--pf-glass-border);
+    width: 30px;
+    height: 30px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 11px;
+    background: #2a2a2a;
+    border: 2px solid #141414;
     border-radius: 999px;
 }
 
-.pf-syncplay__state--playing {
-    color: var(--pf-color-on-accent);
-    background: var(--pf-color-accent);
-    border-color: transparent;
+.pf-spm-faces {
+    display: inline-flex;
+    flex: none;
+
+    .pf-spm-avatar + .pf-spm-avatar {
+        margin-left: -9px;
+    }
+}
+
+// What a group is doing, in words, never in color alone
+.pf-spm-chip {
+    flex: none;
+    padding: 3px 10px;
+    color: #a3a3a3;
+    font-weight: 600;
+    font-size: 12px;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+}
+
+.pf-spm-chip--live {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+}
+
+// Groups to join
+
+.pf-spm-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pf-spm-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    min-height: 56px;
+    padding: 8px 10px;
+    color: #fff;
+    font: inherit;
+    text-align: start;
+    background: transparent;
+    border: 0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+        background: #1f1f1f;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+}
+
+.pf-spm-group__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pf-spm-group__name,
+.pf-spm-group__people {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-spm-group__name {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.pf-spm-group__people {
+    color: #a3a3a3;
+    font-size: 13px;
+}
+
+.pf-spm-join {
+    flex: none;
+    padding: 6px 14px;
+    color: #000;
+    font-weight: 700;
+    font-size: 13px;
+    background: #fff;
+    border-radius: 999px;
+}
+
+// A new group: its name, then Create
+
+.pf-spm-create__row {
+    display: flex;
+    gap: 8px;
+}
+
+.pf-spm-field {
+    flex: 1;
+    min-width: 0;
+}
+
+.pf-spm-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 16px;
+    color: #fff;
+    font: inherit;
+    font-size: 15px;
+    background: #0e0e0e;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+
+    &:focus {
+        border-color: #fff;
+        outline: none;
+    }
+}
+
+// Buttons: a white pill for what matters, a hairline pill for the rest
+
+.pf-spm-button {
+    display: inline-flex;
+    flex: none;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 20px;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    font-size: 15px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 160ms ease, background-color 160ms ease;
+
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.55);
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+}
+
+.pf-spm-button--primary {
+    color: #000;
+    font-weight: 700;
+    background: #fff;
+    border-color: #fff;
+
+    &:hover {
+        background: #e8e8e8;
+        border-color: #e8e8e8;
+    }
 }
 
 // The group the user is in
 
-.pf-syncplay__current {
-    margin-bottom: 1rem;
-    padding: 1rem;
-    border: 1px solid var(--pf-glass-border);
-    border-radius: 12px;
-}
-
-.pf-syncplay__current-head {
+.pf-spm-current__head {
     display: flex;
+    gap: 12px;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.75rem;
+    padding: 8px 4px 0;
 }
 
-.pf-syncplay__current-name {
-    font-weight: 600;
-    font-size: 1rem;
+.pf-spm-current__name {
+    min-width: 0;
+    overflow: hidden;
+    font-weight: 700;
+    font-size: 17px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-.pf-syncplay__current-head .pf-syncplay__state {
-    margin-right: 0;
-}
-
-.pf-syncplay__person {
+.pf-spm-people {
     display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+}
+
+.pf-spm-person {
+    display: flex;
+    gap: 12px;
     align-items: center;
-    padding: 0.35rem 0;
-    font-size: 0.875rem;
-
-    .pf-syncplay__person-avatar {
-        margin-right: 0.6rem;
-    }
+    min-height: 44px;
+    padding: 0 6px;
+    font-size: 15px;
 }
 
-.pf-syncplay__you {
-    margin-left: 0.5rem;
-    color: var(--pf-color-text-secondary);
-    font-size: 0.75rem;
+.pf-spm-person__name {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-.pf-syncplay__actions {
+.pf-spm-person__you {
+    color: #a3a3a3;
+    font-size: 13px;
+}
+
+.pf-spm-actions {
     display: flex;
     flex-wrap: wrap;
-
-    .pf-syncplay__button-icon {
-        margin-right: 0.35rem;
-        font-size: 1rem;
-    }
+    gap: 8px;
+    margin: 4px 0 6px;
 }
 
-.pf-syncplay__create {
-    margin-top: 0.5rem;
+// The synchronisation, folded away
+
+.pf-spm-settings {
+    margin-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.pf-syncplay__number {
-    display: inline-flex;
-    align-items: center;
-    color: var(--pf-color-text-secondary);
-    font-size: 0.8rem;
-
-    .pf-input {
-        width: 6rem;
-        margin-right: 0.4rem;
-        text-align: end;
-        font-variant-numeric: tabular-nums;
-    }
-}
-
-// The fine timings of the synchronisation, folded away
-
-.pf-syncplay__disclosure {
+.pf-spm-disclosure {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 0.75rem 0;
-    color: var(--pf-color-text);
+    min-height: 48px;
+    padding: 0 6px;
+    color: #fff;
     font: inherit;
-    font-weight: 500;
-    font-size: 0.875rem;
+    font-weight: 600;
+    font-size: 15px;
     background: none;
     border: 0;
-    border-top: 1px solid var(--pf-glass-border);
+    border-radius: 12px;
     cursor: pointer;
 
-    .pf-syncplay__chevron {
-        color: var(--pf-color-text-secondary);
-        transition: transform var(--pf-duration) var(--pf-ease);
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
     }
 
-    &[aria-expanded='true'] .pf-syncplay__chevron {
+    .pf-spm-disclosure__chevron {
+        color: #a3a3a3;
+        font-size: 20px;
+        transition: transform 200ms ease;
+    }
+
+    &[aria-expanded='true'] .pf-spm-disclosure__chevron {
         transform: rotate(180deg);
+    }
+}
+
+.pf-spm-settings__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pf-spm-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 52px;
+    padding: 6px 10px;
+    color: #fff;
+    font: inherit;
+    text-align: start;
+    background: transparent;
+    border: 0;
+    border-radius: 12px;
+}
+
+.pf-spm-row--switch {
+    cursor: pointer;
+    transition: background-color 120ms ease;
+
+    &:hover {
+        background: #1f1f1f;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+}
+
+.pf-spm-row__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.pf-spm-row__label {
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.pf-spm-row__hint {
+    color: #a3a3a3;
+    font-size: 12px;
+}
+
+// The switch of the player settings: white when on
+.pf-spm-switch {
+    position: relative;
+    flex: none;
+    width: 40px;
+    height: 24px;
+    background: #3a3a3a;
+    border-radius: 999px;
+    transition: background-color 160ms ease;
+
+    &::after {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        background: #fff;
+        border-radius: 999px;
+        transition: transform 160ms ease, background-color 160ms ease;
+        content: '';
+    }
+
+    [aria-checked='true'] > & {
+        background: #fff;
+
+        &::after {
+            background: #000;
+            transform: translateX(16px);
+        }
+    }
+}
+
+.pf-spm-stepper {
+    display: inline-flex;
+    flex: none;
+    gap: 4px;
+    align-items: center;
+}
+
+.pf-spm-stepper__button {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    color: #fff;
+    font: inherit;
+    font-size: 18px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    cursor: pointer;
+
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.45);
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+}
+
+.pf-spm-stepper__value {
+    min-width: 62px;
+    color: #d4d4d4;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+// A phone: a sheet from the bottom
+@media (max-width: 40em) {
+    .pf-spm {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .pf-spm-dialog {
+        width: 100%;
+        max-height: 85vh;
+        padding-bottom: env(safe-area-inset-bottom);
+        border-width: 1px 0 0;
+        border-radius: 18px 18px 0 0;
+        animation-name: pf-spm-sheet-in;
+    }
+}
+
+// On a TV the focused control fills white, readable from the couch
+:root.layout-tv {
+    .pf-spm-group:focus,
+    .pf-spm-row--switch:focus,
+    .pf-spm-disclosure:focus,
+    .pf-spm-close:focus {
+        color: #000;
+        background: #fff;
+        outline: none;
+
+        .pf-spm-group__people,
+        .pf-spm-row__hint {
+            color: #404040;
+        }
+    }
+}
+
+@keyframes pf-spm-fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pf-spm-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes pf-spm-sheet-in {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-spm,
+    .pf-spm-dialog {
+        animation: none;
     }
 }

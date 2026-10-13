@@ -6,6 +6,7 @@ import { useUserViews } from 'hooks/api/useUserViews';
 import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
 
+import Rail from '../components/Rail';
 import { Bone, SkeletonRegion } from '../components/Skeleton';
 import { ErrorOutline } from '../components/icons';
 import { useDismissResume, useResumeItems } from '../features/home/api/useHomeRows';
@@ -69,7 +70,7 @@ const ResumeRow: FC<{ title: string, items: ItemDto[] | undefined, isPending: bo
         );
     } else {
         content = (
-            <ul className='pf-lib-resume-row__list'>
+            <Rail className='pf-lib-resume-row__list'>
                 {items?.map(item => {
                     const progress = getPlayedPercentage(item);
                     const numbers = getEpisodeNumbers(item);
@@ -90,7 +91,7 @@ const ResumeRow: FC<{ title: string, items: ItemDto[] | undefined, isPending: bo
                         </li>
                     );
                 })}
-            </ul>
+            </Rail>
         );
     }
 

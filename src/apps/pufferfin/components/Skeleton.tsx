@@ -54,9 +54,9 @@ const ROW_CARDS = 8;
 export const RowBone: FC<{ shape?: CardShape, count?: number }> = ({ shape = 'portrait', count = ROW_CARDS }) => (
     <div className='pf-row pf-row--skeleton' aria-hidden='true'>
         <span className='pf-row__title'><Bone className='pf-bone--heading' width='11rem' /></span>
-        <div className='pf-row__list'>
-            {Array.from({ length: count }, (_, index) => <CardBone key={index} shape={shape} withCaption={false} />)}
-        </div>
+        <ul className='pf-row__list'>
+            {Array.from({ length: count }, (_, index) => <li key={index}><CardBone shape={shape} withCaption={false} /></li>)}
+        </ul>
     </div>
 );
 

@@ -23,6 +23,7 @@ import { useCanRequest } from '../features/requests/api/useCanRequest';
 import { useMergedSeasons } from '../features/series/api/useMergedSeasons';
 import SeasonDownloads from '../features/series/components/SeasonDownloads';
 import SeriesEpisodes from '../features/series/components/SeriesEpisodes';
+import TemporaryNotice from '../features/requests/components/TemporaryNotice';
 import { CatalogItemKind } from '../features/catalog/api/types';
 import { useCatalogCast } from '../features/details/api/useCatalogCast';
 import CatalogCastRow from '../features/details/components/CatalogCastRow';
@@ -328,6 +329,7 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                             />
                         )}
                         {isMovie && <WatchedButton item={item} />}
+                        {isMovie && <TemporaryNotice tmdbId={Number(item.ProviderIds?.Tmdb) || undefined} />}
                         {bookmark && <BookmarkButton bookmark={bookmark} withLabel />}
                         {(isMovie || item.Type === ItemKind.Series) && (
                             <ReviewLink

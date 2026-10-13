@@ -171,14 +171,13 @@
 .pf-spotlight__chip {
     display: inline-flex;
     flex: none;
-    gap: 8px;
     align-items: center;
-    min-height: 44px;
-    padding: 0 20px;
+    min-height: 30px;
+    padding: 0 12px;
     color: #fff;
     font: inherit;
     font-weight: 500;
-    font-size: 15px;
+    font-size: 13px;
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 999px;
@@ -193,12 +192,7 @@
 
 .pf-spotlight__chip--selected,
 .pf-spotlight__chip--selected:hover {
-    font-weight: 600;
     border-color: #fff;
-}
-
-.pf-spotlight__chip-check {
-    font-size: 16px !important;
 }
 
 .pf-spotlight__results {
@@ -407,10 +401,11 @@
         max-height: 100%;
     }
 
+    // A finger needs a little more room, still a small capsule
     .pf-spotlight__chip {
-        min-height: 40px;
-        padding: 0 16px;
-        font-size: 14px;
+        min-height: 34px;
+        padding: 0 12px;
+        font-size: 13px;
     }
 
     .pf-spotlight__key,

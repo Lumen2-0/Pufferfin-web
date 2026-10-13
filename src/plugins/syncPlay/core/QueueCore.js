@@ -4,8 +4,9 @@
  */
 
 import globalize from '../../../lib/globalize';
-import toast from '../../../components/toast/toast';
+import { showSyncPlayNotice } from '../../../apps/pufferfin/features/syncplay/notice';
 import * as Helper from './Helper';
+import { orderPlaylistItems } from './playlist';
 
 /**
  * Class that manages the queue of SyncPlay.
@@ -79,8 +80,8 @@ class QueueCore {
                 case 'RemoveItems': {
                     playerWrapper.onQueueUpdate();
 
-                    const index = previous.playQueueUpdate.PlayingItemIndex;
-                    const oldPlaylistItemId = index === -1 ? null : previous.playlist[index].PlaylistItemId;
+                    const index = previous.playQueueUpdate ? previous.playQueueUpdate.PlayingItemIndex : -1;
+                    const oldPlaylistItemId = index === -1 ? null : previous.playlist[index]?.PlaylistItemId ?? null;
                     const playlistItemId = this.getCurrentPlaylistItemId();
                     if (oldPlaylistItemId !== playlistItemId) {
                         this.setCurrentPlaylistItem(apiClient, playlistItemId);
@@ -135,30 +136,36 @@ class QueueCore {
             });
         }
 
+        // PUFFERFIN: the queue is the group's, as it is. Upstream translated it
+        // like a new choice, which turned a lone episode into the rest of its
+        // series, then gave the playlist ids by position: the ids no longer
+        // matched their items and the group played another title.
+        const uniqueIds = [ ...new Set(itemIds) ];
         return Helper.getItemsForPlayback(apiClient, {
-            Ids: itemIds.join(',')
+            Ids: uniqueIds.join(','),
+            Limit: Math.max(300, uniqueIds.length)
         }).then((result) => {
-            return Helper.translateItemsForPlayback(apiClient, result.Items, {
-                ids: itemIds,
-                serverId: serverId
-            }).then((items) => {
-                if (this.lastPlayQueueUpdate && playQueueUpdate.LastUpdate.getTime() <= this.getLastUpdateTime()) {
-                    throw new Error('Trying to apply old update');
-                }
+            if (this.lastPlayQueueUpdate && playQueueUpdate.LastUpdate.getTime() <= this.getLastUpdateTime()) {
+                throw new Error('Trying to apply old update');
+            }
 
-                for (let i = 0; i < items.length; i++) {
-                    items[i].PlaylistItemId = playQueueUpdate.Playlist[i].PlaylistItemId;
-                }
+            this.lastPlayQueueUpdate = playQueueUpdate;
+            this.playlist = orderPlaylistItems(playQueueUpdate.Playlist, result.Items || [], serverId);
 
-                this.lastPlayQueueUpdate = playQueueUpdate;
-                this.playlist = items;
-
-                return {
-                    playQueueUpdate: oldPlayQueueUpdate,
-                    playlist: oldPlaylist
-                };
-            });
+            return {
+                playQueueUpdate: oldPlayQueueUpdate,
+                playlist: oldPlaylist
+            };
         });
+    }
+
+    /**
+     * PUFFERFIN: forgets the queue of the group left. Kept, it made the next
+     * group ignore its own queue as older, and Resume started the old title.
+     */
+    reset() {
+        this.lastPlayQueueUpdate = null;
+        this.playlist = [];
     }
 
     /**
@@ -188,11 +195,12 @@ class QueueCore {
             });
         }).catch((error) => {
             console.error('Error while waiting for `playbackstart` event!', origin, error);
-            if (!this.manager.isSyncPlayEnabled()) {
-                toast(globalize.translate('MessageSyncPlayErrorMedia'));
+            // PUFFERFIN: the member whose playback failed is told, and stops
+            // following the group so the others do not wait for it forever
+            if (this.manager.isSyncPlayEnabled()) {
+                showSyncPlayNotice(globalize.translate('MessageSyncPlayErrorMedia'));
+                this.manager.haltGroupPlayback(apiClient);
             }
-
-            this.manager.haltGroupPlayback(apiClient);
         });
     }
 
@@ -237,7 +245,7 @@ class QueueCore {
             serverId: serverId
         }).catch((error) => {
             console.error(error);
-            toast(globalize.translate('MessageSyncPlayErrorMedia'));
+            showSyncPlayNotice(globalize.translate('MessageSyncPlayErrorMedia'));
         });
     }
 
@@ -277,7 +285,7 @@ class QueueCore {
     getCurrentPlaylistItemId() {
         if (this.lastPlayQueueUpdate) {
             const index = this.lastPlayQueueUpdate.PlayingItemIndex;
-            return index === -1 ? null : this.playlist[index].PlaylistItemId;
+            return index === -1 ? null : this.playlist[index]?.PlaylistItemId ?? null;
         } else {
             return null;
         }

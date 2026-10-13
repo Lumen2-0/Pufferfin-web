@@ -1,7 +1,8 @@
 import type { StringKey } from '../../../i18n/translate';
 import { type MediaRequest, RequestKind, RequestState } from '../api/types';
 
-import { getRequestStateText, isRequestStalled } from './status';
+import { getRequestStateLabel, getRequestStateText, isRequestStalled } from './status';
+import { isExpiredRequest } from './temporary';
 
 type Translate = (key: StringKey, ...args: Array<string | number>) => string;
 
@@ -35,7 +36,8 @@ export function findMovieRequest(requests: MediaRequest[] | undefined, tmdbId: n
     const candidates = (requests ?? [])
         .filter(request => request.Kind === RequestKind.Movie
             && request.TmdbId === tmdbId
-            && request.State !== RequestState.Cancelled)
+            && request.State !== RequestState.Cancelled
+            && !isExpiredRequest(request))
         .sort((a, b) => Date.parse(b.UpdatedAt) - Date.parse(a.UpdatedAt));
     return candidates.find(isRequestActive) ?? candidates[0];
 }
@@ -121,6 +123,10 @@ export interface DownloadTagState {
     /** 0 to 100 while downloading; undefined while the length of the wait is unknown. */
     percent?: number
     text: string
+    /** The state alone in words, without the percentage, for a status that shows the percentage apart. */
+    label?: string
+    /** The time left of a single download, in seconds, when known. */
+    etaSeconds?: number
     /** Stalled for want of seeds: the bar stands still and the words say why. */
     isStalled?: boolean
 }
@@ -131,13 +137,15 @@ function getTagState(request: MediaRequest, t: Translate): DownloadTagState {
         state: request.State,
         percent: request.State === RequestState.Downloading ? getProgressPercent(request) : undefined,
         text: getRequestStateText(request, t),
+        label: isRequestStalled(request) ? t('RequestStalledNoSeeds') : t(getRequestStateLabel(request)),
+        etaSeconds: request.State === RequestState.Downloading ? request.EtaSeconds ?? undefined : undefined,
         isStalled: isRequestStalled(request)
     };
 }
 
 /** States in which a request no longer stands for the title: it may be asked again. */
 export const isOver = (request: MediaRequest) =>
-    request.State === RequestState.Cancelled || request.State === RequestState.Rejected;
+    request.State === RequestState.Cancelled || request.State === RequestState.Rejected || isExpiredRequest(request);
 
 /**
  * Sums up the requests of one title in one tag: a movie has one, a series one
@@ -156,9 +164,9 @@ export function summarizeRequests(requests: MediaRequest[], t: Translate): Downl
     }
     if (downloading.length) {
         const percent = Math.round(live.reduce((sum, request) => sum + getProgressPercent(request), 0) / live.length);
-        return { state: RequestState.Downloading, percent, text: t('RequestDownloadingPercent', percent) };
+        return { state: RequestState.Downloading, percent, text: t('RequestDownloadingPercent', percent), label: t('RequestDownloading') };
     }
     const failed = live.find(request => request.State === RequestState.Failed);
     const first = failed ?? live[0];
-    return { state: first.State, text: getRequestStateText(first, t) };
+    return { state: first.State, text: getRequestStateText(first, t), label: getRequestStateText(first, t) };
 }

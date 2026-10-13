@@ -152,8 +152,9 @@ function getMediaStreamTextTracks(mediaSource) {
 
 function zoomIn(elem) {
     return new Promise(resolve => {
-        const duration = 240;
-        elem.style.animation = `htmlvideoplayer-zoomin ${duration}ms ease-in normal`;
+        // PUFFERFIN: a short fade, see the keyframes
+        const duration = 200;
+        elem.style.animation = `htmlvideoplayer-zoomin ${duration}ms ease-out normal`;
         dom.addEventListener(elem, dom.whichAnimationEvent(), resolve, {
             once: true
         });

@@ -14,6 +14,8 @@ import CastButton from '../shell/CastButton';
 import Clock from '../shell/Clock';
 import NowPlayingButton from '../shell/NowPlayingButton';
 import SyncPlayButton from '../shell/SyncPlayButton';
+import BottomBar from '../shell/BottomBar';
+import { useCompactLayout } from '../shell/useCompactLayout';
 import { Download, Explore, Search, VideoLibrary } from './icons';
 
 // A text tab: quiet at rest, the current screen gets a filled capsule and a heavier label
@@ -21,7 +23,8 @@ const getTabClassName = ({ isActive }: { isActive: boolean }) =>
     classNames('pf-nav__tab', { 'pf-nav__tab--current': isActive });
 
 /**
- * The one top bar of the interface, on the Pufferfin screens and on the
+ * The one bar of the interface: at the top on larger screens, at the bottom on
+ * phones and upright tablets (see BottomBar). The top bar, on the Pufferfin screens and on the
  * upstream pages alike: the screens as text tabs in a capsule at the center,
  * small round actions at the end. The current screen gets a filled capsule, a
  * heavier label and `aria-current`, so it never relies on color alone.
@@ -32,6 +35,18 @@ const AppNav: FC = () => {
     // No download service configured: no Downloads button, rather than an empty panel
     const hasDownloads = !!capabilities?.Radarr || !!capabilities?.Sonarr;
     const isSearchOpen = useIsSpotlightOpen();
+    // Phones and upright tablets: the bottom bar alone, nothing at the top
+    const isCompact = useCompactLayout();
+
+    if (isCompact) {
+        return (
+            <>
+                <BottomBar hasDownloads={hasDownloads} />
+                <Spotlight />
+                <SettingsModal />
+            </>
+        );
+    }
 
     return (
         <nav className='pf-nav' aria-label={t('NavLabel')} {...{ [FOCUS_GROUP_ATTRIBUTE]: true }}>

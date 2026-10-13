@@ -35,6 +35,7 @@ import { OutboundWebSocketMessageType } from '@jellyfin/sdk/lib/websocket';
 import { MediaError } from 'types/mediaError';
 import { getMediaError } from 'utils/mediaError';
 import { bindSkipSegment } from './skipsegment.ts';
+import { failLaunchScreen, isLaunchScreenShown, shouldShowLaunchScreen, showLaunchScreen } from 'apps/pufferfin/features/player/launch/launchScreen';
 import * as bitrateTest from 'utils/bitrateTest';
 
 const UNLIMITED_ITEMS = -1;
@@ -648,6 +649,12 @@ function validatePlaybackInfoResult(instance, result) {
 }
 
 function showPlaybackInfoErrorMessage(instance, errorCode) {
+    // PUFFERFIN: a video that fails to start says so on its launch screen
+    if (isLaunchScreenShown()) {
+        failLaunchScreen(globalize.translate(errorCode));
+        return;
+    }
+
     alert({
         text: globalize.translate(errorCode),
         title: globalize.translate('HeaderPlaybackError')
@@ -2391,6 +2398,11 @@ export class PlaybackManager {
 
             // Normalize defaults to simplfy checks throughout the process
             normalizePlayOptions(playOptions);
+
+            // PUFFERFIN: from now until its first frame, the picture and the name of the video
+            if (shouldShowLaunchScreen(item, playOptions.fullscreen)) {
+                showLaunchScreen(item, { emitter: self, onBack: () => self.stop() });
+            }
 
             playOptions.isFirstItem = playOptions.isFirstItem || !prevSource;
 

@@ -11,6 +11,7 @@ import HeroCarousel, { type HeroSlide } from '../components/HeroCarousel';
 import { CarouselSkeleton } from '../components/Skeleton';
 import MediaRow from '../components/MediaRow';
 import PosterCard from '../components/PosterCard';
+import Rail from '../components/Rail';
 import RoundButton from '../components/RoundButton';
 import { CatalogAvailability, CatalogItemKind, type CatalogItem } from '../features/catalog/api/types';
 import {
@@ -529,9 +530,9 @@ export const Component = () => {
 
             {/* Right under the featured card: the streaming services, the studios, the network */}
             {withProviders && (
-                <div className='pf-discover__brands'>
+                <Rail as='div' className='pf-discover__brands'>
                     <BrandPicker value={brand} onChange={onBrandChange} />
-                </div>
+                </Rail>
             )}
 
             <div className='pf-home__rows pf-discover__rows'>

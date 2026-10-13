@@ -482,11 +482,39 @@
 
     // While the episodes load: grey blocks that shimmer
     .pf-osd-episode--skeleton {
-        height: 77px;
-        background: linear-gradient(90deg, #111 0, #1c1c1c 50%, #111 100%);
-        background-size: 800px 100%;
         cursor: default;
+
+        &:hover {
+            background: transparent;
+        }
+    }
+
+    .pf-osd-bones {
+        flex: 1;
+        gap: 8px;
+    }
+
+    .pf-osd-bone {
+        display: block;
+        background: linear-gradient(90deg, #1a1a1a 0, #262626 50%, #1a1a1a 100%);
+        background-size: 800px 100%;
+        border-radius: 6px;
         animation: pf-osd-shimmer 1.6s linear infinite;
+    }
+
+    .pf-osd-bone--number {
+        width: 30%;
+        height: 9px;
+    }
+
+    .pf-osd-bone--title {
+        width: 78%;
+        height: 13px;
+    }
+
+    .pf-osd-bone--status {
+        width: 45%;
+        height: 10px;
     }
 
     // A phone: each panel rises from the bottom over a dimmed picture
@@ -617,7 +645,7 @@
     :root.pf-player-skin {
         .pf-osd-panel,
         .pf-osd-scrim,
-        .pf-osd-episode--skeleton {
+        .pf-osd-bone {
             animation: none;
         }
     }

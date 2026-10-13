@@ -775,6 +775,12 @@ body,
     padding: 0 var(--pf-gutter);
     overflow-x: auto;
     overflow-y: hidden;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 // Without a featured card, the rows start under the bar
@@ -896,6 +902,28 @@ body,
 
 .pf-choices {
     padding: 0 var(--pf-gutter);
+}
+
+// The same choices on one line that scrolls sideways, its arrows on the edges
+.pf-choices--rail {
+    display: flex;
+    flex-wrap: nowrap;
+    // Room for the focus ring, so it is never clipped
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+// A choice of the line keeps its width: it never squeezes
+.pf-choices__choice {
+    flex: none;
 }
 
 // Request of a missing title: Download, then the tag that replaces it
@@ -2154,9 +2182,10 @@ body,
 
 .pf-bone {
     display: block;
+    // A soft light from #111 to about #1c1c1c, the same on every skeleton
     background:
-        linear-gradient(100deg, transparent 30%, rgba(245, 242, 236, 0.07) 50%, transparent 70%)
-        var(--pf-quiet-background);
+        linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.045) 50%, transparent 70%)
+        #111;
     background-size: 200% 100%;
     border-radius: 8px;
     animation: pf-shimmer var(--pf-pulse-duration) linear infinite;
@@ -2204,8 +2233,8 @@ body,
     .pf-bone--art {
         // The card art keeps its own ratio and radius; only the fill changes
         background:
-            linear-gradient(100deg, transparent 30%, rgba(245, 242, 236, 0.07) 50%, transparent 70%)
-            var(--pf-color-surface);
+            linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.045) 50%, transparent 70%)
+            #111;
         background-size: 200% 100%;
     }
 }

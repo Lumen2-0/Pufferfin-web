@@ -79,14 +79,13 @@ video[controls]::-webkit-media-controls {
     margin-bottom: 0.5em !important;
 }
 
+/* PUFFERFIN: the player fades in, it no longer grows from the centre of the page */
 @keyframes htmlvideoplayer-zoomin {
     from {
-        transform: scale3d(0.2, 0.2, 0.2);
-        opacity: 0.6;
+        opacity: 0;
     }
 
     to {
-        transform: none;
-        opacity: initial;
+        opacity: 1;
     }
 }

@@ -1,0 +1,80 @@
+// A sideways row and its two round arrows, shown when the pointer comes over it.
+// --pf-rail-inset is where the cards start inside the scroller: the arrows sit
+// astride that edge.
+
+.pf-rail {
+    position: relative;
+}
+
+.pf-rail__arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-top: -1.125rem;
+    padding: 0;
+    color: #fff;
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    pointer-events: none;
+
+    &:hover {
+        background: #262626;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+}
+
+.pf-rail__arrow--previous {
+    left: max(0.25rem, calc(var(--pf-rail-inset, var(--pf-gutter)) - 1.125rem));
+}
+
+.pf-rail__arrow--next {
+    right: max(0.25rem, calc(var(--pf-rail-inset, var(--pf-gutter)) - 1.125rem));
+}
+
+[dir='rtl'] .pf-rail__arrow--previous {
+    right: max(0.25rem, calc(var(--pf-rail-inset, var(--pf-gutter)) - 1.125rem));
+    left: auto;
+    transform: scaleX(-1);
+}
+
+[dir='rtl'] .pf-rail__arrow--next {
+    right: auto;
+    left: max(0.25rem, calc(var(--pf-rail-inset, var(--pf-gutter)) - 1.125rem));
+    transform: scaleX(-1);
+}
+
+// Fingers swipe and the remote moves the focus: no arrows there
+@media (hover: none) {
+    .pf-rail__arrow {
+        display: none;
+    }
+}
+
+:root.layout-tv .pf-rail__arrow {
+    display: none;
+}
+
+.pf-rail:hover .pf-rail__arrow:not(.pf-rail__arrow--off) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-rail__arrow {
+        transition: none;
+    }
+}

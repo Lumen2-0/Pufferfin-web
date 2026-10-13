@@ -1,0 +1,78 @@
+// SyncPlay notices: the solid sheet of the panels, as a pill near the bottom
+
+.pf-sp-notices {
+    position: fixed;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    left: 50%;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.pf-sp-notice {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    max-width: min(28rem, calc(100vw - 32px));
+    padding: 8px 16px 8px 10px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: inherit;
+    background: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+    animation: pf-sp-notice-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+
+    > span:last-child {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+}
+
+.pf-sp-notice--plain {
+    padding-left: 16px;
+}
+
+.pf-sp-notice--leaving {
+    opacity: 0;
+    transition: opacity 200ms ease;
+}
+
+.pf-sp-notice__avatar {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    color: #000;
+    font-weight: 700;
+    font-size: 10px;
+    background: #fff;
+    border-radius: 999px;
+}
+
+@keyframes pf-sp-notice-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-sp-notice {
+        animation: none;
+    }
+}
