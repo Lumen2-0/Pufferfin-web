@@ -18,6 +18,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import {
     getAvatarUrl,
     useAuthorizeQuickConnect,
+    MAX_AVATAR_BYTES,
     useChangeAvatar,
     useChangePassword,
     useCultures,
@@ -29,6 +30,8 @@ import {
     useSavePufferfinUserSettings
 } from './api';
 import { FormNote, type SelectOption, Select, SettingRow, SettingsButton, Switch, TextField } from './components/fields';
+import { useReviewSite } from '../reviews/ReviewLink';
+import { parseReviewSite, ReviewSite } from '../reviews/reviewSite';
 import { closeSettings, openSettings, SETTINGS_SECTIONS, SettingsSection, useOpenSettingsSection } from './store';
 
 import './settings.scss';
@@ -117,12 +120,16 @@ const ProfileSection: FC<{ me: UserDto }> = ({ me }) => {
     const [ confirm, setConfirm ] = useState('');
     const [ mismatch, setMismatch ] = useState(false);
     const avatarUrl = getAvatarUrl(api, me);
+    const [ isTooLarge, setIsTooLarge ] = useState(false);
 
     const onPick = useCallback(() => fileRef.current?.click(), []);
     const onFile = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file && me.Id) avatar.mutate({ userId: me.Id, file });
         event.target.value = '';
+        if (!file || !me.Id) return;
+        setIsTooLarge(file.size > MAX_AVATAR_BYTES);
+        if (file.size > MAX_AVATAR_BYTES) return;
+        avatar.mutate({ userId: me.Id, file });
     }, [ avatar, me.Id ]);
     const onRemove = useCallback(() => {
         if (me.Id) avatar.mutate({ userId: me.Id, file: null });
@@ -156,11 +163,14 @@ const ProfileSection: FC<{ me: UserDto }> = ({ me }) => {
                     {me.Policy?.IsAdministrator && <p className='pf-profile-card__role'>{t('ProfileAdministrator')}</p>}
                 </div>
                 <div className='pf-profile-card__actions'>
-                    <input ref={fileRef} type='file' accept='image/*' hidden onChange={onFile} />
+                    <input ref={fileRef} type='file' accept='image/jpeg,image/png,image/webp,image/gif' hidden onChange={onFile} />
                     <SettingsButton onClick={onPick} disabled={avatar.isPending}>{t('ProfileAvatarChange')}</SettingsButton>
                     {me.PrimaryImageTag && <SettingsButton onClick={onRemove} disabled={avatar.isPending}>{t('ProfileAvatarRemove')}</SettingsButton>}
                 </div>
             </div>
+            <p className='pf-settings__hint'>{t('ProfilePictureHint')}</p>
+            {isTooLarge && <FormNote tone='error'>{t('ProfilePictureTooLarge')}</FormNote>}
+            {avatar.isError && <FormNote tone='error'>{t('ProfilePictureError')}</FormNote>}
 
             <form className='pf-settings-form' onSubmit={onSubmit}>
                 <h3 className='pf-settings-form__title'>
@@ -355,10 +365,21 @@ const InterfaceSection: FC = () => {
         // The whole interface takes the new language on a fresh start
         setTimeout(() => window.location.reload(), 300);
     }, []);
+    const [ reviewSite, setReviewSite ] = useReviewSite();
+    const reviewSites = useMemo<SelectOption[]>(() => [
+        { value: ReviewSite.Letterboxd, label: 'Letterboxd' },
+        { value: ReviewSite.SensCritique, label: 'SensCritique' }
+    ], []);
+    const onReviewSiteChange = useCallback((value: string) => setReviewSite(parseReviewSite(value)), [ setReviewSite ]);
     return (
-        <SettingRow label={t('InterfaceLanguage')} description={t('InterfaceLanguageHint')} htmlFor='pf-interface-language'>
-            <Select id='pf-interface-language' value={language} options={choices} onChange={onChange} />
-        </SettingRow>
+        <>
+            <SettingRow label={t('InterfaceLanguage')} description={t('InterfaceLanguageHint')} htmlFor='pf-interface-language'>
+                <Select id='pf-interface-language' value={language} options={choices} onChange={onChange} />
+            </SettingRow>
+            <SettingRow label={t('ReviewSite')} description={t('ReviewSiteHint')} htmlFor='pf-review-site'>
+                <Select id='pf-review-site' value={reviewSite} options={reviewSites} onChange={onReviewSiteChange} />
+            </SettingRow>
+        </>
     );
 };
 

@@ -33,8 +33,8 @@ describe('Pufferfin: Discover types', () => {
         }
     });
 
-    it('keeps above the genres only what is being watched, and live TV', () => {
-        expect(getDiscoverRows(DiscoverType.All)).toEqual([ DiscoverRow.ContinueWatching, DiscoverRow.NextUp ]);
+    it('keeps above the genres only what is being watched, the bookmarks, and live TV', () => {
+        expect(getDiscoverRows(DiscoverType.All)).toEqual([ DiscoverRow.ContinueWatching, DiscoverRow.Bookmarks ]);
         expect(getDiscoverRows(DiscoverType.TvShows)).toEqual([ DiscoverRow.LiveTvOnNow, DiscoverRow.Recordings ]);
         for (const type of DISCOVER_TYPES) {
             expect(getDiscoverRows(type)).not.toContain(DiscoverRow.TrendingMovies);
@@ -53,8 +53,10 @@ describe('Pufferfin: Discover types', () => {
         expect(getDiscoverRows(DiscoverType.Documentaries)).toEqual([]);
     });
 
-    it('keeps the series rows out of Movies', () => {
-        expect(getDiscoverRows(DiscoverType.Movies)).not.toContain(DiscoverRow.NextUp);
+    it('shows no Next Up row: what to resume is enough', () => {
+        for (const type of DISCOVER_TYPES) {
+            expect(getDiscoverRows(type)).not.toContain('nextUp');
+        }
     });
 
     it('opens on a featured title for the video types only', () => {

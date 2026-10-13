@@ -19,7 +19,8 @@ import { getMissingSeasons } from '../features/series/utils/episodes';
 import SeasonDownloads, { getListedSeasons } from '../features/series/components/SeasonDownloads';
 import SeriesEpisodes from '../features/series/components/SeriesEpisodes';
 import TrailerButton from '../features/trailers/TrailerButton';
-import { getLetterboxdUrl, TextLink } from '../components/TextAction';
+import BookmarkButton from '../features/bookmarks/BookmarkButton';
+import ReviewLink from '../features/reviews/ReviewLink';
 import type { StringKey } from '../i18n/translate';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
@@ -99,6 +100,13 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
     useInitialFocus(pageRef, [ title, areActionsSettled ], !!title && areActionsSettled);
 
     const meta = useMemo(() => (title ? getTitleMeta(kind, title, t) : []), [ kind, t, title ]);
+    const bookmark = useMemo(() => ({
+        kind,
+        tmdbId,
+        title: title?.Title ?? '',
+        year: title?.Year,
+        posterUrl: title?.PosterUrl
+    }), [ kind, title, tmdbId ]);
     const makers = useMemo(() => getMakers(kind, title), [ kind, title ]);
 
     if (isPending) return <DetailsSkeleton />;
@@ -137,8 +145,9 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                         canRequest={rights.canRequest}
                         lastSyncAt={requests.dataUpdatedAt}
                     >
+                        <BookmarkButton bookmark={bookmark} />
                         <TrailerButton videos={title.Trailers} title={title.Title} />
-                        <TextLink href={getLetterboxdUrl(tmdbId)}>{t('SeeOnLetterboxd')}</TextLink>
+                        <ReviewLink title={title.Title} year={title.Year} isMovie tmdbId={tmdbId} />
                     </RequestActions>
                 ) : (
                     <RequestActions
@@ -148,6 +157,7 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                         lastSyncAt={requests.dataUpdatedAt}
                         downloadLabel={t('ActionDownloadAllSeasons')}
                     >
+                        <BookmarkButton bookmark={bookmark} />
                         {rights.canRequest && seriesSeasons.data && getListedSeasons(seriesSeasons.data.Seasons).length > 1 && (
                             <SeasonDownloads
                                 seriesTmdbId={tmdbId}
@@ -158,6 +168,7 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                             />
                         )}
                         <TrailerButton videos={title.Trailers} title={title.Title} />
+                        <ReviewLink title={title.Title} year={title.Year} isMovie={false} />
                     </RequestActions>
                 )}
             />

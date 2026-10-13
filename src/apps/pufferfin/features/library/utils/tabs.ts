@@ -5,7 +5,6 @@ import type { StringKey } from '../../../i18n/translate';
 /** The tabs of a library page, as the upstream library pages offer them. */
 export enum LibraryTab {
     All = 'all',
-    Suggestions = 'suggestions',
     Upcoming = 'upcoming',
     Genres = 'genres',
     Networks = 'networks',
@@ -19,7 +18,6 @@ export const LIBRARY_FILTER_PARAM = 'filter';
 
 export const LIBRARY_TAB_LABELS: Record<LibraryTab, StringKey> = {
     [LibraryTab.All]: 'LibraryTabAll',
-    [LibraryTab.Suggestions]: 'LibraryTabSuggestions',
     [LibraryTab.Upcoming]: 'LibraryTabUpcoming',
     [LibraryTab.Genres]: 'LibraryTabGenres',
     [LibraryTab.Networks]: 'LibraryTabNetworks',
@@ -29,15 +27,15 @@ export const LIBRARY_TAB_LABELS: Record<LibraryTab, StringKey> = {
 
 /**
  * The tabs of a library, by its collection type, in the upstream order.
- * Films and series get their upstream tabs; the other libraries their grid
- * and genres.
+ * Films and series get their upstream tabs, without Suggestions: what to
+ * resume is on the Library tab. The other libraries get their grid and genres.
  */
 export function getLibraryTabs(collectionType: string | null | undefined): LibraryTab[] {
     switch (collectionType) {
         case CollectionType.Movies:
-            return [ LibraryTab.All, LibraryTab.Suggestions, LibraryTab.Genres, LibraryTab.Collections ];
+            return [ LibraryTab.All, LibraryTab.Genres, LibraryTab.Collections ];
         case CollectionType.Tvshows:
-            return [ LibraryTab.All, LibraryTab.Suggestions, LibraryTab.Upcoming, LibraryTab.Genres, LibraryTab.Networks, LibraryTab.Episodes ];
+            return [ LibraryTab.All, LibraryTab.Upcoming, LibraryTab.Genres, LibraryTab.Networks, LibraryTab.Episodes ];
         case CollectionType.Boxsets:
         case CollectionType.Playlists:
             return [ LibraryTab.All ];

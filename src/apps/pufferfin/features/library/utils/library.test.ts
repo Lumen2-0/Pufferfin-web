@@ -2,7 +2,7 @@ import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-ite
 import { CollectionType } from '@jellyfin/sdk/lib/generated-client/models/collection-type';
 import { describe, expect, it } from 'vitest';
 
-import { getNextPageStart, getViewItemTypes, hasLatestRow, isAudiobookEntry } from './library';
+import { getNextPageStart, getViewItemTypes, isAudiobookEntry } from './library';
 
 const page = (startIndex: number, count: number, totalCount: number) => ({
     items: Array.from({ length: count }),
@@ -24,19 +24,6 @@ describe('Pufferfin: library helpers', () => {
 
     it('leaves live TV to its upstream page', () => {
         expect(getViewItemTypes(CollectionType.Livetv)).toBeNull();
-    });
-
-    it('gives a Recently added row to the libraries the upstream home gives one', () => {
-        expect(hasLatestRow({ Id: 'a', CollectionType: CollectionType.Movies })).toBe(true);
-        expect(hasLatestRow({ Id: 'a', CollectionType: CollectionType.Livetv })).toBe(false);
-        expect(hasLatestRow({ Id: 'a', CollectionType: CollectionType.Boxsets })).toBe(false);
-        expect(hasLatestRow({ Id: 'a', CollectionType: CollectionType.Playlists })).toBe(false);
-        expect(hasLatestRow({ CollectionType: CollectionType.Movies })).toBe(false);
-    });
-
-    it('skips the libraries the user excluded from their home', () => {
-        expect(hasLatestRow({ Id: 'a', CollectionType: CollectionType.Movies }, [ 'a' ])).toBe(false);
-        expect(hasLatestRow({ Id: 'b', CollectionType: CollectionType.Movies }, [ 'a' ])).toBe(true);
     });
 
     it('asks for the next page until every title is loaded', () => {

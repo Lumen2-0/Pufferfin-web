@@ -4,7 +4,7 @@ import React, { type ReactNode, useCallback } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import type { CardShape } from '../utils/images';
-import { PlayArrow } from './icons';
+import { Close, PlayArrow } from './icons';
 
 interface PosterCardProps<T> {
     title: string
@@ -25,6 +25,13 @@ interface PosterCardProps<T> {
      * art under the pointer, and plays without opening the page.
      */
     onPlay?: (value: T) => void
+    /**
+     * For a title being watched: a small cross shows at the top right of the
+     * art under the pointer, and takes the title out of the row. Its words
+     * say what it does, such as "Stop watching".
+     */
+    onDismiss?: (value: T) => void
+    dismissLabel?: string
 }
 
 const PosterCard = <T, >({
@@ -37,11 +44,14 @@ const PosterCard = <T, >({
     badge,
     value,
     onSelect,
-    onPlay
+    onPlay,
+    onDismiss,
+    dismissLabel
 }: PosterCardProps<T>) => {
     const t = useTranslation();
     const onClick = useCallback(() => onSelect?.(value), [ onSelect, value ]);
     const onPlayClick = useCallback(() => onPlay?.(value), [ onPlay, value ]);
+    const onDismissClick = useCallback(() => onDismiss?.(value), [ onDismiss, value ]);
     const accessibleName = [ title, subtitle, progressLabel, badge?.label ].filter(Boolean).join(', ');
 
     const content = (
@@ -92,23 +102,37 @@ const PosterCard = <T, >({
         </button>
     );
 
-    if (!onPlay) return card;
+    if (!onPlay && !onDismiss) return card;
 
-    // Two buttons side by side, not one in the other: the card opens the page, Play plays
+    // Buttons side by side, not one in the other: the card opens the page, Play plays, the cross takes it out
     return (
         <span className={classNames('pf-card-play', `pf-card-play--${shape}`)}>
             {card}
             <span className='pf-card-play__zone'>
-                <button
-                    type='button'
-                    className='pf-card-play__button'
-                    aria-label={t('ActionPlayTitle', title)}
-                    title={t('ActionPlay')}
-                    onClick={onPlayClick}
-                    tabIndex={-1}
-                >
-                    <PlayArrow fontSize='inherit' aria-hidden='true' />
-                </button>
+                {onDismiss && dismissLabel && (
+                    <button
+                        type='button'
+                        className='pf-card-play__dismiss'
+                        aria-label={`${dismissLabel}, ${title}`}
+                        title={dismissLabel}
+                        onClick={onDismissClick}
+                        {...{ [FOCUSABLE_ATTRIBUTE]: true }}
+                    >
+                        <Close fontSize='inherit' aria-hidden='true' />
+                    </button>
+                )}
+                {onPlay && (
+                    <button
+                        type='button'
+                        className='pf-card-play__button'
+                        aria-label={t('ActionPlayTitle', title)}
+                        title={t('ActionPlay')}
+                        onClick={onPlayClick}
+                        tabIndex={-1}
+                    >
+                        <PlayArrow fontSize='inherit' aria-hidden='true' />
+                    </button>
+                )}
             </span>
         </span>
     );

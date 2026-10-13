@@ -45,6 +45,9 @@ export const useChangePassword = () => {
     });
 };
 
+/** The largest picture a user can send for their avatar. */
+export const MAX_AVATAR_BYTES = 10 * 1024 * 1024;
+
 export const useChangeAvatar = () => {
     const { api } = useApi();
     return useMutation({

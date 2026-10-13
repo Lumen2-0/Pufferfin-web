@@ -5,8 +5,8 @@ import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-
 import { MediaType } from '@jellyfin/sdk/lib/generated-client/models/media-type';
 import { SortOrder } from '@jellyfin/sdk/lib/generated-client/models/sort-order';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
-import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
-import { useQuery } from '@tanstack/react-query';
+import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
@@ -39,22 +39,24 @@ export const useResumeItems = (itemTypes?: BaseItemKind[]) => {
     });
 };
 
-export const useNextUpItems = () => {
+/**
+ * Takes a title out of what to resume: its position goes back to the start,
+ * as if it had never been begun. It stays in the library, and unwatched.
+ */
+export const useDismissResume = () => {
     const { api, user } = useApi();
-    return useQuery({
-        queryKey: [ 'Pufferfin', 'Home', 'NextUp', user?.Id ],
-        queryFn: async ({ signal }) => {
-            const response = await getShowApi(api!).getNextUp({
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (itemId: string) => {
+            await getUserDataApi(api!).updateItemUserData({
+                itemId,
                 userId: user!.Id!,
-                limit: ROW_LIMIT,
-                fields: FIELDS,
-                enableImageTypes: IMAGE_TYPES,
-                imageTypeLimit: 1,
-                enableTotalRecordCount: false
-            }, { signal });
-            return (response.data.Items ?? []) as ItemDto[];
+                updateUserItemDataDto: { PlaybackPositionTicks: 0 }
+            });
         },
-        enabled: !!api && !!user?.Id
+        onSuccess: () => queryClient.invalidateQueries({
+            predicate: query => query.queryKey[0] === 'Pufferfin' && query.queryKey.some(part => part === 'Resume' || part === 'ResumeAudio')
+        })
     });
 };
 

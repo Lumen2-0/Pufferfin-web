@@ -7,13 +7,13 @@ import { getLibraryTabs, LIBRARY_TAB_LABELS, LibraryTab, parseLibraryTab } from 
 describe('Pufferfin: library tabs', () => {
     it('gives films their upstream tabs', () => {
         expect(getLibraryTabs(CollectionType.Movies)).toEqual([
-            LibraryTab.All, LibraryTab.Suggestions, LibraryTab.Genres, LibraryTab.Collections
+            LibraryTab.All, LibraryTab.Genres, LibraryTab.Collections
         ]);
     });
 
     it('gives series their upstream tabs, upcoming, networks and episodes included', () => {
         expect(getLibraryTabs(CollectionType.Tvshows)).toEqual([
-            LibraryTab.All, LibraryTab.Suggestions, LibraryTab.Upcoming, LibraryTab.Genres, LibraryTab.Networks, LibraryTab.Episodes
+            LibraryTab.All, LibraryTab.Upcoming, LibraryTab.Genres, LibraryTab.Networks, LibraryTab.Episodes
         ]);
     });
 

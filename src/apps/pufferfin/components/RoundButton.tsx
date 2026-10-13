@@ -14,6 +14,8 @@ interface RoundButtonProps<T> {
     value?: T
     onClick: (value: T) => void
     disabled?: boolean
+    /** For a button that turns something on and off, such as a bookmark: whether it is on. */
+    pressed?: boolean
 }
 
 const RoundButton = <T, >({
@@ -23,7 +25,8 @@ const RoundButton = <T, >({
     ariaLabel,
     value,
     onClick,
-    disabled
+    disabled,
+    pressed
 }: RoundButtonProps<T>) => {
     // Without a value, T is inferred as unknown or undefined: the callback ignores it
     const handleClick = useCallback(() => onClick(value as T), [ onClick, value ]);
@@ -33,6 +36,9 @@ const RoundButton = <T, >({
             type='button'
             className={classNames('pf-button', `pf-button--${variant}`, { 'pf-button--icon': !label })}
             aria-label={label ? undefined : ariaLabel}
+            // A circle says what it does under the pointer
+            title={label ? undefined : ariaLabel}
+            aria-pressed={pressed}
             onClick={handleClick}
             disabled={disabled}
             {...{ [FOCUSABLE_ATTRIBUTE]: true }}

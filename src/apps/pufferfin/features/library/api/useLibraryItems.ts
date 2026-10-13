@@ -1,5 +1,4 @@
 import { BaseItemKind as BaseItemKindValue, type BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
-import { CollectionType } from '@jellyfin/sdk/lib/generated-client/models/collection-type';
 import { ImageType } from '@jellyfin/sdk/lib/generated-client/models/image-type';
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
 import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
@@ -111,39 +110,6 @@ export const useLibraryItems = (
     });
 };
 
-/**
- * The newest titles of one library, as the upstream home shows them; episodes
- * come grouped by series, and the files of a book in parts as that one book.
- */
-export const useLatestInLibrary = (view: ItemDto) => {
-    const { api, user } = useApi();
-    const parentId = view.Id ?? '';
-    const isBooks = view.CollectionType === CollectionType.Books;
-    return useQuery({
-        queryKey: [ 'Pufferfin', 'Library', 'Latest', parentId, isBooks, user?.Id ],
-        queryFn: async ({ signal }) => {
-            if (isBooks) {
-                const books = await getPufferfin<BooksPage>(api!, BOOKS_PATH, {
-                    params: { parentId, sortBy: BOOKS_NEWEST_FIRST, limit: ROW_LIMIT },
-                    signal
-                });
-                return books.Items ?? [];
-            }
-
-            const response = await getLibraryApi(api!).getLatestMedia({
-                userId: user!.Id!,
-                parentId,
-                limit: ROW_LIMIT,
-                fields: FIELDS,
-                enableImageTypes: IMAGE_TYPES,
-                imageTypeLimit: 1
-            }, { signal });
-            return response.data as ItemDto[];
-        },
-        enabled: !!api && !!user?.Id && !!parentId
-    });
-};
-
 /** Audiobooks to pick up where the user stopped, one entry per book, last listened first. */
 export const useResumeAudioItems = () => {
     const { api, user } = useApi();
@@ -218,44 +184,3 @@ export const useUpcomingEpisodes = (parentId: string | undefined) => {
     });
 };
 
-/** What to resume in one library, for the Suggestions tab. */
-export const useLibraryResume = (parentId: string | undefined) => {
-    const { api, user } = useApi();
-    return useQuery({
-        queryKey: [ 'Pufferfin', 'Library', 'Resume', parentId, user?.Id ],
-        queryFn: async ({ signal }) => {
-            const response = await getLibraryApi(api!).getResumeItems({
-                userId: user!.Id!,
-                parentId,
-                limit: ROW_LIMIT,
-                fields: FIELDS,
-                enableImageTypes: IMAGE_TYPES,
-                imageTypeLimit: 1,
-                enableTotalRecordCount: false
-            }, { signal });
-            return (response.data.Items ?? []) as ItemDto[];
-        },
-        enabled: !!api && !!user?.Id && !!parentId
-    });
-};
-
-/** The next episodes to watch in one library of series, for the Suggestions tab. */
-export const useLibraryNextUp = (parentId: string | undefined, isEnabled: boolean) => {
-    const { api, user } = useApi();
-    return useQuery({
-        queryKey: [ 'Pufferfin', 'Library', 'NextUp', parentId, user?.Id ],
-        queryFn: async ({ signal }) => {
-            const response = await getShowApi(api!).getNextUp({
-                userId: user!.Id!,
-                parentId,
-                limit: ROW_LIMIT,
-                fields: FIELDS,
-                enableImageTypes: IMAGE_TYPES,
-                imageTypeLimit: 1,
-                enableTotalRecordCount: false
-            }, { signal });
-            return (response.data.Items ?? []) as ItemDto[];
-        },
-        enabled: !!api && !!user?.Id && !!parentId && isEnabled
-    });
-};

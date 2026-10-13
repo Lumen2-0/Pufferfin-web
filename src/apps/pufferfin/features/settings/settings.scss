@@ -642,3 +642,11 @@
         animation: none;
     }
 }
+
+// Profile: what a picture should be, under the card
+
+.pf-settings__hint {
+    margin: -0.5rem 0 1rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.8rem;
+}

@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import {
-    Activity, ArrowDown, ArrowRight, ArrowUp, Ban, BookOpen, Cast as LucideCast, Check as LucideCheck, ChevronDown, CircleAlert,
+    Activity, ArrowDown, ArrowRight, ArrowUp, Ban, BookOpen, Bookmark as LucideBookmark, Camera, Cast as LucideCast, Check as LucideCheck, ChevronDown, CircleAlert,
     CircleCheck, CircleMinus, Clapperboard, Cloud, CloudOff as LucideCloudOff, Compass, Download as LucideDownload, ExternalLink, Globe, HardDrive, Info,
     KeyRound, Languages, Library, ListVideo, Lock as LucideLock, type LucideIcon, Menu as LucideMenu, Mic as LucideMic, Music,
     Network, Play, Puzzle, RefreshCw, RotateCcw, Search as LucideSearch, SlidersHorizontal, Trash2, TriangleAlert,
@@ -39,6 +39,9 @@ export const ArrowDownward = icon(ArrowDown, 'ArrowDownward');
 export const ArrowForward = icon(ArrowRight, 'ArrowForward');
 export const ArrowUpward = icon(ArrowUp, 'ArrowUpward');
 export const Block = icon(Ban, 'Block');
+export const Bookmark = icon(LucideBookmark, 'Bookmark');
+export const BookmarkFilled = icon(LucideBookmark, 'BookmarkFilled', { fill: 'currentColor' });
+export const PhotoCamera = icon(Camera, 'PhotoCamera');
 export const Cast = icon(LucideCast, 'Cast');
 export const CastConnected = icon(LucideCast, 'CastConnected', { fill: 'currentColor', fillOpacity: 0.25 });
 export const Check = icon(LucideCheck, 'Check');

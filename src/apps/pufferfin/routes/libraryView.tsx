@@ -1,5 +1,4 @@
 import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
-import { CollectionType } from '@jellyfin/sdk/lib/generated-client/models/collection-type';
 import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
 import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -11,14 +10,10 @@ import { toLocaleDateString } from 'scripts/datetime';
 import type { ItemDto } from 'types/base/models/item-dto';
 
 import ChoicePicker from '../components/ChoicePicker';
-import MediaRow from '../components/MediaRow';
 import PosterCard from '../components/PosterCard';
 import {
     type LibraryItemsFilter,
-    useLatestInLibrary,
     useLibraryGenres,
-    useLibraryNextUp,
-    useLibraryResume,
     useLibraryStudios,
     useUpcomingEpisodes
 } from '../features/library/api/useLibraryItems';
@@ -37,14 +32,10 @@ import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { getCardImageUrl } from '../utils/images';
-import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage } from '../utils/items';
+import { getDisplayTitle, getEpisodeNumbers } from '../utils/items';
 import { useOpenItem } from '../utils/navigation';
 import { CapsulesSkeleton, GridSkeleton, TilesSkeleton } from '../components/Skeleton';
-import { isPlayableItem } from '../utils/playback';
-import { usePlayItem } from '../utils/usePlay';
 import { ErrorOutline } from '../components/icons';
-
-const getKey = (item: ItemDto) => item.Id ?? '';
 
 const NEWEST_FIRST: LibraryItemsFilter = { sortBy: [ ItemSortBy.DateCreated ] };
 const COLLECTION_TYPES = [ BaseItemKind.BoxSet ];
@@ -54,78 +45,6 @@ interface TabProps {
     view: ItemDto
     itemTypes: BaseItemKind[] | null
 }
-
-/** Rows of a title to resume or to watch next, then the newest titles of the library. */
-const SuggestionsTab: FC<TabProps> = ({ view }) => {
-    const t = useTranslation();
-    const { api } = useApi();
-    const openItem = useOpenItem();
-    const playCard = usePlayItem();
-    const isSeries = view.CollectionType === CollectionType.Tvshows;
-    const resume = useLibraryResume(view.Id ?? undefined);
-    const nextUp = useLibraryNextUp(view.Id ?? undefined, isSeries);
-    const latest = useLatestInLibrary(view);
-
-    const renderCard = useCallback((shape: 'landscape' | 'portrait') => {
-        const CardRenderer = (item: ItemDto) => {
-            const progress = getPlayedPercentage(item);
-            const numbers = getEpisodeNumbers(item);
-            return (
-                <PosterCard
-                    title={getDisplayTitle(item)}
-                    subtitle={numbers ? t('EpisodeNumber', numbers[0], numbers[1]) : undefined}
-                    imageUrl={api ? getCardImageUrl(api, item, shape) : undefined}
-                    shape={shape}
-                    progress={progress}
-                    progressLabel={progress ? t('WatchedPercent', progress) : undefined}
-                    value={item}
-                    onSelect={openItem}
-                    onPlay={isPlayableItem(item) ? playCard : undefined}
-                />
-            );
-        };
-        return CardRenderer;
-    }, [ api, openItem, playCard, t ]);
-
-    const isEmpty = !resume.isPending && !latest.isPending && (!isSeries || !nextUp.isPending)
-        && !resume.data?.length && !latest.data?.length && !nextUp.data?.length
-        && !resume.isError && !latest.isError && !nextUp.isError;
-
-    return (
-        <>
-            <MediaRow
-                title={t('RowContinueWatching')}
-                shape='landscape'
-                items={resume.data}
-                isPending={resume.isPending}
-                isError={resume.isError}
-                getKey={getKey}
-                renderItem={renderCard('landscape')}
-            />
-            {isSeries && (
-                <MediaRow
-                    title={t('RowNextUp')}
-                    shape='landscape'
-                    items={nextUp.data}
-                    isPending={nextUp.isPending}
-                    isError={nextUp.isError}
-                    getKey={getKey}
-                    renderItem={renderCard('landscape')}
-                />
-            )}
-            <MediaRow
-                title={t('RowRecentlyAdded')}
-                shape='portrait'
-                items={latest.data}
-                isPending={latest.isPending}
-                isError={latest.isError}
-                getKey={getKey}
-                renderItem={renderCard('portrait')}
-            />
-            {isEmpty && <p className='pf-library__note'>{t('LibraryNoSuggestions')}</p>}
-        </>
-    );
-};
 
 /**
  * Episodes airing soon, with their air date in words. They are not on disk
@@ -261,8 +180,6 @@ const LibraryTabContent: FC<TabProps & { tab: LibraryTab }> = ({ tab, view, item
     switch (tab) {
         case LibraryTab.All:
             return <LibraryGrid parentId={parentId} itemTypes={itemTypes} emptyKey='LibraryEmpty' />;
-        case LibraryTab.Suggestions:
-            return <SuggestionsTab view={view} itemTypes={itemTypes} />;
         case LibraryTab.Upcoming:
             return <UpcomingTab view={view} itemTypes={itemTypes} />;
         case LibraryTab.Genres:
@@ -278,7 +195,7 @@ const LibraryTabContent: FC<TabProps & { tab: LibraryTab }> = ({ tab, view, item
 };
 
 /**
- * One library of the server: its tabs (All, Suggestions, Genres...), as the
+ * One library of the server: its tabs (All, Genres...), as the
  * upstream library pages offer them, and its titles on disk. No catalog
  * title, no missing badge, no Download button: everything here plays right
  * away, except the announced episodes of Upcoming.

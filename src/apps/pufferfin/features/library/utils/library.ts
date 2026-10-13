@@ -34,21 +34,6 @@ export function getViewItemTypes(collectionType: string | null | undefined): Bas
     }
 }
 
-/**
- * Whether a library gets a "Recently added" row on the library tab, as on the
- * upstream home: not for live TV, collections and playlists, nor for the
- * libraries the user excluded in their home settings.
- */
-export function hasLatestRow(
-    view: { Id?: string | null, CollectionType?: string | null },
-    excludedIds: readonly string[] = []
-): boolean {
-    if (!view.Id || excludedIds.includes(view.Id)) return false;
-    return view.CollectionType !== CollectionType.Livetv
-        && view.CollectionType !== CollectionType.Boxsets
-        && view.CollectionType !== CollectionType.Playlists;
-}
-
 interface LibraryPage {
     items: unknown[]
     startIndex: number

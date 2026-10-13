@@ -15,12 +15,12 @@ export enum DiscoverType {
 /**
  * Rows a Discover screen can show. Discover is for finding something new:
  * catalog rows mix titles on disk and missing ones; the only disk rows are the
- * ones about what is being watched (Continue Watching, Next Up). What the
- * library already holds is the Library tab.
+ * ones about what is being watched (Continue Watching) and the titles the
+ * user put aside (Bookmarks). What the library already holds is the Library tab.
  */
 export enum DiscoverRow {
     ContinueWatching = 'continueWatching',
-    NextUp = 'nextUp',
+    Bookmarks = 'bookmarks',
     RecommendedForYou = 'recommendedForYou',
     TrendingMovies = 'trendingMovies',
     TrendingShows = 'trendingShows',
@@ -65,13 +65,13 @@ export const DISCOVER_TYPE_LABELS: Record<DiscoverType, StringKey> = {
 };
 
 /**
- * The rows above the genre rows: only what is being watched, and live TV.
+ * The rows above the genre rows: only what is being watched, the bookmarks, and live TV.
  * Everything else on Discover is a genre and its variants.
  */
 const ROWS: Record<DiscoverType, DiscoverRow[]> = {
-    [DiscoverType.All]: [ DiscoverRow.ContinueWatching, DiscoverRow.NextUp ],
-    [DiscoverType.Movies]: [ DiscoverRow.ContinueWatching ],
-    [DiscoverType.Series]: [ DiscoverRow.ContinueWatching, DiscoverRow.NextUp ],
+    [DiscoverType.All]: [ DiscoverRow.ContinueWatching, DiscoverRow.Bookmarks ],
+    [DiscoverType.Movies]: [ DiscoverRow.ContinueWatching, DiscoverRow.Bookmarks ],
+    [DiscoverType.Series]: [ DiscoverRow.ContinueWatching, DiscoverRow.Bookmarks ],
     [DiscoverType.TvShows]: [ DiscoverRow.LiveTvOnNow, DiscoverRow.Recordings ],
     [DiscoverType.Documentaries]: [],
     [DiscoverType.Audiobooks]: []

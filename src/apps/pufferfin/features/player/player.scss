@@ -49,9 +49,10 @@
             color var(--pf-duration) var(--pf-ease),
             background-color var(--pf-duration) var(--pf-ease);
 
+        // The icon alone, as the buttons of the controls
         &:hover {
             color: var(--pf-lumen-text);
-            background: var(--pf-lumen-fill);
+            background: transparent;
         }
     }
 
@@ -239,42 +240,57 @@
         content: '/';
     }
 
-    // Buttons: 36px filled circles, as the secondary buttons of Lumen
+    // Buttons: the icon alone, no circle behind it. Slightly dimmed at rest,
+    // full white and a touch larger under the pointer; the keyboard focus
+    // draws a soft ring
 
     .videoOsdBottom .paper-icon-button-light {
         display: inline-flex;
         flex: none;
         align-items: center;
         justify-content: center;
-        // 36px at the base size, as in Lumen; larger on large screens
+        // The hit area stays 36px at the base size, larger on large screens
         width: 2.42rem;
         height: 2.42rem;
-        margin: 0 0.135rem;
+        margin: 0 0.1rem;
         padding: 0;
-        color: var(--pf-lumen-text);
-        background: var(--pf-lumen-fill);
+        color: rgba(250, 250, 250, 0.82);
+        background: transparent;
         border: 0;
-        border-radius: 50%;
-        transition: background-color var(--pf-duration) var(--pf-ease);
+        border-radius: 0.6rem;
+        transition:
+            color var(--pf-duration) var(--pf-ease),
+            transform var(--pf-duration) var(--pf-ease);
     }
 
     .videoOsdBottom .paper-icon-button-light:hover:not(:disabled),
     .videoOsdBottom .paper-icon-button-light:active:not(:disabled) {
-        color: var(--pf-lumen-text);
-        background: var(--pf-lumen-fill-hover);
+        color: #fafafa;
+        background: transparent;
+        transform: scale(1.08);
     }
 
-    .videoOsdBottom .paper-icon-button-light:focus:not(:disabled),
-    .videoOsdBottom .paper-icon-button-light.show-focus:focus {
-        color: var(--pf-lumen-text);
-        background: var(--pf-lumen-fill);
+    .videoOsdBottom .paper-icon-button-light:active:not(:disabled) {
+        transform: scale(0.94);
+    }
+
+    .videoOsdBottom .paper-icon-button-light:focus:not(:disabled) {
+        color: #fafafa;
+        background: transparent;
         box-shadow: none;
     }
 
-    // Icons: lucide drawings, 16px, play and pause 20px
+    .videoOsdBottom .paper-icon-button-light:focus-visible:not(:disabled),
+    .videoOsdBottom .paper-icon-button-light.show-focus:focus:not(:disabled) {
+        color: #fafafa;
+        background: transparent;
+        box-shadow: 0 0 0 2px rgba(250, 250, 250, 0.55);
+    }
+
+    // Icons: lucide drawings, 18px, play and pause 24px
     .videoOsdBottom .material-icons {
-        width: 1rem;
-        height: 1rem;
+        width: 1.15rem;
+        height: 1.15rem;
         font-size: 0;
 
         &::before {
@@ -288,8 +304,8 @@
     }
 
     .videoOsdBottom .btnPause .material-icons {
-        width: 1.25rem;
-        height: 1.25rem;
+        width: 1.5rem;
+        height: 1.5rem;
     }
 
     @each $class, $icon in $pf-player-icon-classes {
@@ -298,12 +314,16 @@
         }
     }
 
-    // Playback on the left, in the order of Lumen; the actions on the right
-    .osdControls .btnPause { order: 1; }
-    .osdControls .btnRewind { order: 2; }
-    .osdControls .btnFastForward { order: 3; }
-    .osdControls .btnPreviousTrack { order: 4; }
-    .osdControls .btnNextTrack { order: 5; }
+    // Playback on the left, in the order of the timeline: previous episode,
+    // back a few seconds, play or pause, ahead a few seconds, next episode.
+    // The actions on the right
+    .osdControls .btnPreviousTrack { order: 1; }
+    .osdControls .btnPreviousChapter { order: 2; }
+    .osdControls .btnRewind { order: 3; }
+    .osdControls .btnPause { order: 4; }
+    .osdControls .btnFastForward { order: 5; }
+    .osdControls .btnNextChapter { order: 6; }
+    .osdControls .btnNextTrack { order: 7; }
     .osdControls .btnRecord { order: 11; }
     .osdControls .btnUserRating { order: 12; }
     .osdControls .btnSubtitles { order: 13; }

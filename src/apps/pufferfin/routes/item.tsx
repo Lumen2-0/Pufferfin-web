@@ -19,7 +19,10 @@ import { useCanRequest } from '../features/requests/api/useCanRequest';
 import { useMergedSeasons } from '../features/series/api/useMergedSeasons';
 import SeasonDownloads from '../features/series/components/SeasonDownloads';
 import SeriesEpisodes from '../features/series/components/SeriesEpisodes';
-import { getLetterboxdUrl, TextLink } from '../components/TextAction';
+import { CatalogItemKind } from '../features/catalog/api/types';
+import type { Bookmark } from '../features/bookmarks/bookmarks';
+import BookmarkButton from '../features/bookmarks/BookmarkButton';
+import ReviewLink from '../features/reviews/ReviewLink';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
@@ -115,6 +118,23 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
             .filter((value, index, values) => values.indexOf(value) === index);
     }, [ item, t ]);
 
+    // A film or a series known to TMDB can be bookmarked, like the same title in the catalog
+    const bookmark = useMemo<Bookmark | undefined>(() => {
+        const bookmarkTmdbId = Number(item?.ProviderIds?.Tmdb);
+        if (!item || !bookmarkTmdbId) return undefined;
+        let kind: CatalogItemKind.Movie | CatalogItemKind.Series | undefined;
+        if (item.Type === ItemKind.Movie) kind = CatalogItemKind.Movie;
+        else if (item.Type === ItemKind.Series) kind = CatalogItemKind.Series;
+        if (!kind) return undefined;
+        return {
+            kind,
+            tmdbId: bookmarkTmdbId,
+            title: getDisplayTitle(item),
+            year: item.ProductionYear,
+            posterUrl: api ? getCardImageUrl(api, item, 'portrait') : undefined
+        };
+    }, [ api, item ]);
+
     const cast = useMemo(
         () => (item?.People ?? []).filter(person => person.Type === PersonKind.Actor).slice(0, CAST_LIMIT),
         [ item ]
@@ -196,6 +216,7 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                             value={playTarget}
                             onClick={playIfAny}
                         />
+                        {bookmark && <BookmarkButton bookmark={bookmark} />}
                         {canRequestEpisodes && tmdbId && mergedSeasons && (
                             <SeasonDownloads
                                 seriesTmdbId={tmdbId}
@@ -213,7 +234,14 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                                 onClick={playTrailers}
                             />
                         )}
-                        {movieTmdbId && <TextLink href={getLetterboxdUrl(movieTmdbId)}>{t('SeeOnLetterboxd')}</TextLink>}
+                        {(item.Type === ItemKind.Movie || item.Type === ItemKind.Series) && (
+                            <ReviewLink
+                                title={getDisplayTitle(item)}
+                                year={item.ProductionYear}
+                                isMovie={item.Type === ItemKind.Movie}
+                                tmdbId={movieTmdbId}
+                            />
+                        )}
                     </>
                 }
             />

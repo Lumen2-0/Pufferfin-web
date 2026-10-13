@@ -17,6 +17,7 @@ vi.mock('../features/audiobooks/components/AudiobookSheet', () => ({ default: ()
 vi.mock('../components/CatalogCard', () => ({ default: () => null }));
 vi.mock('../features/requests/api/useRequests', () => ({ useMyRequests: () => ({ data: [], isPending: false, dataUpdatedAt: 0 }) }));
 vi.mock('../features/requests/api/useCanRequest', () => ({ useCanRequest: () => ({ canRequest: true, isSettled: true }) }));
+vi.mock('../utils/userPreference', () => ({ useUserPreference: () => [ null, () => undefined ] }));
 vi.mock('lib/globalize', () => ({ default: { getCurrentLocale: () => 'en-us' } }));
 
 const catalogTitle = vi.fn<() => { data?: CatalogTitleDetails, isPending: boolean, isError: boolean, error: null }>();

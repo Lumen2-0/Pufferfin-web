@@ -39,7 +39,8 @@ import {
     TV_SHOW_TYPES
 } from '../features/discover/utils/discover';
 import { pickThemeRows } from '../features/discover/utils/themes';
-import { useNextUpItems, useResumeItems } from '../features/home/api/useHomeRows';
+import BookmarksRow from '../features/bookmarks/BookmarksRow';
+import { useDismissResume, useResumeItems } from '../features/home/api/useHomeRows';
 import DownloadsRow from '../features/requests/components/DownloadsRow';
 import type { StringKey } from '../i18n/translate';
 import { useTranslation } from '../i18n/useTranslation';
@@ -111,10 +112,38 @@ interface RowProps {
     type: DiscoverType
 }
 
+/** What is being watched; each card has a cross to stop watching it. */
 const ContinueWatchingRow: FC<RowProps> = ({ type }) => {
     const t = useTranslation();
-    const { renderCard } = useCardRenderers();
+    const { api } = useApi();
+    const openItem = useOpenItem();
+    const playCard = usePlayItem();
+    const { getEpisodeLabel } = useCardRenderers();
     const resume = useResumeItems(getDiskItemTypes(type));
+    const dismiss = useDismissResume();
+    const onDismiss = useCallback((item: ItemDto) => {
+        if (item.Id) dismiss.mutate(item.Id);
+    }, [ dismiss ]);
+
+    const renderItem = useCallback((item: ItemDto) => {
+        const progress = getPlayedPercentage(item);
+        return (
+            <PosterCard
+                title={getDisplayTitle(item)}
+                subtitle={getEpisodeLabel(item)}
+                imageUrl={api ? getCardImageUrl(api, item, 'landscape') : undefined}
+                shape='landscape'
+                progress={progress}
+                progressLabel={progress ? t('WatchedPercent', progress) : undefined}
+                value={item}
+                onSelect={openItem}
+                onPlay={isPlayableItem(item) ? playCard : undefined}
+                onDismiss={onDismiss}
+                dismissLabel={t('ActionStopWatching')}
+            />
+        );
+    }, [ api, getEpisodeLabel, onDismiss, openItem, playCard, t ]);
+
     return (
         <MediaRow
             title={t('RowContinueWatching')}
@@ -123,26 +152,15 @@ const ContinueWatchingRow: FC<RowProps> = ({ type }) => {
             isPending={resume.isPending}
             isError={resume.isError}
             getKey={getKey}
-            renderItem={renderCard('landscape')}
+            renderItem={renderItem}
         />
     );
 };
 
-const NextUpRow: FC = () => {
-    const t = useTranslation();
-    const { renderCard } = useCardRenderers();
-    const nextUp = useNextUpItems();
-    return (
-        <MediaRow
-            title={t('RowNextUp')}
-            shape='landscape'
-            items={nextUp.data}
-            isPending={nextUp.isPending}
-            isError={nextUp.isError}
-            getKey={getKey}
-            renderItem={renderCard('landscape')}
-        />
-    );
+const getBookmarkKind = (type: DiscoverType) => {
+    if (type === DiscoverType.Movies) return CatalogItemKind.Movie;
+    if (type === DiscoverType.Series) return CatalogItemKind.Series;
+    return undefined;
 };
 
 const RecommendedRow: FC = () => {
@@ -267,8 +285,8 @@ const DiscoverRowView: FC<RowProps> = ({ row, type }) => {
     switch (row) {
         case DiscoverRow.ContinueWatching:
             return <ContinueWatchingRow row={row} type={type} />;
-        case DiscoverRow.NextUp:
-            return <NextUpRow />;
+        case DiscoverRow.Bookmarks:
+            return <BookmarksRow kind={getBookmarkKind(type)} />;
         case DiscoverRow.RecommendedForYou:
             return <RecommendedRow />;
         case DiscoverRow.TrendingMovies:

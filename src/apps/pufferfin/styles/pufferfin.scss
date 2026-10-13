@@ -1476,6 +1476,16 @@ body,
     padding: 0.5rem var(--pf-gutter) 0;
 }
 
+// The library tab: below what is being watched, the libraries as choices and every title of the chosen one
+
+.pf-library__all {
+    margin-top: var(--pf-row-gap);
+}
+
+.pf-library__all > .pf-choices {
+    margin-bottom: 1.25rem;
+}
+
 // Menu: sections of round buttons, wrapping on narrow screens
 
 .pf-menu__section + .pf-menu__section {
@@ -1956,15 +1966,58 @@ body,
     }
 }
 
+// Stop watching: a small dark cross at the top right of the art
+.pf-card-play__dismiss {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    color: var(--pf-color-text);
+    font-size: 0.95rem;
+    background: rgba(10, 10, 10, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    opacity: 0;
+    transition:
+        opacity var(--pf-duration) var(--pf-ease),
+        background-color var(--pf-duration) var(--pf-ease);
+    pointer-events: auto;
+    backdrop-filter: blur(6px);
+
+    &:hover {
+        background: rgba(38, 38, 38, 0.95);
+    }
+
+    &:focus-visible {
+        opacity: 1;
+        box-shadow: 0 0 0 2px var(--pf-color-text);
+    }
+
+    [dir='rtl'] & {
+        right: auto;
+        left: 0.45rem;
+    }
+}
+
 .pf-card-play:hover .pf-card-play__button,
-.pf-card-play:focus-within .pf-card-play__button {
+.pf-card-play:focus-within .pf-card-play__button,
+.pf-card-play:hover .pf-card-play__dismiss,
+.pf-card-play:focus-within .pf-card-play__dismiss {
     opacity: 1;
     transform: none;
 }
 
-// No pointer to hover with: the Play stays in view
+// No pointer to hover with: the Play and the cross stay in view
 @media (hover: none) {
-    .pf-card-play__button {
+    .pf-card-play__button,
+    .pf-card-play__dismiss {
         opacity: 1;
         transform: none;
     }
