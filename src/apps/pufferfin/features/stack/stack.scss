@@ -1,0 +1,48 @@
+// "Stack arr" in the account menu: a toggle that unfolds the management pages, indented under it
+
+.pf-stack__toggle,
+.pf-stack__link {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    text-decoration: none;
+}
+
+.pf-stack__label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-stack__icon,
+.pf-stack__chevron,
+.pf-stack__external {
+    flex: none;
+}
+
+.pf-stack__chevron {
+    color: var(--pf-color-text-secondary);
+    transition: transform 0.2s ease;
+}
+
+.pf-stack__chevron--open {
+    transform: rotate(180deg);
+}
+
+.pf-stack__list {
+    margin: 0.125rem 0 0.25rem;
+    padding: 0 0 0 1.5rem;
+    list-style: none;
+}
+
+.pf-stack__external {
+    color: var(--pf-color-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-stack__chevron {
+        transition: none;
+    }
+}

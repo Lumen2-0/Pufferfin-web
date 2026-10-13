@@ -8,12 +8,14 @@ import { useQuickConnectEnabled } from 'hooks/useQuickConnect';
 import shell from 'scripts/shell';
 import Dashboard from 'utils/dashboard';
 
+import { openContentManager } from '../contentManager/store';
 import { getAvatarUrl } from '../settings/api';
 import { openSettings } from '../settings/store';
 import { getAccountEntries, getAdminEntries, type MenuActionId, type MenuEntry } from './utils/menu';
 
 const MENU_ACTIONS: Record<MenuActionId, () => void> = {
     settings: () => openSettings(),
+    contentManager: () => openContentManager(),
     downloadManager: () => shell.openDownloadManager(),
     clientSettings: () => shell.openClientSettings(),
     selectServer: () => Dashboard.selectServer(),

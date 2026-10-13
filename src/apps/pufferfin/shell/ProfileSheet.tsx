@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from '../i18n/useTranslation';
 import { useMenuEntries } from '../features/menu/useMenuEntries';
 import type { MenuEntry } from '../features/menu/utils/menu';
+import StackLinksMenu from '../features/stack/StackLinksMenu';
 import { useIsSyncPlayOpen } from '../features/syncplay/SyncPlayModal';
 import { FOCUSABLE_ATTRIBUTE, focusElement } from '../navigation/focus';
 import CastButton from './CastButton';
@@ -108,6 +109,7 @@ const ProfileSheet: FC<ProfileSheetProps> = ({ isOpen, onClose }) => {
                             {adminEntries.map(entry => (
                                 <SheetItem key={entry.id} entry={entry} onChoose={onChoose} />
                             ))}
+                            <StackLinksMenu variant='sheet' onOpen={onClose} />
                         </ul>
                     </>
                 )}

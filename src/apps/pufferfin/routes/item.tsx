@@ -29,6 +29,7 @@ import { useCatalogCast } from '../features/details/api/useCatalogCast';
 import CatalogCastRow from '../features/details/components/CatalogCastRow';
 import type { Bookmark } from '../features/bookmarks/bookmarks';
 import BookmarkButton from '../features/bookmarks/BookmarkButton';
+import DownloadFileLink from '../features/fileDownload/DownloadFileLink';
 import ReviewLink from '../features/reviews/ReviewLink';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
@@ -331,6 +332,7 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                         {isMovie && <WatchedButton item={item} />}
                         {isMovie && <TemporaryNotice tmdbId={Number(item.ProviderIds?.Tmdb) || undefined} />}
                         {bookmark && <BookmarkButton bookmark={bookmark} withLabel />}
+                        {isMovie && <DownloadFileLink item={item} />}
                         {(isMovie || item.Type === ItemKind.Series) && (
                             <ReviewLink
                                 title={getDisplayTitle(item)}

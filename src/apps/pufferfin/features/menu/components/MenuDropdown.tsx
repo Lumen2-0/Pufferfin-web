@@ -7,6 +7,7 @@ import { FOCUSABLE_ATTRIBUTE, focusElement } from '../../../navigation/focus';
 import { useMenuEntries } from '../useMenuEntries';
 import type { MenuEntry } from '../utils/menu';
 import { Menu as MenuIcon } from '../../../components/icons';
+import StackLinksMenu from '../../stack/StackLinksMenu';
 
 const MenuItem: FC<{ entry: MenuEntry, onChoose: (entry: MenuEntry) => void }> = ({ entry, onChoose }) => {
     const t = useTranslation();
@@ -46,6 +47,8 @@ const MenuDropdown: FC = () => {
         if (restoreFocus && buttonRef.current) focusElement(buttonRef.current);
     }, []);
     const toggle = useCallback(() => setIsOpen(value => !value), []);
+    // A page of the stack opens in a new tab: the menu simply closes
+    const closeAfterLink = useCallback(() => setIsOpen(false), []);
 
     // Another screen closes it
     useEffect(() => setIsOpen(false), [ pathname ]);
@@ -115,6 +118,7 @@ const MenuDropdown: FC = () => {
                             <p className='pf-dropdown__label'>{t('MenuAdministration')}</p>
                             <ul className='pf-dropdown__list' role='none'>
                                 {adminEntries.map(entry => <MenuItem key={entry.id} entry={entry} onChoose={onChoose} />)}
+                                <StackLinksMenu variant='dropdown' onOpen={closeAfterLink} />
                             </ul>
                         </>
                     )}

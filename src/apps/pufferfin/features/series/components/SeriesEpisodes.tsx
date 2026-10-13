@@ -22,6 +22,7 @@ import { useNow } from '../../requests/utils/useNow';
 import { findEpisodeRequest, getDefaultSeasonNumber, getEpisodeKey } from '../utils/episodes';
 import EpisodeCard, { type EpisodeAction, useLibraryImageUrl } from './EpisodeCard';
 import { ErrorOutline } from '../../../components/icons';
+import DownloadFileLink from '../../fileDownload/DownloadFileLink';
 
 interface SeriesEpisodesProps {
     seriesTmdbId: number
@@ -132,18 +133,25 @@ const SeriesEpisodes: FC<SeriesEpisodesProps> = ({ seriesTmdbId, seasons, series
         return episodes.filter(episode => !!episode.LocalItemId && !!libraryById.get(episode.LocalItemId)?.UserData?.Played).length;
     }, [ episodes, libraryById, libraryEpisodes.data, seriesItemId ]);
 
-    const renderEpisode = useCallback((episode: CatalogEpisode) => (
-        <EpisodeCard
-            isCurrent={!!currentEpisodeItemId && episode.LocalItemId === currentEpisodeItemId}
-            episode={episode}
-            libraryItem={episode.LocalItemId ? libraryById.get(episode.LocalItemId) : undefined}
-            request={findEpisodeRequest(requests.data, seriesTmdbId, episode)}
-            isStale={isStale}
-            canRequest={canRequest}
-            onSelect={onEpisodeSelect}
-            getLibraryImageUrl={getLibraryImageUrl}
-        />
-    ), [ canRequest, currentEpisodeItemId, getLibraryImageUrl, isStale, libraryById, onEpisodeSelect, requests.data, seriesTmdbId ]);
+    const renderEpisode = useCallback((episode: CatalogEpisode) => {
+        const libraryItem = episode.LocalItemId ? libraryById.get(episode.LocalItemId) : undefined;
+        return (
+            <>
+                <EpisodeCard
+                    isCurrent={!!currentEpisodeItemId && episode.LocalItemId === currentEpisodeItemId}
+                    episode={episode}
+                    libraryItem={libraryItem}
+                    request={findEpisodeRequest(requests.data, seriesTmdbId, episode)}
+                    isStale={isStale}
+                    canRequest={canRequest}
+                    onSelect={onEpisodeSelect}
+                    getLibraryImageUrl={getLibraryImageUrl}
+                />
+                {/* Beside the card, never inside it: a link cannot sit in the button of the card */}
+                {libraryItem && <DownloadFileLink item={libraryItem} compact />}
+            </>
+        );
+    }, [ canRequest, currentEpisodeItemId, getLibraryImageUrl, isStale, libraryById, onEpisodeSelect, requests.data, seriesTmdbId ]);
 
     if (!seasons.length) return null;
 

@@ -37,6 +37,7 @@ import { parseReviewSite, ReviewSite } from '../reviews/reviewSite';
 import { closeSettings, openSettings, SETTINGS_SECTIONS, SettingsSection, useOpenSettingsSection } from './store';
 
 import './settings.scss';
+import { useContentDownload } from '../fileDownload/DownloadFileLink';
 
 const SECTION_LABELS: Record<SettingsSection, StringKey> = {
     [SettingsSection.Profile]: 'SettingsSectionProfile',
@@ -394,6 +395,17 @@ const PreferencesSection: FC = () => {
     );
 };
 
+/** Under the genres: whether every title on disk shows a link to download its file. */
+const ContentDownloadRow: FC = () => {
+    const t = useTranslation();
+    const [ isEnabled, setEnabled ] = useContentDownload();
+    return (
+        <SettingRow label={t('PreferencesContentDownload')} description={t('PreferencesContentDownloadHint')}>
+            <Switch checked={isEnabled} onChange={setEnabled} label={t('PreferencesContentDownload')} />
+        </SettingRow>
+    );
+};
+
 const InterfaceSection: FC = () => {
     const t = useTranslation();
     const { data: options } = useInterfaceLanguages();
@@ -516,7 +528,12 @@ const SettingsPanel: FC<{ section: SettingsSection }> = ({ section }) => {
                 content = <ProfileSection me={me} />;
                 break;
             case SettingsSection.Preferences:
-                content = <PreferencesSection />;
+                content = (
+                    <>
+                        <PreferencesSection />
+                        <ContentDownloadRow />
+                    </>
+                );
                 break;
             case SettingsSection.Playback:
                 content = <PlaybackSection me={me} save={save} />;

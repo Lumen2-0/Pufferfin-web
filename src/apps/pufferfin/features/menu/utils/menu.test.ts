@@ -39,6 +39,6 @@ describe('Pufferfin: menu', () => {
 
     it('shows the administration entries to administrators only', () => {
         expect(getAdminEntries(BROWSER_USER)).toEqual([]);
-        expect(ids(getAdminEntries({ ...BROWSER_USER, isAdministrator: true }))).toEqual([ 'dashboard', 'metadata' ]);
+        expect(ids(getAdminEntries({ ...BROWSER_USER, isAdministrator: true }))).toEqual([ 'dashboard', 'metadata', 'contentManager' ]);
     });
 });

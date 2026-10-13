@@ -16,6 +16,7 @@ import { getCoverUrl } from '../utils/images';
 import { getPlayedPercentage, getRuntime, isResumable } from '../utils/items';
 import { getStartPart, playAudiobookParts } from '../utils/playback';
 import { Check, ErrorOutline, PlayArrow } from '../components/icons';
+import DownloadFileLink from '../features/fileDownload/DownloadFileLink';
 
 const COVER_WIDTH = 800;
 
@@ -147,6 +148,8 @@ export const AudiobookDetails: FC<{ itemId: string }> = ({ itemId }) => {
                             label={playLabel}
                             onClick={onPlayBook}
                         />
+                        {/* A book in one file downloads as that file; a book in parts has no one file to give */}
+                        {parts.length === 1 && <DownloadFileLink item={parts[0]} />}
                     </div>
                     {book.Overview && <p className='pf-album__overview'>{book.Overview}</p>}
                 </div>

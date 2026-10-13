@@ -7,6 +7,7 @@ import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import MenuDropdown from '../features/menu/components/MenuDropdown';
 import Spotlight from '../features/search/spotlight/Spotlight';
+import ContentManagerModal from '../features/contentManager/ContentManagerModal';
 import SettingsModal from '../features/settings/SettingsModal';
 import { openSpotlight, useIsSpotlightOpen } from '../features/search/spotlight/store';
 import { getDownloadsPath, getHomePath, getLibraryPath } from '../routes/paths';
@@ -44,6 +45,7 @@ const AppNav: FC = () => {
                 <BottomBar hasDownloads={hasDownloads} />
                 <Spotlight />
                 <SettingsModal />
+                <ContentManagerModal />
             </>
         );
     }
@@ -91,6 +93,7 @@ const AppNav: FC = () => {
             </span>
             <Spotlight />
             <SettingsModal />
+            <ContentManagerModal />
         </nav>
     );
 };

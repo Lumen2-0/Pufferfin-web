@@ -17,7 +17,7 @@ export interface MenuAction {
 
 export type MenuEntry = MenuLink | MenuAction;
 
-export type MenuActionId = 'settings' | 'downloadManager' | 'clientSettings' | 'selectServer' | 'signOut' | 'exitApp';
+export type MenuActionId = 'settings' | 'contentManager' | 'downloadManager' | 'clientSettings' | 'selectServer' | 'signOut' | 'exitApp';
 
 export interface MenuContext {
     userId?: string
@@ -61,6 +61,8 @@ export function getAdminEntries(context: MenuContext): MenuEntry[] {
     if (!context.isAdministrator) return [];
     return [
         { kind: 'link', id: 'dashboard', labelKey: 'MenuDashboard', path: '/dashboard' },
-        { kind: 'link', id: 'metadata', labelKey: 'MenuMetadataManager', path: '/metadata' }
+        { kind: 'link', id: 'metadata', labelKey: 'MenuMetadataManager', path: '/metadata' },
+        // Every title on disk with its torrents, deleted now or seven days later
+        { kind: 'action', id: 'contentManager', labelKey: 'MenuContentManager' }
     ];
 }
