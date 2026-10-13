@@ -1,4 +1,5 @@
 import React, { type FC, useCallback, useMemo, useRef } from 'react';
+import { CollectionType } from '@jellyfin/sdk/lib/generated-client/models/collection-type';
 import { useSearchParams } from 'react-router-dom';
 
 import { useUserViews } from 'hooks/api/useUserViews';
@@ -28,6 +29,13 @@ const getKey = (item: ItemDto) => item.Id ?? '';
 
 /** The chosen library of the page, kept in the address so Back from a title returns to it. */
 const LIBRARY_PARAM = 'library';
+
+/** Films first, then series, then the other libraries in the order of the server. */
+const LIBRARY_ORDER: (string | null | undefined)[] = [ CollectionType.Movies, CollectionType.Tvshows ];
+const getLibraryRank = (view: ItemDto) => {
+    const rank = LIBRARY_ORDER.indexOf(view.CollectionType);
+    return rank === -1 ? LIBRARY_ORDER.length : rank;
+};
 
 /** Authors of a book, under its cover. */
 const getBookAuthors = (item: ItemDto) => (isAudiobookEntry(item) ? item.AlbumArtist ?? undefined : undefined);
@@ -85,7 +93,10 @@ export const Component = () => {
 
     // The libraries Pufferfin shows a grid for; live TV keeps its upstream page
     const libraries = useMemo(
-        () => ((views.data?.Items ?? []) as ItemDto[]).filter(view => !!view.Id && getViewItemTypes(view.CollectionType) !== null),
+        () => ((views.data?.Items ?? []) as ItemDto[])
+            .filter(view => !!view.Id && getViewItemTypes(view.CollectionType) !== null)
+            // A stable sort: the libraries of the same rank keep the order of the server
+            .sort((a, b) => getLibraryRank(a) - getLibraryRank(b)),
         [ views.data ]
     );
     const options = useMemo(
