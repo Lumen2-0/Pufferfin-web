@@ -1,0 +1,731 @@
+// The sheet of a film or a series: the art over the top of the page, the text
+// and the actions at its bottom, then the sections, each under a thin rule.
+// The main button is a white pill that opens, under the pointer or the focus,
+// into a card of what it plays.
+
+$pf-sheet-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+$pf-sheet-soft: rgba(245, 242, 236, 0.84);
+$pf-sheet-rule: rgba(245, 242, 236, 0.12);
+
+.pf-hero--sheet {
+    .pf-hero__frame {
+        height: auto;
+        min-height: clamp(30rem, 84vh, 46.25rem);
+    }
+
+    .pf-hero__backdrop {
+        object-position: center 30%;
+    }
+
+    .pf-hero__veil {
+        background: linear-gradient(to top, #000 4%, rgba(0, 0, 0, 0.55) 40%, rgba(0, 0, 0, 0) 70%);
+    }
+
+    .pf-hero__content {
+        width: 100%;
+        max-width: calc(53.75rem + 2 * var(--pf-gutter));
+        padding: calc(var(--pf-nav-height) + 2rem) var(--pf-gutter) 2.5rem;
+    }
+
+    .pf-hero__title {
+        font-size: clamp(2.25rem, 4vw, 3.5rem);
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
+
+    .pf-hero__meta {
+        margin-top: 0.875rem;
+    }
+
+    .pf-meta {
+        color: var(--pf-color-text);
+        font-size: 1rem;
+    }
+
+    .pf-meta__item + .pf-meta__item::before {
+        margin: 0 0.625rem;
+        color: var(--pf-color-text-secondary);
+    }
+
+    .pf-hero__credit {
+        margin-top: 0.875rem;
+        color: $pf-sheet-soft;
+        font-size: 0.9375rem;
+    }
+
+    .pf-hero__overview {
+        margin-top: 0.875rem;
+        color: $pf-sheet-soft;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+    }
+
+    .pf-hero__actions {
+        align-items: center;
+        margin-top: 1.25rem;
+    }
+
+    // Every action the same height as the main pill, a dark glass under a light hairline
+    .pf-hero__actions .pf-button,
+    .pf-hero__actions .pf-download-tag {
+        margin: 0 0.75rem 0.75rem 0;
+    }
+
+    .pf-hero__actions .pf-button {
+        min-height: 3rem;
+        padding: 0 1.25rem 0 1rem;
+        font-size: 0.9375rem;
+    }
+
+    .pf-hero__actions .pf-button--icon {
+        width: 3rem;
+        padding: 0;
+    }
+
+    .pf-hero__actions .pf-button--quiet {
+        background: rgba(0, 0, 0, 0.4);
+        border-color: rgba(245, 242, 236, 0.3);
+        transition: border-color 0.2s ease;
+
+        &:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(245, 242, 236, 0.5);
+        }
+    }
+
+    .pf-hero__actions .pf-button__icon svg {
+        font-size: 1.125rem;
+    }
+
+    .pf-hero__actions .pf-button__icon + .pf-button__label {
+        margin-left: 0.5rem;
+
+        [dir='rtl'] & {
+            margin-right: 0.5rem;
+            margin-left: 0;
+        }
+    }
+
+    .pf-hero__actions .pf-text-action {
+        min-height: 2.75rem;
+        margin: 0 0.75rem 0.75rem 0;
+        padding: 0 0.5rem;
+        color: $pf-sheet-soft;
+
+        &:hover,
+        &:focus-visible {
+            color: var(--pf-color-text);
+        }
+    }
+}
+
+// The versions of a film: small outlined tags, readable before playing
+
+.pf-hero__tags {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0.875rem 0 -0.5rem;
+    padding: 0;
+    list-style: none;
+}
+
+.pf-hero__tag {
+    margin: 0 0.5rem 0.5rem 0;
+    padding: 0.1875rem 0.5625rem;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(245, 242, 236, 0.28);
+    border-radius: 6px;
+
+    [dir='rtl'] & {
+        margin: 0 0 0.5rem 0.5rem;
+    }
+}
+
+.pf-sheet-icon {
+    display: block;
+    flex: none;
+}
+
+// Resume: the pill keeps its place in the row; the button floats over it and
+// grows up and to the right into the card
+
+.pf-resume {
+    position: relative;
+    display: inline-block;
+    flex: none;
+    height: 3rem;
+    margin: 0 0.75rem 0.75rem 0;
+    vertical-align: top;
+
+    [dir='rtl'] & {
+        margin: 0 0 0.75rem 0.75rem;
+    }
+}
+
+.pf-resume__label {
+    display: flex;
+    align-items: center;
+    height: 3rem;
+    padding: 0 1.5rem 0 1.125rem;
+    font-weight: 700;
+    font-size: 0.9375rem;
+    white-space: nowrap;
+}
+
+.pf-resume__sizer {
+    visibility: hidden;
+}
+
+.pf-resume__icon {
+    display: inline-flex;
+    margin-right: 0.5rem;
+    font-size: 1.125rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.5rem;
+    }
+}
+
+.pf-resume__button {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 6;
+    display: block;
+    width: 100%;
+    max-width: calc(100vw - 2 * var(--pf-gutter));
+    height: 3rem;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    color: var(--pf-color-on-accent);
+    font: inherit;
+    text-align: left;
+    background: var(--pf-color-accent);
+    border: 0;
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+    transition:
+        width 0.32s $pf-sheet-ease,
+        height 0.32s $pf-sheet-ease,
+        border-radius 0.32s ease,
+        box-shadow 0.32s ease;
+
+    .pf-resume__label {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    &:disabled {
+        cursor: default;
+        opacity: 0.4;
+    }
+
+    [dir='rtl'] & {
+        right: 0;
+        left: auto;
+        text-align: right;
+    }
+}
+
+.pf-resume__card {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    width: 27.5rem;
+    max-width: calc(100vw - 2 * var(--pf-gutter));
+    padding: 0.625rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+
+    [dir='rtl'] & {
+        right: 0;
+        left: auto;
+    }
+}
+
+.pf-resume__thumb {
+    position: relative;
+    flex: none;
+    width: 9.75rem;
+    height: 5.5rem;
+    margin-right: 1rem;
+    overflow: hidden;
+    background: #141414;
+    border-radius: 12px;
+
+    img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 1rem;
+    }
+}
+
+.pf-resume__track {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 999px;
+}
+
+.pf-resume__fill {
+    display: block;
+    height: 100%;
+    background: #000;
+    border-radius: 999px;
+}
+
+.pf-resume__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pf-resume__kicker {
+    color: rgba(0, 0, 0, 0.62);
+    font-weight: 700;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.pf-resume__title {
+    display: -webkit-box;
+    margin: 0.1875rem 0;
+    overflow: hidden;
+    font-weight: 700;
+    font-size: 1.0625rem;
+    line-height: 1.2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.pf-resume__detail {
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 0.8125rem;
+}
+
+@mixin pf-resume-open {
+    width: 27.5rem;
+    height: 6.75rem;
+    border-radius: 1.375rem;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+
+    .pf-resume__label {
+        opacity: 0;
+    }
+
+    .pf-resume__card {
+        opacity: 1;
+        transition-delay: 0.1s;
+    }
+}
+
+// Only a pointer that can hover opens it: a finger just plays
+@media (hover: hover) {
+    .pf-resume--card:hover .pf-resume__button:not(:disabled) {
+        @include pf-resume-open;
+    }
+}
+
+.pf-resume--card .pf-resume__button:not(:disabled):focus-visible {
+    @include pf-resume-open;
+}
+
+// On a TV the remote moves the focus: it opens, with the ring
+:root.layout-tv .pf-resume--card .pf-resume__button:not(:disabled):focus {
+    @include pf-resume-open;
+}
+
+:root.layout-tv .pf-resume__button:focus {
+    box-shadow: var(--pf-focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-resume__button,
+    .pf-resume__button .pf-resume__label,
+    .pf-resume__card {
+        transition: none;
+    }
+}
+
+// Sections of a sheet: each under a thin centered rule
+
+.pf-hero--sheet + .pf-details__sections {
+    > section {
+        margin-top: 2.5rem;
+    }
+
+    > section:first-child {
+        margin-top: 0;
+    }
+
+    > section::before {
+        display: block;
+        width: min(56.25rem, calc(100% - 2 * var(--pf-gutter)));
+        height: 1px;
+        margin: 0 auto 2.5rem;
+        background: $pf-sheet-rule;
+        content: '';
+    }
+
+    // The about section sits inside the margins: its rule spans its own width
+    > .pf-about::before {
+        width: min(56.25rem, 100%);
+    }
+
+    .pf-row__title {
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .pf-person,
+    .pf-person__portrait {
+        width: 7.375rem;
+    }
+
+    .pf-person__portrait {
+        height: 7.375rem;
+    }
+
+    .pf-person__name,
+    .pf-person__role {
+        font-size: 0.8125rem;
+    }
+}
+
+// Episodes of a season: chips for the seasons, then a grid of wide cards
+
+.pf-episodes {
+    .pf-choices .pf-button {
+        min-height: 2.75rem;
+        margin: 0 0.625rem 0.625rem 0;
+        padding: 0 1.25rem;
+        font-weight: 500;
+        font-size: 0.9375rem;
+    }
+
+    .pf-choices .pf-button--selected {
+        font-weight: 600;
+    }
+}
+
+.pf-episodes__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    margin-top: 0.625rem;
+    padding: 0 var(--pf-gutter);
+}
+
+.pf-episodes__title {
+    margin: 0 1rem 0 0;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+
+    [dir='rtl'] & {
+        margin: 0 0 0 1rem;
+    }
+}
+
+.pf-episodes__count {
+    color: var(--pf-color-text-secondary);
+    font-size: 0.875rem;
+}
+
+.pf-episodes__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(17.5rem, 100%), 1fr));
+    gap: 1.75rem 1.5rem;
+    margin: 1.25rem 0 0;
+    padding: 0 var(--pf-gutter);
+    list-style: none;
+
+    > li {
+        min-width: 0;
+    }
+
+    .pf-card--landscape {
+        width: auto;
+    }
+}
+
+.pf-episodes__more {
+    display: flex;
+    width: max-content;
+    min-height: 2.75rem;
+    margin: 1.75rem auto 0;
+    padding: 0 1.75rem;
+    font-size: 0.9375rem;
+}
+
+.pf-episode {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-color-text);
+    font: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    scroll-margin: 2rem;
+
+    [dir='rtl'] & {
+        text-align: right;
+    }
+}
+
+.pf-episode--static {
+    cursor: default;
+}
+
+.pf-episode__inner {
+    display: block;
+}
+
+.pf-episode__art {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background: var(--pf-color-surface);
+    border-radius: 12px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+
+    // Ratio box through padding: aspect-ratio is missing on older TV engines
+    &::before {
+        display: block;
+        padding-top: 56.25%;
+        content: '';
+    }
+}
+
+.pf-episode__image,
+.pf-episode__placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.pf-episode__image {
+    display: block;
+    object-fit: cover;
+}
+
+.pf-episode__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    text-align: center;
+}
+
+.pf-episode--watched .pf-episode__image {
+    opacity: 0.55;
+}
+
+.pf-episode--current .pf-episode__art {
+    box-shadow: 0 0 0 2px var(--pf-color-accent);
+}
+
+.pf-episode__number {
+    position: absolute;
+    top: 0.625rem;
+    left: 0.625rem;
+    padding: 0.1875rem 0.5625rem;
+    font-weight: 700;
+    font-size: 0.75rem;
+    background: rgba(0, 0, 0, 0.72);
+    border-radius: 999px;
+}
+
+.pf-episode__seen {
+    position: absolute;
+    top: 0.625rem;
+    right: 0.625rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    font-size: 0.875rem;
+    background: rgba(0, 0, 0, 0.72);
+    border-radius: 999px;
+}
+
+.pf-episode__badge {
+    position: absolute;
+    bottom: 0.625rem;
+    left: 0.625rem;
+    display: flex;
+    align-items: center;
+    max-width: calc(100% - 1.25rem);
+    padding: 0.2rem 0.6rem 0.2rem 0.4rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    background: rgba(0, 0, 0, 0.72);
+    border-radius: 999px;
+}
+
+.pf-episode__badge-icon {
+    display: flex;
+    margin-right: 0.3rem;
+    font-size: 1rem;
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.3rem;
+    }
+}
+
+.pf-episode__badge-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pf-episode__progress {
+    position: absolute;
+    right: 0.625rem;
+    bottom: 0.625rem;
+    left: 0.625rem;
+    height: 4px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+}
+
+.pf-episode__progress-fill {
+    display: block;
+    height: 100%;
+    background: var(--pf-color-accent);
+    border-radius: 999px;
+}
+
+.pf-episode__play {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--pf-color-on-accent);
+    font-size: 1.125rem;
+    background: var(--pf-color-accent);
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.pf-episode__caption {
+    display: flex;
+    flex-direction: column;
+    padding-top: 0.625rem;
+}
+
+.pf-episode__title {
+    overflow: hidden;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-episode__subtitle {
+    margin-top: 0.125rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.8125rem;
+}
+
+.pf-episode--current .pf-episode__subtitle {
+    color: var(--pf-color-text);
+}
+
+@media (hover: hover) {
+    button.pf-episode:hover {
+        .pf-episode__art {
+            transform: translateY(-4px);
+        }
+
+        .pf-episode__play {
+            opacity: 1;
+        }
+    }
+}
+
+button.pf-episode:focus-visible {
+    .pf-episode__art {
+        transform: translateY(-4px);
+    }
+
+    .pf-episode__play {
+        opacity: 1;
+    }
+}
+
+:root.layout-tv button.pf-episode:focus {
+    .pf-episode__art {
+        transform: scale(var(--pf-focus-scale));
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .pf-episode__play {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-episode__art {
+        transition: none;
+    }
+
+    button.pf-episode:hover .pf-episode__art,
+    button.pf-episode:focus-visible .pf-episode__art {
+        transform: none;
+    }
+}
+
+// Right to left: the margins of the buttons change sides. Last, as the most specific rules
+[dir='rtl'] .pf-hero--sheet .pf-hero__actions .pf-button,
+[dir='rtl'] .pf-hero--sheet .pf-hero__actions .pf-download-tag {
+    margin: 0 0 0.75rem 0.75rem;
+}
+
+[dir='rtl'] .pf-episodes .pf-choices .pf-button {
+    margin: 0 0 0.625rem 0.625rem;
+}

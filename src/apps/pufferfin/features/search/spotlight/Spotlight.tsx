@@ -13,7 +13,14 @@ import { CatalogAvailability, type CatalogItem, CatalogItemKind } from '../../ca
 import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import { isSearchable } from '../utils/query';
 
-import { FILTER_KINDS, getKindResults, getResultPath, SECTION_LIMIT, SPOTLIGHT_FILTERS, SpotlightFilter } from './results';
+import {
+    getResultPath,
+    getSpotlightSections,
+    type SectionId,
+    SPOTLIGHT_FILTERS,
+    SpotlightFilter,
+    type SpotlightLine
+} from './results';
 import { closeSpotlight, openSpotlight, useIsSpotlightOpen } from './store';
 import { useSpotlightSearch } from './useSpotlightSearch';
 
@@ -31,7 +38,8 @@ const FILTER_LABELS: Record<SpotlightFilter, StringKey> = {
     [SpotlightFilter.People]: 'RowPeople'
 };
 
-const SECTION_TITLES: Record<Exclude<SpotlightFilter, SpotlightFilter.All>, StringKey> = {
+const SECTION_TITLES: Record<SectionId, StringKey> = {
+    library: 'SpotlightInYourLibrary',
     [SpotlightFilter.Movies]: 'RowMovies',
     [SpotlightFilter.Series]: 'RowShows',
     [SpotlightFilter.Audiobooks]: 'RowAudiobooks',
@@ -41,17 +49,13 @@ const SECTION_TITLES: Record<Exclude<SpotlightFilter, SpotlightFilter.All>, Stri
 const KIND_LABELS: Partial<Record<CatalogItemKind, StringKey>> = {
     [CatalogItemKind.Movie]: 'KindMovie',
     [CatalogItemKind.Series]: 'KindSeries',
-    [CatalogItemKind.Audiobook]: 'KindAudiobook'
+    [CatalogItemKind.Audiobook]: 'KindAudiobook',
+    [CatalogItemKind.Person]: 'KindPerson'
 };
 
-/** One line of the list: an entry to open, or See all of a section. */
-type Line =
-    | { type: 'result', item: CatalogItem }
-    | { type: 'more', filter: SpotlightFilter, count: number };
-
 interface Section {
-    filter: Exclude<SpotlightFilter, SpotlightFilter.All>
-    lines: Line[]
+    id: SectionId
+    lines: SpotlightLine[]
     isPending: boolean
 }
 
@@ -63,17 +67,17 @@ interface RowProps {
     onHover: (index: number) => void
 }
 
-const ResultRow: FC<RowProps & { item: CatalogItem, onOpen: (item: CatalogItem) => void }> = ({
-    item, isActive, id, index, onOpen, onHover
+const ResultRow: FC<RowProps & { item: CatalogItem, isInLibrarySection: boolean, onOpen: (item: CatalogItem) => void }> = ({
+    item, isActive, isInLibrarySection, id, index, onOpen, onHover
 }) => {
     const t = useTranslation();
     const onClick = useCallback(() => onOpen(item), [ item, onOpen ]);
     const onMouseMove = useCallback(() => onHover(index), [ index, onHover ]);
     const kindLabel = KIND_LABELS[item.Kind];
+    // "Film · 2022": what it is, then its year; the author of a book
     const subtitle = [
-        item.Kind === CatalogItemKind.Audiobook ? item.Authors?.[0] : undefined,
-        item.Year ? String(item.Year) : undefined,
-        kindLabel ? t(kindLabel) : undefined
+        item.Kind === CatalogItemKind.Audiobook ? item.Authors?.[0] : kindLabel && t(kindLabel),
+        item.Year ? String(item.Year) : undefined
     ].filter(Boolean).join(' · ');
     const isOnDisk = item.Availability === CatalogAvailability.OnDisk;
 
@@ -96,7 +100,10 @@ const ResultRow: FC<RowProps & { item: CatalogItem, onOpen: (item: CatalogItem) 
                     <span className='pf-spotlight__title'>{item.Title}</span>
                     {subtitle && <span className='pf-spotlight__subtitle'>{subtitle}</span>}
                 </span>
-                {isOnDisk && item.Kind !== CatalogItemKind.Person && (
+                {isActive && (
+                    <span className='pf-spotlight__open' aria-hidden='true'>{t('SpotlightOpen')} ↵</span>
+                )}
+                {!isActive && isOnDisk && !isInLibrarySection && item.Kind !== CatalogItemKind.Person && (
                     <span className='pf-spotlight__badge'>
                         <Check fontSize='inherit' aria-hidden='true' />
                         {t('SpotlightInLibrary')}
@@ -178,22 +185,13 @@ const SpotlightPanel: FC = () => {
     }, []);
 
     const sections = useMemo<Section[]>(() => {
-        const sourceOf = (kindFilter: Exclude<SpotlightFilter, SpotlightFilter.All>) => {
-            if (kindFilter === SpotlightFilter.Audiobooks) return audiobooks;
-            return titles;
-        };
-        const filters = filter === SpotlightFilter.All ?
-            SPOTLIGHT_FILTERS.filter((value): value is Exclude<SpotlightFilter, SpotlightFilter.All> => value !== SpotlightFilter.All) :
-            [ filter ];
-        return filters.map(kindFilter => {
-            const source = sourceOf(kindFilter);
-            const results = getKindResults(source.data, FILTER_KINDS[kindFilter]);
-            const isAll = filter === SpotlightFilter.All;
-            const shown = isAll ? results.slice(0, SECTION_LIMIT) : results;
-            const lines: Line[] = shown.map(item => ({ type: 'result', item }));
-            if (isAll && results.length > SECTION_LIMIT) lines.push({ type: 'more', filter: kindFilter, count: results.length });
-            return { filter: kindFilter, lines, isPending: source.isPending && source.fetchStatus !== 'idle' };
-        });
+        const sources = { titles, audiobooks };
+        return getSpotlightSections(filter, titles.data, audiobooks.data).map(section => {
+            const source = sources[section.source];
+            return { id: section.id, lines: section.lines, isPending: source.isPending && source.fetchStatus !== 'idle' };
+        })
+            // The section of the titles on disk shows no skeleton of its own: the kinds under it do
+            .filter(section => section.id !== 'library' || section.lines.length > 0);
     }, [ audiobooks, filter, titles ]);
 
     const lines = useMemo(() => sections.flatMap(section => section.lines), [ sections ]);
@@ -300,7 +298,7 @@ const SpotlightPanel: FC = () => {
                             <Mic fontSize='inherit' aria-hidden='true' />
                         </button>
                     )}
-                    <kbd className='pf-spotlight__key'>esc</kbd>
+                    <kbd className='pf-spotlight__key'>{t('SpotlightEscapeKey')}</kbd>
                 </label>
 
                 <div className='pf-spotlight__filters' role='tablist' aria-label={t('SpotlightFilters')}>
@@ -315,9 +313,9 @@ const SpotlightPanel: FC = () => {
                     {isActive && sections.map(section => {
                         if (!section.isPending && !section.lines.length) return null;
                         return (
-                            <section key={section.filter} className='pf-spotlight__section'>
+                            <section key={section.id} className='pf-spotlight__section'>
                                 {filter === SpotlightFilter.All && (
-                                    <h3 className='pf-spotlight__section-title'>{t(SECTION_TITLES[section.filter])}</h3>
+                                    <h3 className='pf-spotlight__section-title'>{t(SECTION_TITLES[section.id])}</h3>
                                 )}
                                 <ul className='pf-spotlight__list' role='presentation'>
                                     {section.isPending && !section.lines.length ? <RowSkeletons /> : section.lines.map(line => {
@@ -328,6 +326,7 @@ const SpotlightPanel: FC = () => {
                                                 key={line.item.Key}
                                                 id={`${listId}-${index}`}
                                                 item={line.item}
+                                                isInLibrarySection={section.id === 'library'}
                                                 index={index}
                                                 isActive={index === activeIndex}
                                                 onOpen={onOpen}
@@ -351,6 +350,12 @@ const SpotlightPanel: FC = () => {
                         );
                     })}
                 </div>
+
+                <div className='pf-spotlight__footer' aria-hidden='true'>
+                    <span>{t('SpotlightHintNavigate')}</span>
+                    <span>{t('SpotlightHintOpen')}</span>
+                    <span>{t('SpotlightHintClose')}</span>
+                </div>
             </div>
         </div>
     );
@@ -368,6 +373,7 @@ const FilterChip: FC<{ value: SpotlightFilter, isSelected: boolean, onSelect: (v
             onClick={onClick}
             tabIndex={-1}
         >
+            {isSelected && <Check className='pf-spotlight__chip-check' fontSize='inherit' aria-hidden='true' />}
             {t(FILTER_LABELS[value])}
         </button>
     );

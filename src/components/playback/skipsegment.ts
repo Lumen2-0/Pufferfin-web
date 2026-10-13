@@ -1,6 +1,10 @@
 import { PlaybackManager } from './playbackmanager';
 import { TICKS_PER_MILLISECOND, TICKS_PER_SECOND } from 'constants/time';
 import type { MediaSegmentDto } from '@jellyfin/sdk/lib/generated-client/models/media-segment-dto';
+import { MediaSegmentType } from '@jellyfin/sdk/lib/generated-client/models/media-segment-type';
+import { ICONS } from 'apps/pufferfin/features/player/osd/icons';
+import { playerText } from 'apps/pufferfin/features/player/osd/strings';
+import type { StringKey } from 'apps/pufferfin/i18n/translate';
 import type { PlaybackStopInfo } from 'types/playbackStopInfo';
 import { PlaybackSubscriber } from 'apps/legacy/features/playback/utils/playbackSubscriber';
 import { isInSegment } from 'apps/legacy/features/playback/utils/mediaSegments';
@@ -14,6 +18,15 @@ import focusManager from 'components/focusManager';
 import layoutManager from 'components/layoutManager';
 
 const CREDITS_END_TOLERANCE_TICKS = 3 * TICKS_PER_SECOND;
+
+// PUFFERFIN: the words of the Skip button for each kind of segment
+const SKIP_LABELS: Partial<Record<MediaSegmentType, StringKey>> = {
+    [MediaSegmentType.Intro]: 'Player.SkipIntro',
+    [MediaSegmentType.Outro]: 'Player.SkipOutro',
+    [MediaSegmentType.Recap]: 'Player.SkipRecap',
+    [MediaSegmentType.Preview]: 'Player.SkipPreview',
+    [MediaSegmentType.Commercial]: 'Player.SkipCommercial'
+};
 
 interface ShowOptions {
     animate?: boolean;
@@ -75,8 +88,13 @@ class SkipSegment extends PlaybackSubscriber {
 
     setButtonText() {
         if (this.skipElement && this.currentSegment) {
-            this.skipElement.innerHTML = globalize.translate('MediaSegmentSkipPrompt', globalize.translate(`MediaSegmentType.${this.currentSegment.Type}`));
-            this.skipElement.innerHTML += '<span class="material-icons skip_next" aria-hidden="true"></span>';
+            // PUFFERFIN: "Skip the intro" in words, then the skip drawing
+            const key = this.currentSegment.Type ? SKIP_LABELS[this.currentSegment.Type] : undefined;
+            const text = key ?
+                playerText(key) :
+                globalize.translate('MediaSegmentSkipPrompt', globalize.translate(`MediaSegmentType.${this.currentSegment.Type}`));
+            this.skipElement.textContent = text;
+            this.skipElement.insertAdjacentHTML('beforeend', ICONS.skip);
         }
     }
 

@@ -72,7 +72,8 @@ class MediaSegmentManager extends PlaybackSubscriber {
             return;
         }
 
-        const action = this.mediaSegmentTypeActions[mediaSegment.Type];
+        // PUFFERFIN: read again, so that a switch turned in the player applies to this video already
+        const action = getMediaSegmentAction(userSettings, mediaSegment.Type);
         if (action === MediaSegmentAction.Skip) {
             this.skipSegment(mediaSegment);
         } else if (action === MediaSegmentAction.AskToSkip) {

@@ -1,12 +1,14 @@
 import { BaseItemKind as BaseItemKindValue, type BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
 import { ImageType } from '@jellyfin/sdk/lib/generated-client/models/image-type';
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
+import { ItemFilter } from '@jellyfin/sdk/lib/generated-client/models/item-filter';
 import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
 import { SortOrder } from '@jellyfin/sdk/lib/generated-client/models/sort-order';
 import { getGenreApi } from '@jellyfin/sdk/lib/utils/api/genre-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
 import { getStudioApi } from '@jellyfin/sdk/lib/utils/api/studio-api';
+import { getYearApi } from '@jellyfin/sdk/lib/utils/api/year-api';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { useApi } from 'hooks/useApi';
@@ -32,6 +34,7 @@ const isNewestFirst = (sortBy: ItemSortBy[] | undefined) =>
 const isBookListing = (itemTypes: BaseItemKind[] | null, filter: LibraryItemsFilter) =>
     !!itemTypes?.includes(BaseItemKindValue.AudioBook)
     && !filter.genreId && !filter.studioId && !filter.isServerWide
+    && !filter.years?.length && !filter.isUnplayed && !filter.searchTerm
     && (!filter.sortBy || isNewestFirst(filter.sortBy));
 
 /** Sort of the Pufferfin books endpoint. */
@@ -47,6 +50,14 @@ export interface LibraryItemsFilter {
     studioId?: string
     /** Newest first when set, by name otherwise. */
     sortBy?: ItemSortBy[]
+    /** The order of `sortBy`; without it, descending when `sortBy` is set, ascending by name otherwise. */
+    sortOrder?: SortOrder
+    /** Only the titles of these years. */
+    years?: number[]
+    /** Only the titles not watched yet. */
+    isUnplayed?: boolean
+    /** Only the titles whose name holds these words. */
+    searchTerm?: string
     /** Across every library rather than one, such as the collections of the server. */
     isServerWide?: boolean
 }
@@ -90,7 +101,10 @@ export const useLibraryItems = (
                 genreIds: filter.genreId ? [ filter.genreId ] : undefined,
                 studioIds: filter.studioId ? [ filter.studioId ] : undefined,
                 sortBy: filter.sortBy ?? [ ItemSortBy.SortName ],
-                sortOrder: [ filter.sortBy ? SortOrder.Descending : SortOrder.Ascending ],
+                sortOrder: [ filter.sortOrder ?? (filter.sortBy ? SortOrder.Descending : SortOrder.Ascending) ],
+                years: filter.years,
+                filters: filter.isUnplayed ? [ ItemFilter.IsUnplayed ] : undefined,
+                searchTerm: filter.searchTerm,
                 fields: [ ItemFields.PrimaryImageAspectRatio ],
                 enableImageTypes: [ ImageType.Primary ],
                 imageTypeLimit: 1,
@@ -143,6 +157,25 @@ export const useLibraryGenres = (parentId: string | undefined, itemTypes: BaseIt
             return (response.data.Items ?? []) as ItemDto[];
         },
         enabled: !!api && !!user?.Id && !!parentId
+    });
+};
+
+/** The years of the titles of one library, for the decades of the Year menu. */
+export const useLibraryYears = (parentId: string | undefined, itemTypes: BaseItemKind[] | null) => {
+    const { api, user } = useApi();
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Library', 'Years', parentId, itemTypes, user?.Id ],
+        queryFn: async ({ signal }) => {
+            const response = await getYearApi(api!).getYears({
+                userId: user!.Id!,
+                parentId,
+                includeItemTypes: itemTypes ?? undefined,
+                recursive: true,
+                enableImages: false
+            }, { signal });
+            return (response.data.Items ?? []).map(year => year.ProductionYear ?? Number(year.Name));
+        },
+        enabled: !!api && !!user?.Id && !!parentId && itemTypes !== null
     });
 };
 

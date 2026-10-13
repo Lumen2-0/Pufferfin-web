@@ -33,7 +33,20 @@ import { ServerConnections } from 'lib/jellyfin-apiclient';
 import LibraryMenu from 'scripts/libraryMenu';
 import { setBackdropTransparency, TRANSPARENCY_LEVEL } from 'components/backdrop/backdrop';
 import { pluginManager } from 'components/pluginManager';
-import { createVolumePanel, enableButtonHints, getVolumeIcon } from 'apps/pufferfin/features/player/volumePanel';
+import { createInlineVolume, enableButtonHints, getVolumeIcon } from 'apps/pufferfin/features/player/volumePanel';
+// PUFFERFIN: the panels of the player (audio and subtitles, settings, episodes) and the words they use
+import { MediaSegmentType } from '@jellyfin/sdk/lib/generated-client/models/media-segment-type';
+import { MediaSegmentAction } from 'apps/legacy/features/playback/constants/mediaSegmentAction';
+import { getId as getSegmentSettingId, getMediaSegmentAction } from 'apps/legacy/features/playback/utils/mediaSegmentSettings';
+import { episodesControl } from 'apps/pufferfin/features/player/osd/episodesControl';
+import { renderEpisodesPanel } from 'apps/pufferfin/features/player/osd/episodesPanel';
+import { ICONS } from 'apps/pufferfin/features/player/osd/icons';
+import { getChapterAt, getChapterMarkers } from 'apps/pufferfin/features/player/osd/model';
+import { createPanelHost, PANEL_TOGGLE_ATTRIBUTE } from 'apps/pufferfin/features/player/osd/panelHost';
+import { renderSettingsPanel } from 'apps/pufferfin/features/player/osd/settingsPanel';
+import { loadPlayerText, playerText } from 'apps/pufferfin/features/player/osd/strings';
+import { renderTracksPanel } from 'apps/pufferfin/features/player/osd/tracksPanel';
+import qualityoptions from 'components/qualityOptions';
 
 function getOpenedDialog() {
     return document.querySelector('.dialogContainer .dialog.opened');
@@ -127,16 +140,8 @@ export default function (view) {
             programEndDateMs = 0;
         }
 
-        // Set currently playing item for favorite button
-        const btnUserRating = view.querySelector('.btnUserRating');
-
-        if (itemHelper.canRate(currentItem)) {
-            btnUserRating.classList.remove('hide');
-            btnUserRating.setItem(currentItem);
-        } else {
-            btnUserRating.classList.add('hide');
-            btnUserRating.setItem(null);
-        }
+        // PUFFERFIN: no rating button; an episode can open the episodes of its series
+        updateEpisodesAvailability(item);
 
         // Update trickplay data
         trickplayResolution = null;
@@ -199,9 +204,8 @@ export default function (view) {
             btnFastForward.disabled = true;
             btnRewind.disabled = true;
             view.querySelector('.btnSubtitles').classList.add('hide');
-            view.querySelector('.btnAudio').classList.add('hide');
             view.querySelector('.osdTitle').innerHTML = '';
-            view.querySelector('.osdMediaInfo').innerHTML = '';
+            updateEpisodesAvailability(null);
             return;
         }
 
@@ -213,18 +217,15 @@ export default function (view) {
         btnRewind.disabled = false;
 
         if (playbackManager.subtitleTracks(player).length) {
-            view.querySelector('.btnSubtitles').classList.remove('hide');
             toggleSubtitleSync();
         } else {
-            view.querySelector('.btnSubtitles').classList.add('hide');
             toggleSubtitleSync('forceToHide');
         }
 
-        if (playbackManager.audioTracks(player).length > 1) {
-            view.querySelector('.btnAudio').classList.remove('hide');
-        } else {
-            view.querySelector('.btnAudio').classList.add('hide');
-        }
+        // PUFFERFIN: one button for the audio and the subtitles, shown when there is a choice
+        const hasTrackChoice = playbackManager.subtitleTracks(player).length > 0 || playbackManager.audioTracks(player).length > 1;
+        view.querySelector('.btnSubtitles').classList.toggle('hide', !hasTrackChoice);
+        if (!hasTrackChoice && panels.isOpen('tracks')) panels.close(false);
 
         if (currentItem.Chapters?.length > 1) {
             view.querySelector('.btnPreviousChapter').classList.remove('hide');
@@ -278,8 +279,8 @@ export default function (view) {
     }
 
     function hideOsd() {
-        // PUFFERFIN: the volume panel holds the controls while it is open
-        if (volumePanel.isOpen()) return;
+        // PUFFERFIN: an open panel holds the controls
+        if (panels.isOpen()) return;
         Events.trigger(document, EventType.SHOW_VIDEO_OSD, [ false ]);
         slideUpToHide(headerElement);
         hideMainOsdControls();
@@ -379,7 +380,7 @@ export default function (view) {
 
     function resetIdle() {
         // Restart hide timer if OSD is currently visible and there is no opened dialog
-        if (currentVisibleMenu && !mouseIsDown && !getOpenedDialog() && !volumePanel.isOpen()) {
+        if (currentVisibleMenu && !mouseIsDown && !getOpenedDialog() && !panels.isOpen()) {
             startOsdHideTimer();
         } else {
             stopOsdHideTimer();
@@ -467,6 +468,12 @@ export default function (view) {
                 break;
 
             case 'back':
+                // PUFFERFIN: Back closes an open panel first
+                if (panels.isOpen()) {
+                    panels.close();
+                    e.preventDefault();
+                    break;
+                }
                 // Ignore command when some dialog is opened
                 if (currentVisibleMenu === 'osd' && !getOpenedDialog()) {
                     hideOsd();
@@ -542,6 +549,8 @@ export default function (view) {
         const player = this;
         onStateChanged.call(player, e, state);
         resetUpNextDialog();
+        // PUFFERFIN: another video: its tracks and its settings, not those of the last one
+        panels.close(false);
     }
 
     function resetUpNextDialog() {
@@ -571,6 +580,8 @@ export default function (view) {
         onStateChanged.call(player, {
             type: 'init'
         }, state);
+        // PUFFERFIN: the open audio and subtitles panel checks the new choice
+        if (panels.isOpen('tracks')) panels.refresh();
     }
 
     function onBeginFetch() {
@@ -835,7 +846,7 @@ export default function (view) {
                 }
 
                 if (runtimeTicks && positionTicks != null && currentRuntimeTicks && !enableProgressByTimeOfDay && currentItem.RunTimeTicks && currentItem.Type !== 'Recording' && playbackRate !== null) {
-                    endsAtText.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;' + mediaInfo.getEndsAtFromPosition(runtimeTicks, positionTicks, playbackRate, true);
+                    endsAtText.textContent = mediaInfo.getEndsAtFromPosition(runtimeTicks, positionTicks, playbackRate, true);
                 } else {
                     endsAtText.innerHTML = '';
                 }
@@ -891,12 +902,12 @@ export default function (view) {
 
         buttonMuteIcon.classList.remove('volume_off', 'volume_up');
 
-        // PUFFERFIN: the button opens the volume panel; its icon tells the level
+        // PUFFERFIN: the button mutes, its icon tells the level; the short bar beside it sets the volume
         buttonMuteIcon.classList.remove('volume_down');
-        buttonMute.setAttribute('title', globalize.translate('Volume'));
+        buttonMute.setAttribute('title', globalize.translate(isMuted ? 'Unmute' : 'Mute') + ' (M)');
         buttonMuteIcon.classList.add(getVolumeIcon(isMuted, volumeLevel));
-        volumePanel.update(isMuted, volumeLevel);
-        canSetVolume = showVolumeSlider;
+        inlineVolume.update(isMuted, volumeLevel);
+        inlineVolume.setAvailable(showVolumeSlider);
 
         if (showMuteButton) {
             buttonMute.classList.remove('hide');
@@ -905,12 +916,7 @@ export default function (view) {
         }
 
         if (nowPlayingVolumeSlider) {
-            if (showVolumeSlider) {
-                nowPlayingVolumeSliderContainer.classList.remove('hide');
-            } else {
-                nowPlayingVolumeSliderContainer.classList.add('hide');
-            }
-
+            // PUFFERFIN: the upstream volume slider stays hidden, the short bar replaces it
             if (!nowPlayingVolumeSlider.dragging) {
                 nowPlayingVolumeSlider.value = volumeLevel || 0;
             }
@@ -958,35 +964,133 @@ export default function (view) {
         updateTimeDisplay(playState.PositionTicks, nowPlayingItem.RunTimeTicks, playState.PlaybackStartTimeTicks, playState.PlaybackRate, playState.BufferedRanges || []);
     }
 
+    // PUFFERFIN: the settings open in a panel of the player: quality, speed and
+    // aspect ratio with their lists, then the switches for the next episode and the intro
+    function getQualitySetting(player, user, state) {
+        const supportedCommands = playbackManager.getSupportedCommands(player);
+        if (!state.MediaSource?.SupportsTranscoding || !supportedCommands.includes('SetMaxStreamingBitrate')
+                || !user?.Policy?.EnableVideoPlaybackTranscoding) {
+            return undefined;
+        }
+
+        const videoStream = (playbackManager.currentMediaSource(player)?.MediaStreams || []).find(stream => stream.Type === 'Video');
+        const options = qualityoptions.getVideoQualityOptions({
+            currentMaxBitrate: playbackManager.getMaxStreamingBitrate(player),
+            isAutomaticBitrateEnabled: playbackManager.enableAutomaticBitrateDetection(player),
+            videoCodec: videoStream?.Codec,
+            videoBitRate: videoStream?.BitRate,
+            videoWidth: videoStream?.Width,
+            videoHeight: videoStream?.Height,
+            enableAuto: true
+        });
+        const selected = options.find(option => option.selected);
+        let value = selected?.name || '';
+        if (selected?.autoText) {
+            value += state.PlayState?.PlayMethod !== 'Transcode' ? ' · Direct' : ' · ' + selected.autoText;
+        }
+
+        return {
+            value,
+            options: options.map(option => ({
+                label: option.name,
+                aside: option.secondaryText || undefined,
+                selected: !!option.selected,
+                onSelect: () => {
+                    const bitrate = parseInt(option.bitrate, 10) || 0;
+                    if (bitrate !== (parseInt(selected?.bitrate, 10) || 0)) {
+                        playbackManager.setMaxStreamingBitrate({
+                            enableAutomaticBitrateDetection: !bitrate,
+                            maxBitrate: bitrate
+                        }, player);
+                    }
+                }
+            }))
+        };
+    }
+
+    function getSettingsModel(player, user) {
+        const state = playbackManager.getPlayerState(player);
+        const supportedCommands = playbackManager.getSupportedCommands(player);
+        const model = { locale: globalize.getCurrentLocale() };
+
+        model.quality = getQualitySetting(player, user, state);
+
+        if (supportedCommands.includes('PlaybackRate')) {
+            model.speed = {
+                current: Number(playbackManager.getPlaybackRate(player)) || 1,
+                rates: playbackManager.getSupportedPlaybackRates(player).map(rate => Number(rate.id)),
+                select: rate => playbackManager.setPlaybackRate(rate, player)
+            };
+        }
+
+        if (supportedCommands.includes('SetAspectRatio')) {
+            const currentId = playbackManager.getAspectRatio(player);
+            const ratios = playbackManager.getSupportedAspectRatios(player);
+            model.aspectRatio = {
+                value: ratios.find(ratio => ratio.id === currentId)?.name || '',
+                options: ratios.map(ratio => ({
+                    label: ratio.name,
+                    selected: ratio.id === currentId,
+                    onSelect: () => playbackManager.setAspectRatio(ratio.id, player)
+                }))
+            };
+        }
+
+        if (playbackManager.supportSubtitleOffset(player) && playbackManager.canHandleOffsetOnCurrentSubtitle(player)) {
+            model.subtitleOffset = () => {
+                panels.close();
+                onSettingsOption('suboffset');
+            };
+        }
+
+        model.stats = () => {
+            panels.close();
+            onSettingsOption('stats');
+        };
+
+        if (currentItem?.Type === 'Episode' && user?.Configuration) {
+            model.autoNext = {
+                checked: !!user.Configuration.EnableNextEpisodeAutoPlay,
+                set: checked => {
+                    // The user object is the cached one: the player reads the new value at the end of this episode
+                    user.Configuration.EnableNextEpisodeAutoPlay = checked;
+                    const apiClient = ServerConnections.getApiClient(currentItem.ServerId);
+                    apiClient.updateUserConfiguration(user.Id, user.Configuration).catch(err => {
+                        console.error('[VideoPlayer] failed to save the next episode setting', err);
+                    });
+                }
+            };
+        }
+
+        model.autoSkipIntro = {
+            checked: getMediaSegmentAction(userSettings, MediaSegmentType.Intro) === MediaSegmentAction.Skip,
+            set: checked => {
+                userSettings.set(getSegmentSettingId(MediaSegmentType.Intro), checked ? MediaSegmentAction.Skip : MediaSegmentAction.AskToSkip, false);
+            }
+        };
+
+        return model;
+    }
+
     function onSettingsButtonClick() {
         const btn = this;
+        const player = currentPlayer;
+        if (!player) return;
 
-        import('components/playback/playersettingsmenu').then((playerSettingsMenu) => {
-            const player = currentPlayer;
+        if (panels.isOpen('settings')) {
+            panels.close();
+            return;
+        }
 
-            if (player) {
-                const state = playbackManager.getPlayerState(player);
+        const currentItemOfPlayer = playbackManager.currentItem(player);
+        const userPromise = currentItemOfPlayer?.ServerId ?
+            ServerConnections.getApiClient(currentItemOfPlayer.ServerId).getCurrentUser().catch(() => null) :
+            Promise.resolve(null);
 
-                // show subtitle offset feature only if player and media support it
-                const showSubOffset = playbackManager.supportSubtitleOffset(player)
-                        && playbackManager.canHandleOffsetOnCurrentSubtitle(player);
-
-                playerSettingsMenu.show({
-                    mediaType: 'Video',
-                    player: player,
-                    positionTo: btn,
-                    quality: state.MediaSource?.SupportsTranscoding,
-                    stats: true,
-                    suboffset: showSubOffset,
-                    onOption: onSettingsOption
-                }).catch(() => {
-                    // PUFFERFIN: closed without a choice, nothing to do
-                }).finally(() => {
-                    resetIdle();
-                });
-
-                setTimeout(resetIdle, 0);
-            }
+        userPromise.then(user => {
+            if (player !== currentPlayer) return;
+            const model = getSettingsModel(player, user);
+            panels.open('settings', btn, playerText('Player.Settings'), panel => renderSettingsPanel(panel, model));
         });
     }
 
@@ -1025,175 +1129,101 @@ export default function (view) {
         }
     }
 
-    function showAudioTrackSelection() {
+    // PUFFERFIN: the audio tracks and the subtitles side by side, in a panel of the player
+    function renderTracks(panel) {
         const player = currentPlayer;
-        const audioTracks = playbackManager.audioTracks(player);
-        const currentIndex = playbackManager.getAudioStreamIndex(player);
-        const menuItems = audioTracks.map(function (stream) {
-            const opt = {
-                name: stream.DisplayTitle,
-                id: stream.Index
-            };
-
-            if (stream.Index === currentIndex) {
-                opt.selected = true;
-            }
-
-            return opt;
-        });
-        const positionTo = this;
-
-        import('components/actionSheet/actionSheet').then(({ default: actionsheet }) => {
-            actionsheet.show({
-                items: menuItems,
-                title: globalize.translate('Audio'),
-                positionTo: positionTo
-            }).then(function (id) {
-                const index = parseInt(id, 10);
-
-                if (index !== currentIndex) {
-                    playbackManager.setAudioStreamIndex(index, player);
-                }
-            }).catch(() => {
-                // PUFFERFIN: closed without a choice, nothing to do
-            }).finally(() => {
-                resetIdle();
-            });
-
-            setTimeout(resetIdle, 0);
-        });
-    }
-
-    function showSecondarySubtitlesMenu(actionsheet, positionTo) {
-        const player = currentPlayer;
-        if (!playbackManager.playerHasSecondarySubtitleSupport(player)) return;
-        let currentIndex = playbackManager.getSecondarySubtitleStreamIndex(player);
-        const streams = playbackManager.secondarySubtitleTracks(player);
-
-        if (currentIndex == null) {
-            currentIndex = -1;
-        }
-
-        streams.unshift({
-            Index: -1,
-            DisplayTitle: globalize.translate('Off')
-        });
-
-        const menuItems = streams.map(function (stream) {
-            const opt = {
-                name: stream.DisplayTitle,
-                id: stream.Index
-            };
-
-            if (stream.Index === currentIndex) {
-                opt.selected = true;
-            }
-
-            return opt;
-        });
-
-        actionsheet.show({
-            title: globalize.translate('SecondarySubtitles'),
-            items: menuItems,
-            positionTo
-        }).then(function (id) {
-            if (id) {
-                const index = parseInt(id, 10);
-                if (index !== currentIndex) {
-                    playbackManager.setSecondarySubtitleStreamIndex(index, player);
-                }
-            }
-        })
-            .catch(() => {
-                // PUFFERFIN: closed without a choice, nothing to do
-            })
-            .finally(() => {
-                resetIdle();
-            });
-
-        setTimeout(resetIdle, 0);
-    }
-
-    function showSubtitleTrackSelection() {
-        const player = currentPlayer;
-        const streams = playbackManager.subtitleTracks(player);
-        const secondaryStreams = playbackManager.secondarySubtitleTracks(player);
-        let currentIndex = playbackManager.getSubtitleStreamIndex(player);
-
-        if (currentIndex == null) {
-            currentIndex = -1;
-        }
-
-        streams.unshift({
-            Index: -1,
-            DisplayTitle: globalize.translate('Off')
-        });
-        const menuItems = streams.map(function (stream) {
-            const opt = {
-                name: stream.DisplayTitle,
-                id: stream.Index
-            };
-
-            if (stream.Index === currentIndex) {
-                opt.selected = true;
-            }
-
-            return opt;
-        });
-
-        /**
-            * Only show option if:
-            * - player has support
-            * - has more than 1 subtitle track
-            * - has valid secondary tracks
-            * - primary subtitle is not off
-            * - primary subtitle has support
-            */
-        const currentTrackCanAddSecondarySubtitle = playbackManager.playerHasSecondarySubtitleSupport(player)
-                && streams.length > 1
-                && secondaryStreams.length > 0
-                && currentIndex !== -1
-                && playbackManager.trackHasSecondarySubtitleSupport(playbackManager.getSubtitleStream(player, currentIndex), player);
-
-        if (currentTrackCanAddSecondarySubtitle) {
-            const secondarySubtitleMenuItem = {
-                name: globalize.translate('SecondarySubtitles'),
-                id: 'secondarysubtitle'
-            };
-            menuItems.unshift(secondarySubtitleMenuItem);
-        }
-
-        const positionTo = this;
-
-        import('components/actionSheet/actionSheet').then(({ default: actionsheet }) => {
-            actionsheet.show({
-                title: globalize.translate('Subtitles'),
-                items: menuItems,
-                positionTo: positionTo
-            }).then(function (id) {
-                if (id === 'secondarysubtitle') {
-                    try {
-                        showSecondarySubtitlesMenu(actionsheet, positionTo);
-                    } catch (e) {
-                        console.error(e);
-                    }
-                } else {
-                    const index = parseInt(id, 10);
-
-                    if (index !== currentIndex) {
-                        playbackManager.setSubtitleStreamIndex(index, player);
-                    }
-                }
-
+        if (!player) return;
+        renderTracksPanel(panel, {
+            audio: playbackManager.audioTracks(player),
+            audioIndex: playbackManager.getAudioStreamIndex(player),
+            subtitles: playbackManager.subtitleTracks(player),
+            subtitleIndex: playbackManager.getSubtitleStreamIndex(player),
+            setAudio: index => {
+                playbackManager.setAudioStreamIndex(index, player);
+                panels.refresh();
+            },
+            setSubtitles: index => {
+                playbackManager.setSubtitleStreamIndex(index, player);
                 toggleSubtitleSync();
-            }).catch(() => {
-                // PUFFERFIN: closed without a choice, nothing to do
-            }).finally(() => {
-                resetIdle();
-            });
-
-            setTimeout(resetIdle, 0);
+                panels.refresh();
+            }
         });
+    }
+
+    function showTracksPanel() {
+        if (!currentPlayer) return;
+        panels.toggle('tracks', this, playerText('Player.AudioAndSubtitles'), renderTracks);
+    }
+
+    // PUFFERFIN: the episodes of the series, in a drawer beside the picture
+    function updateEpisodesAvailability(item) {
+        const isAvailable = item?.Type === 'Episode' && !!item.SeriesId;
+        episodesControl.setAvailable(isAvailable);
+        legacyEpisodesButton?.classList.toggle('hide', !isAvailable);
+        if (!isAvailable && panels.isOpen('episodes')) panels.close(false);
+    }
+
+    function getEpisodeImageUrl(apiClient, episode) {
+        const options = { maxWidth: 320, quality: 90 };
+        if (episode.ImageTags?.Primary) {
+            return apiClient.getScaledImageUrl(episode.Id, { ...options, type: 'Primary', tag: episode.ImageTags.Primary });
+        }
+        if (episode.ParentThumbItemId && episode.ParentThumbImageTag) {
+            return apiClient.getScaledImageUrl(episode.ParentThumbItemId, { ...options, type: 'Thumb', tag: episode.ParentThumbImageTag });
+        }
+        if (episode.ParentBackdropItemId && episode.ParentBackdropImageTags?.length) {
+            return apiClient.getScaledImageUrl(episode.ParentBackdropItemId, { ...options, type: 'Backdrop', tag: episode.ParentBackdropImageTags[0] });
+        }
+        return undefined;
+    }
+
+    async function playEpisode(episode) {
+        panels.close(false);
+        const player = currentPlayer;
+        try {
+            // An episode already in the queue plays from there, the queue goes on after it
+            const playlist = await playbackManager.getPlaylist(player);
+            const queued = playlist?.find(entry => entry.Id === episode.Id);
+            if (queued?.PlaylistItemId) {
+                playbackManager.setCurrentPlaylistItem(queued.PlaylistItemId, player);
+                return;
+            }
+        } catch (err) {
+            console.error('[VideoPlayer] failed to read the queue', err);
+        }
+
+        const resumeTicks = !episode.UserData?.Played ? episode.UserData?.PlaybackPositionTicks || 0 : 0;
+        playbackManager.play({
+            items: [ episode ],
+            startPositionTicks: resumeTicks
+        }).catch(err => {
+            console.error('[VideoPlayer] failed to play the episode', err);
+        });
+    }
+
+    function toggleEpisodes(trigger) {
+        const item = currentItem;
+        if (!item?.SeriesId) return;
+        const apiClient = ServerConnections.getApiClient(item.ServerId);
+        const userId = apiClient.getCurrentUserId();
+        const fields = 'PrimaryImageAspectRatio';
+
+        panels.toggle('episodes', trigger, playerText('Player.Episodes'), panel => renderEpisodesPanel(panel, {
+            currentId: item.Id,
+            currentSeasonId: item.SeasonId,
+            loadSeasons: () => apiClient.getSeasons(item.SeriesId, { userId, Fields: fields }).then(result => result.Items || []),
+            loadEpisodes: seasonId => apiClient.getEpisodes(item.SeriesId, {
+                seasonId,
+                userId,
+                Fields: fields,
+                EnableImageTypes: 'Primary,Thumb,Backdrop',
+                ImageTypeLimit: 1
+            }).then(result => result.Items || []),
+            imageUrl: episode => getEpisodeImageUrl(apiClient, episode),
+            positionTicks: () => (currentPlayer ? playbackManager.currentTime(currentPlayer) * 10000 : 0),
+            play: playEpisode,
+            close: () => panels.close()
+        }));
     }
 
     function toggleSubtitleSync(action) {
@@ -1239,6 +1269,14 @@ export default function (view) {
         const key = keyboardnavigation.getKeyName(e);
 
         const btnPlayPause = osdBottomElement.querySelector('.btnPause');
+
+        // PUFFERFIN: Escape and Back close an open panel first
+        if (panels.isOpen() && (key === 'Escape' || key === 'Back' || key === 'BrowserBack' || key === 'GoBack')) {
+            panels.close();
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
 
         if (e.keyCode === 32) {
             if (e.target.tagName !== 'BUTTON' || !layoutManager.tv) {
@@ -1467,55 +1505,35 @@ export default function (view) {
         resetIdle();
     }
 
+    // PUFFERFIN: above the pointer on the timeline, the picture at that time
+    // framed in white, then a small tag with the time and the chapter
+    const SCRUB_WIDTH = 200;
+
+    function getScrubLabelHtml(timeText, chapterName) {
+        let html = '<div class="pf-scrub__label"><span class="pf-scrub__time">' + escapeHtml(timeText) + '</span>';
+        html += '<span class="pf-scrub__chapter">' + (chapterName ? ' · ' + escapeHtml(chapterName) : '') + '</span>';
+        return html + '</div>';
+    }
+
+    function getChapterNameAt(item, positionTicks) {
+        return getChapterAt(item?.Chapters, positionTicks)?.chapter.Name || '';
+    }
+
     function updateTrickplayBubbleHtml(apiClient, trickplayInfo, item, mediaSourceId, bubble, positionTicks) {
-        let doFullUpdate = false;
-        let chapterThumbContainer = bubble.querySelector('.chapterThumbContainer');
-        let chapterThumb;
-        let chapterThumbText;
-        let chapterThumbName;
+        let container = bubble.querySelector('.pf-scrub--trickplay');
 
-        // Create bubble elements if they don't already exist
-        if (chapterThumbContainer) {
-            chapterThumb = chapterThumbContainer.querySelector('.chapterThumbWrapper');
-            chapterThumbText = chapterThumbContainer.querySelector('h2.chapterThumbText');
-            chapterThumbName = chapterThumbContainer.querySelector('div.chapterThumbText');
-        } else {
-            doFullUpdate = true;
-
-            chapterThumbContainer = document.createElement('div');
-            chapterThumbContainer.classList.add('chapterThumbContainer');
-            chapterThumbContainer.style.overflow = 'hidden';
-
-            chapterThumb = document.createElement('div');
-            chapterThumb.classList.add('chapterThumbWrapper');
-            chapterThumb.style.overflow = 'hidden';
-            chapterThumb.style.width = trickplayInfo.Width + 'px';
-            chapterThumb.style.height = trickplayInfo.Height + 'px';
-            chapterThumbContainer.appendChild(chapterThumb);
-
-            const chapterThumbTextContainer = document.createElement('div');
-            chapterThumbTextContainer.classList.add('chapterThumbTextContainer');
-            chapterThumbContainer.appendChild(chapterThumbTextContainer);
-
-            chapterThumbName = document.createElement('div');
-            chapterThumbName.classList.add('chapterThumbText', 'chapterThumbText-dim');
-            chapterThumbTextContainer.appendChild(chapterThumbName);
-
-            chapterThumbText = document.createElement('h2');
-            chapterThumbText.classList.add('chapterThumbText');
-            chapterThumbTextContainer.appendChild(chapterThumbText);
+        // Built once per size of picture, then only its position moves
+        if (!container || container.dataset.width !== String(trickplayInfo.Width)) {
+            const scale = SCRUB_WIDTH / trickplayInfo.Width;
+            bubble.innerHTML = '<div class="pf-scrub pf-scrub--trickplay" data-width="' + trickplayInfo.Width + '">'
+                + '<div class="pf-scrub__frame" style="width:' + SCRUB_WIDTH + 'px;height:' + Math.round(trickplayInfo.Height * scale) + 'px">'
+                + '<div class="pf-scrub__tile" style="width:' + trickplayInfo.Width + 'px;height:' + trickplayInfo.Height + 'px;transform:scale(' + scale + ')"></div>'
+                + '</div>'
+                + getScrubLabelHtml('', '')
+                + '</div>';
+            container = bubble.querySelector('.pf-scrub--trickplay');
         }
 
-        let chapter;
-        for (const currentChapter of item.Chapters || []) {
-            if (positionTicks < currentChapter.StartPositionTicks) {
-                break;
-            }
-
-            chapter = currentChapter;
-        }
-
-        // Update trickplay values
         const currentTimeMs = positionTicks / 10_000;
         const currentTile = Math.floor(currentTimeMs / trickplayInfo.Interval);
 
@@ -1533,17 +1551,14 @@ export default function (view) {
             MediaSourceId: mediaSourceId
         });
 
-        chapterThumb.style.backgroundImage = `url('${imgSrc}')`;
-        chapterThumb.style.backgroundPositionX = offsetX + 'px';
-        chapterThumb.style.backgroundPositionY = offsetY + 'px';
+        const tile = container.querySelector('.pf-scrub__tile');
+        tile.style.backgroundImage = `url('${imgSrc}')`;
+        tile.style.backgroundPositionX = offsetX + 'px';
+        tile.style.backgroundPositionY = offsetY + 'px';
 
-        chapterThumbText.textContent = datetime.getDisplayRunningTime(positionTicks);
-        chapterThumbName.textContent = chapter?.Name || '';
-
-        // Set bubble innerHTML if container isn't part of DOM
-        if (doFullUpdate) {
-            bubble.innerHTML = chapterThumbContainer.outerHTML;
-        }
+        const chapterName = getChapterNameAt(item, positionTicks);
+        container.querySelector('.pf-scrub__time').textContent = datetime.getDisplayRunningTime(positionTicks);
+        container.querySelector('.pf-scrub__chapter').textContent = chapterName ? ' · ' + chapterName : '';
 
         return true;
     }
@@ -1564,39 +1579,19 @@ export default function (view) {
     }
 
     function getChapterBubbleHtml(apiClient, item, chapters, positionTicks) {
-        let chapter;
-        let index = -1;
-
-        for (let i = 0, length = chapters.length; i < length; i++) {
-            const currentChapter = chapters[i];
-
-            if (positionTicks >= currentChapter.StartPositionTicks) {
-                chapter = currentChapter;
-                index = i;
-            }
-        }
-
-        if (!chapter) {
+        const found = getChapterAt(chapters, positionTicks);
+        if (!found) {
             return null;
         }
 
-        const src = getImgUrl(item, chapter, index, 400, apiClient);
-        let html = '<div class="chapterThumbContainer chapterBubblePosition">';
+        const src = getImgUrl(item, found.chapter, found.index, 400, apiClient);
+        let html = '<div class="pf-scrub">';
 
         if (src) {
-            html += '<img class="chapterThumb" src="' + src + '" />';
-            html += '<div class="chapterThumbTextContainer">';
-        } else {
-            html += '<div class="chapterThumbTextContainer chapterBubblePosition">';
+            html += '<div class="pf-scrub__frame" style="width:' + SCRUB_WIDTH + 'px"><img class="pf-scrub__image" alt="" src="' + escapeHtml(src) + '" /></div>';
         }
 
-        html += '<div class="chapterThumbText chapterThumbText-dim">';
-        html += escapeHtml(chapter.Name);
-        html += '</div>';
-        html += '<h2 class="chapterThumbText">';
-        html += datetime.getDisplayRunningTime(positionTicks);
-        html += '</h2>';
-        html += '</div>';
+        html += getScrubLabelHtml(datetime.getDisplayRunningTime(positionTicks), found.chapter.Name);
 
         return html + '</div>';
     }
@@ -1653,7 +1648,6 @@ export default function (view) {
     let subtitleSyncOverlay;
     let trickplayResolution = null;
     const nowPlayingVolumeSlider = view.querySelector('.osdVolumeSlider');
-    const nowPlayingVolumeSliderContainer = view.querySelector('.osdVolumeSliderContainer');
     const nowPlayingPositionSlider = view.querySelector('.osdPositionSlider');
     const nowPlayingPositionText = view.querySelector('.osdPositionText');
     const nowPlayingDurationText = view.querySelector('.osdDurationText');
@@ -1666,16 +1660,44 @@ export default function (view) {
     const headerElement = document.querySelector('.skinHeader');
     const osdBottomElement = view.querySelector('.videoOsdBottom-maincontrols');
 
-    let canSetVolume = true;
-    const volumePanel = createVolumePanel({
-        button: view.querySelector('.buttonMute'),
+    // PUFFERFIN: the short volume bar beside the mute button
+    const inlineVolume = createInlineVolume({
         container: view.querySelector('.volumeButtons'),
         setVolume: volume => playbackManager.setVolume(volume, currentPlayer),
         setMuted: muted => playbackManager.setMute(muted, currentPlayer),
-        labels: { volume: globalize.translate('Volume'), mute: globalize.translate('Mute'), unmute: globalize.translate('Unmute') },
-        onOpenChange: isOpen => (isOpen ? stopOsdHideTimer() : resetIdle())
+        label: globalize.translate('Volume')
     });
     enableButtonHints(view);
+
+    // PUFFERFIN: the panels of the player; one open holds the controls on screen
+    const panels = createPanelHost({
+        root: view,
+        onOpenChange: isOpen => {
+            if (isOpen) {
+                stopOsdHideTimer();
+            } else {
+                resetIdle();
+            }
+            episodesControl.setOpen(isOpen && panels.isOpen('episodes'));
+        }
+    });
+
+    // PUFFERFIN: the header of the legacy layouts gets its own Episodes button;
+    // the header of the other layouts draws it with React
+    let legacyEpisodesButton = null;
+    const legacyHeaderActions = headerElement?.querySelector('.headerRight');
+    if (legacyHeaderActions) {
+        legacyEpisodesButton = document.createElement('button');
+        legacyEpisodesButton.type = 'button';
+        legacyEpisodesButton.className = 'headerButton headerButtonRight paper-icon-button-light pf-headerEpisodes hide';
+        legacyEpisodesButton.setAttribute(PANEL_TOGGLE_ATTRIBUTE, '');
+        legacyEpisodesButton.setAttribute('aria-haspopup', 'dialog');
+        legacyEpisodesButton.innerHTML = ICONS.list + '<span class="pf-headerEpisodes__text"></span>';
+        legacyEpisodesButton.addEventListener('click', function () {
+            toggleEpisodes(this);
+        });
+        legacyHeaderActions.prepend(legacyEpisodesButton);
+    }
 
     nowPlayingPositionSlider.enableKeyboardDragging();
     nowPlayingVolumeSlider.enableKeyboardDragging();
@@ -1692,6 +1714,11 @@ export default function (view) {
     });
     view.addEventListener('viewshow', function () {
         try {
+            // PUFFERFIN: the words of the panels, and the Episodes button of the header
+            loadPlayerText().then(() => {
+                if (legacyEpisodesButton) legacyEpisodesButton.querySelector('.pf-headerEpisodes__text').textContent = playerText('Player.Episodes');
+            });
+            episodesControl.setToggleHandler(toggleEpisodes);
             Events.on(playbackManager, 'playerchange', onPlayerChange);
             bindToPlayer(playbackManager.getCurrentPlayer());
             /* eslint-disable-next-line compat/compat */
@@ -1739,7 +1766,9 @@ export default function (view) {
         }
     });
     view.addEventListener('viewbeforehide', function () {
-        volumePanel.close();
+        panels.close(false);
+        episodesControl.setToggleHandler(null);
+        episodesControl.setAvailable(false);
         if (statsOverlay) {
             statsOverlay.enabled(false);
         }
@@ -1815,12 +1844,20 @@ export default function (view) {
 
         destroyStats();
         destroySubtitleSync();
+        panels.destroy();
+        inlineVolume.destroy();
+        legacyEpisodesButton?.remove();
     });
     let lastPointerDown = 0;
     /* eslint-disable-next-line compat/compat */
     dom.addEventListener(view, window.PointerEvent ? 'pointerdown' : 'click', function (e) {
-        if (dom.parentWithClass(e.target, ['videoOsdBottom', 'upNextContainer'])) {
+        if (dom.parentWithClass(e.target, ['videoOsdBottom', 'upNextContainer', 'pf-osd-panel'])) {
             showOsd();
+            return;
+        }
+
+        // PUFFERFIN: a click that closed a panel does not also pause the video
+        if (panels.wasJustDismissed()) {
             return;
         }
 
@@ -1865,13 +1902,9 @@ export default function (view) {
         playbackManager.toggleFullscreen(currentPlayer);
     });
 
-    // PUFFERFIN: the volume button opens a panel with a slider; without volume control it mutes
+    // PUFFERFIN: the volume button mutes; the bar beside it sets the volume
     view.querySelector('.buttonMute').addEventListener('click', function () {
-        if (canSetVolume) {
-            volumePanel.toggle();
-        } else {
-            playbackManager.toggleMute(currentPlayer);
-        }
+        playbackManager.toggleMute(currentPlayer);
     });
 
     nowPlayingVolumeSlider.addEventListener('input', (e) => {
@@ -1931,14 +1964,14 @@ export default function (view) {
                 ms /= 100;
                 ms *= value;
                 ms += programStartDateMs;
-                return '<h1 class="sliderBubbleText">' + getDisplayTimeWithoutAmPm(new Date(parseInt(ms, 10)), true) + '</h1>';
+                return '<div class="pf-scrub">' + getScrubLabelHtml(getDisplayTimeWithoutAmPm(new Date(parseInt(ms, 10)), true), '') + '</div>';
             }
 
-            return '--:--';
+            return '<div class="pf-scrub">' + getScrubLabelHtml('--:--', '') + '</div>';
         }
 
         if (!currentRuntimeTicks) {
-            return '--:--';
+            return '<div class="pf-scrub">' + getScrubLabelHtml('--:--', '') + '</div>';
         }
 
         let ticks = currentRuntimeTicks;
@@ -1954,16 +1987,22 @@ export default function (view) {
             }
         }
 
-        return '<h1 class="sliderBubbleText">' + datetime.getDisplayRunningTime(ticks) + '</h1>';
+        return '<div class="pf-scrub">' + getScrubLabelHtml(datetime.getDisplayRunningTime(ticks), '') + '</div>';
     };
 
+    // PUFFERFIN: a notch where each chapter starts, none at the very start
     nowPlayingPositionSlider.getMarkerInfo = function () {
-        // use markers based on chapters
-        return currentItem?.Chapters?.map(currentChapter => ({
-            name: currentChapter.Name,
-            progress: currentChapter.StartPositionTicks / currentItem.RunTimeTicks
-        })) || [];
+        return getChapterMarkers(currentItem?.Chapters, currentItem?.RunTimeTicks);
     };
+
+    // PUFFERFIN: a white dot follows the pointer along the timeline
+    const seekContainer = view.querySelector('.pf-seek');
+    seekContainer.addEventListener('pointermove', function (e) {
+        const rect = nowPlayingPositionSlider.getBoundingClientRect();
+        if (!rect.width) return;
+        const fraction = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+        seekContainer.style.setProperty('--pf-scrub-x', (fraction * 100) + '%');
+    }, { passive: true });
 
     view.querySelector('.btnPreviousTrack').addEventListener('click', function () {
         playbackManager.previousTrack(currentPlayer);
@@ -1986,11 +2025,7 @@ export default function (view) {
     btnFastForward.addEventListener('click', function () {
         playbackManager.fastForward(currentPlayer);
     });
-    view.querySelector('.btnAudio').addEventListener('click', showAudioTrackSelection);
-    view.querySelector('.btnSubtitles').addEventListener('click', showSubtitleTrackSelection);
-
-    // HACK: Remove `emby-button` from the rating button to make it look like the other buttons
-    view.querySelector('.btnUserRating').classList.remove('emby-button');
+    view.querySelector('.btnSubtitles').addEventListener('click', showTracksPanel);
 
     // Register to SyncPlay playback events and show big animated icon
     const showIcon = (action) => {

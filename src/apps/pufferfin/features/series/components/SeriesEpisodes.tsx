@@ -1,17 +1,19 @@
 import { isAxiosError } from 'axios';
-import React, { type FC, useCallback, useMemo, useState } from 'react';
+import React, { type FC, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
 
 import ChoicePicker from '../../../components/ChoicePicker';
-import MediaRow from '../../../components/MediaRow';
+import { CardBone } from '../../../components/Skeleton';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE, focusElement } from '../../../navigation/focus';
 import { getDownloadsPath } from '../../../routes/paths';
 import { playItem, playItemById } from '../../../utils/playback';
 import type { CatalogEpisode, CatalogSeason } from '../../catalog/api/types';
 import { useSeasonEpisodes } from '../../catalog/api/useCatalog';
 import { useEpisodes } from '../../details/api/useDetails';
+import { getEpisodeWindow } from '../../details/utils/sheet';
 import { RequestKind, RequestState } from '../../requests/api/types';
 import { useCreateRequest, useMyRequests } from '../../requests/api/useRequests';
 import { isRequestStale } from '../../requests/utils/requests';
@@ -29,6 +31,8 @@ interface SeriesEpisodesProps {
     seriesItemId?: string
     /** Library season holding the next episode to watch, shown first. */
     nextUpSeasonItemId?: string | null
+    /** Library item of the next episode to watch: outlined, and the episodes around it show first. */
+    currentEpisodeItemId?: string | null
     /** Sonarr is enabled and the account may request: otherwise missing episodes offer no download. */
     canRequest: boolean
 }
@@ -39,8 +43,12 @@ interface SeriesEpisodesProps {
  * a Download badge and is requested on its own when selected; once requested
  * its card tells where the request stands and opens the downloads panel.
  */
-const SeriesEpisodes: FC<SeriesEpisodesProps> = ({ seriesTmdbId, seasons, seriesItemId, nextUpSeasonItemId, canRequest }) => {
+const SKELETON_COUNT = 8;
+
+const SeriesEpisodes: FC<SeriesEpisodesProps> = ({ seriesTmdbId, seasons, seriesItemId, nextUpSeasonItemId, currentEpisodeItemId, canRequest }) => {
     const t = useTranslation();
+    const headingId = useId();
+    const gridRef = useRef<HTMLUListElement>(null);
     const { api, user } = useApi();
     const navigate = useNavigate();
 
@@ -96,8 +104,37 @@ const SeriesEpisodes: FC<SeriesEpisodesProps> = ({ seriesTmdbId, seasons, series
     }, [ navigate, playEpisode, requestEpisode ]);
     const getLibraryImageUrl = useLibraryImageUrl();
 
+    // A long season shows the episodes around the one to watch, then all of them on demand
+    const [ expandedSeason, setExpandedSeason ] = useState<number>();
+    const episodes = details.data?.Episodes;
+    const currentIndex = useMemo(
+        () => (episodes ?? []).findIndex(episode => !!currentEpisodeItemId && episode.LocalItemId === currentEpisodeItemId),
+        [ currentEpisodeItemId, episodes ]
+    );
+    const isExpanded = expandedSeason === seasonNumber;
+    const range = getEpisodeWindow(episodes?.length ?? 0, currentIndex);
+    const shown = isExpanded ? episodes : episodes?.slice(range.start, range.end);
+    const isCut = !isExpanded && !!episodes && shown?.length !== episodes.length;
+
+    const showAll = useCallback(() => {
+        setExpandedSeason(seasonNumber);
+        // The button goes away: the focus moves to the first episode that was hidden after the window
+        requestAnimationFrame(() => {
+            const items = gridRef.current?.querySelectorAll<HTMLElement>(`[${FOCUSABLE_ATTRIBUTE}]`);
+            const target = items?.[range.end] ?? items?.[0];
+            if (target) focusElement(target);
+        });
+    }, [ range.end, seasonNumber ]);
+
+    // Watched episodes of the season, when it is on disk
+    const watchedCount = useMemo(() => {
+        if (!seriesItemId || !episodes?.length || !libraryEpisodes.data) return undefined;
+        return episodes.filter(episode => !!episode.LocalItemId && !!libraryById.get(episode.LocalItemId)?.UserData?.Played).length;
+    }, [ episodes, libraryById, libraryEpisodes.data, seriesItemId ]);
+
     const renderEpisode = useCallback((episode: CatalogEpisode) => (
         <EpisodeCard
+            isCurrent={!!currentEpisodeItemId && episode.LocalItemId === currentEpisodeItemId}
             episode={episode}
             libraryItem={episode.LocalItemId ? libraryById.get(episode.LocalItemId) : undefined}
             request={findEpisodeRequest(requests.data, seriesTmdbId, episode)}
@@ -106,29 +143,62 @@ const SeriesEpisodes: FC<SeriesEpisodesProps> = ({ seriesTmdbId, seasons, series
             onSelect={onEpisodeSelect}
             getLibraryImageUrl={getLibraryImageUrl}
         />
-    ), [ canRequest, getLibraryImageUrl, isStale, libraryById, onEpisodeSelect, requests.data, seriesTmdbId ]);
+    ), [ canRequest, currentEpisodeItemId, getLibraryImageUrl, isStale, libraryById, onEpisodeSelect, requests.data, seriesTmdbId ]);
 
     if (!seasons.length) return null;
 
     const createStatus = isAxiosError(createError) ? createError.response?.status : undefined;
 
+    const seasonName = seasonOptions.find(option => option.id === String(seasonNumber))?.name ?? '';
+
+    let content: React.ReactNode;
+    if (details.isPending) {
+        content = (
+            <div className='pf-episodes__grid' aria-busy='true'>
+                {Array.from({ length: SKELETON_COUNT }, (_, index) => <CardBone key={index} shape='landscape' />)}
+                <span className='pf-visually-hidden'>{t('Loading')}</span>
+            </div>
+        );
+    } else if (details.isError) {
+        content = (
+            <p className='pf-row__error' role='status'>
+                <ErrorOutline aria-hidden='true' />
+                {t('RowLoadError')}
+            </p>
+        );
+    } else {
+        content = (
+            <ul ref={gridRef} className='pf-episodes__grid' {...{ [FOCUS_GROUP_ATTRIBUTE]: true }}>
+                {shown?.map(episode => <li key={getEpisodeKey(episode)}>{renderEpisode(episode)}</li>)}
+            </ul>
+        );
+    }
+
     return (
-        <section className='pf-details__episodes' aria-label={t('SeasonsLabel')}>
+        <section className='pf-details__episodes pf-episodes' aria-labelledby={headingId}>
             <ChoicePicker
                 label={t('SeasonsLabel')}
                 options={seasonOptions}
                 selectedId={seasonNumber !== undefined ? String(seasonNumber) : undefined}
                 onSelect={onSeasonSelect}
             />
-            <MediaRow
-                title={seasonOptions.find(option => option.id === String(seasonNumber))?.name ?? ''}
-                shape='landscape'
-                items={details.data?.Episodes}
-                isPending={details.isPending}
-                isError={details.isError}
-                getKey={getEpisodeKey}
-                renderItem={renderEpisode}
-            />
+            <div className='pf-episodes__head'>
+                <h2 id={headingId} className='pf-episodes__title'>{seasonName}</h2>
+                {watchedCount !== undefined && episodes && (
+                    <span className='pf-episodes__count'>{t('SeasonWatchedCount', watchedCount, episodes.length)}</span>
+                )}
+            </div>
+            {content}
+            {isCut && episodes && (
+                <button
+                    type='button'
+                    className='pf-button pf-button--quiet pf-episodes__more'
+                    onClick={showAll}
+                    {...{ [FOCUSABLE_ATTRIBUTE]: true }}
+                >
+                    {t('ActionShowAllEpisodes', episodes.length)}
+                </button>
+            )}
             {isCreateError && (
                 <p className='pf-row__error' role='alert'>
                     <ErrorOutline aria-hidden='true' />

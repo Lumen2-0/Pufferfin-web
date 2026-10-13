@@ -102,8 +102,27 @@ describe('Pufferfin: episode card', () => {
 
     it('says when a download bar has had no news for a while', () => {
         const view = getEpisodeCardView({ episode: missing, request: downloading, isStale: true, canRequest: true }, echo);
-        expect(view.subtitle).toBe('EpisodeNumber 1 3, RequestDownloadingPercent 40, RequestStale');
+        expect(view.subtitle).toBe('RequestDownloadingPercent 40, RequestStale');
+        expect(view.fullNumber).toBe('EpisodeNumber 1 3');
         expect(view.progress).toBe(40);
+    });
+
+    it('tells a watched episode, a started one and a new one apart', () => {
+        const state = { isStale: false, canRequest: true, episode: { ...onDisk, RuntimeMinutes: 42 } };
+        const minute = 600_000_000;
+        const watched = getEpisodeCardView({ ...state, libraryItem: { RunTimeTicks: 42 * minute, UserData: { Key: 'k', Played: true } } }, echo);
+        expect(watched.isWatched).toBe(true);
+        expect(watched.subtitle).toBe('DurationMinutes 42 · StateWatched');
+        expect(watched.number).toBe('EpisodeBadge 3');
+
+        const started = getEpisodeCardView({
+            ...state,
+            libraryItem: { RunTimeTicks: 42 * minute, UserData: { Key: 'k', PlaybackPositionTicks: 21 * minute, PlayedPercentage: 50 } }
+        }, echo);
+        expect(started.subtitle).toBe('TimeLeft DurationMinutes 21');
+        expect(started.progress).toBe(50);
+
+        expect(getEpisodeCardView(state, echo).subtitle).toBe('DurationMinutes 42');
     });
 
     it('keys an episode the same before and after its import', () => {

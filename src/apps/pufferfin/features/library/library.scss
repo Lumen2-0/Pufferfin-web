@@ -1,0 +1,669 @@
+// The library tab: Resume in wide cards, a rule, then a bar of filters as
+// capsules over a grid of posters, with Show more under it. Lists open under
+// their capsule on a plain dark sheet.
+
+$pf-lib-surface: #141414;
+$pf-lib-selected: #262626;
+$pf-lib-border: rgba(255, 255, 255, 0.18);
+$pf-lib-border-hover: rgba(255, 255, 255, 0.4);
+$pf-lib-muted: #a3a3a3;
+$pf-lib-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+
+.pf-lib {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    width: 100%;
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: calc(var(--pf-nav-height) + 2rem) var(--pf-gutter) 4.5rem;
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+}
+
+.pf-lib__heading {
+    margin: 0 0 1rem;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
+}
+
+.pf-lib__rule {
+    align-self: center;
+    width: 900px;
+    max-width: 100%;
+    height: 1px;
+    margin: -1.5rem 0;
+    background: rgba(255, 255, 255, 0.12);
+    border: 0;
+}
+
+.pf-lib__note {
+    margin: 0;
+    padding: 1rem 0;
+    color: $pf-lib-muted;
+}
+
+.pf-lib__catalog {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+// Resume: wide stills side by side, scrolling sideways
+
+.pf-lib-resume-row__list {
+    display: flex;
+    gap: 1.25rem;
+    margin: -0.5rem 0 0;
+    padding: 0.5rem 0 0.75rem;
+    overflow-x: auto;
+    list-style: none;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    > * {
+        flex: none;
+    }
+}
+
+.pf-lib-resume {
+    position: relative;
+    width: 260px;
+}
+
+.pf-lib-resume__open,
+.pf-lib-poster__open {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    background: none;
+    border: 0;
+    border-radius: 10px;
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: none;
+    }
+}
+
+.pf-lib-resume__tile,
+.pf-lib-poster__tile {
+    position: relative;
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    background: $pf-lib-surface;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    transition: transform 0.25s ease, box-shadow 0.2s ease;
+}
+
+.pf-lib-resume__tile {
+    aspect-ratio: 16 / 9;
+}
+
+.pf-lib-poster__tile {
+    aspect-ratio: 2 / 3;
+}
+
+.pf-lib-resume__open:focus-visible .pf-lib-resume__tile,
+.pf-lib-poster__open:focus-visible .pf-lib-poster__tile {
+    box-shadow: 0 0 0 2px #fff;
+}
+
+.pf-lib-resume__dismiss {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    color: #fff;
+    font-size: 18px;
+    background: rgba(0, 0, 0, 0.78);
+    border: 0;
+    border-radius: 999px;
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.2s ease, background 0.2s ease;
+
+    &:hover {
+        background: #c0392b;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+}
+
+.pf-lib-resume:hover .pf-lib-resume__dismiss,
+.pf-lib-resume:focus-within .pf-lib-resume__dismiss {
+    opacity: 1;
+}
+
+// A thin bar of progress at the bottom of the art
+
+.pf-lib-progress {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    display: block;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+}
+
+.pf-lib-resume .pf-lib-progress {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.pf-lib-progress__fill {
+    display: block;
+    height: 100%;
+    background: #fff;
+    border-radius: 999px;
+}
+
+// Posters
+
+.pf-lib-poster {
+    position: relative;
+    min-width: 0;
+}
+
+.pf-lib-poster .pf-lib-poster__open {
+    gap: 0.75rem;
+}
+
+.pf-lib-poster__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pf-lib-poster__placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    padding: 14px;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1.25;
+}
+
+.pf-lib-poster__seen {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    color: #fff;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.72);
+    border-radius: 999px;
+
+    svg {
+        stroke-width: 3;
+    }
+}
+
+.pf-lib-poster__caption {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.pf-lib-poster__title {
+    display: -webkit-box;
+    overflow: hidden;
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1.3;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.pf-lib-poster__title--one-line {
+    -webkit-line-clamp: 1;
+}
+
+.pf-lib-poster__subtitle {
+    color: $pf-lib-muted;
+    font-size: 13px;
+}
+
+.pf-lib-poster__overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    aspect-ratio: 2 / 3;
+    pointer-events: none;
+    transition: transform 0.25s ease;
+}
+
+.pf-lib-poster__play {
+    position: absolute;
+    right: 12px;
+    bottom: 16px;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    color: #000;
+    font-size: 18px;
+    background: #fff;
+    border: 0;
+    border-radius: 999px;
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    pointer-events: auto;
+}
+
+.pf-lib-poster:hover .pf-lib-poster__tile,
+.pf-lib-poster:focus-within .pf-lib-poster__tile,
+.pf-lib-poster:hover .pf-lib-poster__overlay,
+.pf-lib-poster:focus-within .pf-lib-poster__overlay {
+    transform: translateY(-4px);
+}
+
+.pf-lib-poster:hover .pf-lib-poster__play,
+.pf-lib-poster:focus-within .pf-lib-poster__play {
+    opacity: 1;
+}
+
+// The grid of posters
+
+.pf-lib-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(147px, 100%), 1fr));
+    gap: 2rem 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pf-lib-grid__item {
+    min-width: 0;
+}
+
+// The bar of filters
+
+.pf-lib-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.pf-lib-toolbar__spacer {
+    flex: 1 1 0;
+}
+
+.pf-lib-toolbar__count {
+    color: $pf-lib-muted;
+    font-size: 14px;
+}
+
+.pf-lib-search {
+    position: relative;
+    display: block;
+    flex: 1 1 260px;
+    max-width: 360px;
+}
+
+.pf-lib-search__icon {
+    position: absolute;
+    top: 13px;
+    left: 16px;
+    color: $pf-lib-muted;
+    font-size: 18px !important;
+    pointer-events: none;
+}
+
+.pf-lib-search__input {
+    width: 100%;
+    height: 44px;
+    padding: 0 16px 0 42px;
+    color: #fff;
+    font: inherit;
+    font-size: 15px;
+    background: #0d0d0d;
+    border: 1px solid $pf-lib-border;
+    border-radius: 999px;
+    outline: none;
+    appearance: none;
+    transition: border-color 0.2s ease;
+
+    &::placeholder {
+        color: #8a8a8a;
+    }
+
+    &:hover {
+        border-color: $pf-lib-border-hover;
+    }
+
+    &:focus-visible {
+        border-color: #fff;
+    }
+
+    &::-webkit-search-cancel-button {
+        display: none;
+    }
+}
+
+.pf-lib-chip {
+    display: inline-flex;
+    flex: none;
+    gap: 8px;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px 0 20px;
+    color: #fff;
+    font: inherit;
+    font-weight: 500;
+    font-size: 15px;
+    white-space: nowrap;
+    background: transparent;
+    border: 1px solid $pf-lib-border;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+
+    &:hover {
+        border-color: $pf-lib-border-hover;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 3px;
+    }
+}
+
+.pf-lib-chip--toggle,
+.pf-lib-chip--more {
+    padding: 0 20px;
+}
+
+.pf-lib-chip--more {
+    padding: 0 28px;
+    font-weight: 600;
+}
+
+.pf-lib-chip--active,
+.pf-lib-chip--active:hover {
+    font-weight: 600;
+    border-color: #fff;
+}
+
+.pf-lib-chip__chevron {
+    font-size: 16px !important;
+}
+
+// Lists under a capsule
+
+@keyframes pf-lib-menu-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.pf-lib-menu {
+    position: relative;
+}
+
+.pf-lib-menu__panel {
+    position: absolute;
+    top: 52px;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    width: max-content;
+    min-width: 240px;
+    max-width: min(320px, calc(100vw - 32px));
+    max-height: min(420px, 60vh);
+    padding: 8px;
+    overflow-y: auto;
+    background: $pf-lib-surface;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    box-shadow: $pf-lib-shadow;
+    animation: pf-lib-menu-in 140ms ease both;
+    scrollbar-color: #3a3a3a transparent;
+    scrollbar-width: thin;
+}
+
+.pf-lib-menu__panel--start {
+    left: 0;
+}
+
+.pf-lib-menu__panel--end {
+    right: 0;
+    min-width: 272px;
+}
+
+.pf-lib-menu__option {
+    display: flex;
+    flex: none;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 0 14px;
+    color: #fff;
+    font: inherit;
+    font-weight: 500;
+    font-size: 15px;
+    text-align: start;
+    background: transparent;
+    border: 0;
+    border-radius: 12px;
+    outline: none;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        background: #1f1f1f;
+    }
+
+    &:focus-visible {
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+    }
+}
+
+.pf-lib-menu__option--selected,
+.pf-lib-menu__option--selected:hover {
+    font-weight: 600;
+    background: $pf-lib-selected;
+}
+
+.pf-lib-menu__check {
+    flex: none;
+    font-size: 16px !important;
+
+    path,
+    polyline {
+        stroke-width: 2.5;
+    }
+}
+
+// Show more: how many are shown, a thin line, the button
+
+.pf-lib-more {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    align-self: center;
+    padding-top: 8px;
+}
+
+.pf-lib-more__count {
+    color: $pf-lib-muted;
+    font-size: 14px;
+}
+
+.pf-lib-more__bar {
+    display: block;
+    width: 200px;
+    height: 3px;
+    background: $pf-lib-border;
+    border-radius: 999px;
+}
+
+.pf-lib-more__fill {
+    display: block;
+    height: 100%;
+    background: #fff;
+    border-radius: 999px;
+}
+
+// Skeletons: dark blocks a soft light runs across
+
+@keyframes pf-lib-shimmer {
+    from {
+        background-position: -400px 0;
+    }
+
+    to {
+        background-position: 400px 0;
+    }
+}
+
+.pf-lib-skeleton {
+    display: block;
+    background: linear-gradient(90deg, #111 0, #1c1c1c 50%, #111 100%);
+    background-size: 800px 100%;
+    border-radius: 10px;
+    animation: pf-lib-shimmer 1.6s linear infinite;
+}
+
+.pf-lib-skeleton--poster {
+    aspect-ratio: 2 / 3;
+}
+
+.pf-lib-skeleton--resume {
+    flex: none;
+    width: 260px;
+    aspect-ratio: 16 / 9;
+}
+
+.pf-lib-skeleton--line {
+    height: 14px;
+    margin-top: 12px;
+    border-radius: 999px;
+}
+
+.pf-lib-skeleton--small {
+    height: 11px;
+    margin-top: 6px;
+}
+
+// Phones: the search over the capsules, three posters a row
+
+@media (max-width: 40em) {
+    .pf-lib {
+        gap: 2rem;
+        padding-right: 16px;
+        padding-left: 16px;
+    }
+
+    .pf-lib__rule {
+        margin: -1rem 0;
+    }
+
+    .pf-lib-resume,
+    .pf-lib-skeleton--resume {
+        width: 220px;
+    }
+
+    .pf-lib-toolbar {
+        gap: 8px;
+    }
+
+    .pf-lib-search {
+        flex-basis: 100%;
+        max-width: none;
+    }
+
+    .pf-lib-toolbar__spacer {
+        display: none;
+    }
+
+    .pf-lib-toolbar__count {
+        order: 10;
+        margin-left: auto;
+        font-size: 13px;
+    }
+
+    .pf-lib-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.25rem 0.75rem;
+    }
+
+    .pf-lib-poster__title {
+        font-size: 13px;
+    }
+
+    .pf-lib-poster__subtitle {
+        font-size: 12px;
+    }
+
+    .pf-lib-poster__play {
+        display: none;
+    }
+
+    .pf-lib-menu__panel--start {
+        max-width: calc(100vw - 32px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-lib-skeleton,
+    .pf-lib-menu__panel {
+        animation: none;
+    }
+
+    .pf-lib-poster__tile,
+    .pf-lib-poster__overlay,
+    .pf-lib-resume__tile {
+        transition: none;
+    }
+}

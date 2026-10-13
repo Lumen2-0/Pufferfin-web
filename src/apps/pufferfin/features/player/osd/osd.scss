@@ -1,0 +1,604 @@
+// The panels of the video player, as the design draws them: one solid sheet
+// (#141414, a hairline, 18px corners, a deep shadow, no frosted glass) on the
+// right, above the controls. Audio and subtitles in two columns, the settings
+// with their lists, and the Episodes drawer that runs from under the header.
+// On a phone each one rises from the bottom over a dimmed picture.
+
+:root.pf-player-skin {
+    --pf-osd-sheet: #141414;
+    --pf-osd-sheet-border: rgba(255, 255, 255, 0.12);
+    --pf-osd-sheet-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    --pf-osd-selected: #262626;
+    --pf-osd-row-hover: rgba(255, 255, 255, 0.08);
+
+    .pf-osd-panel {
+        position: fixed;
+        right: 28px;
+        bottom: 100px;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        width: 340px;
+        max-width: calc(100vw - 56px);
+        max-height: calc(100vh - 176px);
+        padding: 12px;
+        overflow-y: auto;
+        color: #fff;
+        font-size: 15px;
+        background: var(--pf-osd-sheet);
+        border: 1px solid var(--pf-osd-sheet-border);
+        border-radius: 18px;
+        box-shadow: var(--pf-osd-sheet-shadow);
+        animation: pf-osd-panel-in 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        overscroll-behavior: contain;
+        scrollbar-color: #3a3a3a transparent;
+        scrollbar-width: thin;
+        user-select: none;
+
+        &[hidden] {
+            display: none;
+        }
+
+        &:focus {
+            outline: none;
+        }
+
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #3a3a3a;
+            border: 2px solid var(--pf-osd-sheet);
+            border-radius: 999px;
+        }
+    }
+
+    .pf-osd-panel[data-kind='tracks'] {
+        width: 580px;
+        padding: 16px;
+    }
+
+    .pf-osd-panel[data-kind='tracks'].pf-osd-panel--single {
+        width: 300px;
+    }
+
+    // The Episodes drawer: from under the header down to the controls
+    .pf-osd-panel[data-kind='episodes'] {
+        top: 76px;
+        width: 440px;
+        max-height: none;
+        padding: 16px;
+    }
+
+    .pf-osd-scrim {
+        display: none;
+    }
+
+    // Headings: small capitals, quiet
+
+    .pf-osd-heading {
+        padding: 4px 12px 8px;
+        color: #a3a3a3;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    // Choices: a 44px line, the current one filled and checked
+
+    .pf-osd-options,
+    .pf-osd-settings {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .pf-osd-option,
+    .pf-osd-row {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        min-height: 44px;
+        margin: 0;
+        padding: 0 12px;
+        color: #fff;
+        font: inherit;
+        font-weight: 500;
+        font-size: 15px;
+        text-align: start;
+        background: transparent;
+        border: 0;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background-color 120ms ease;
+
+        &:hover {
+            background: var(--pf-osd-row-hover);
+        }
+
+        &:focus {
+            outline: none;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: -2px;
+        }
+
+        svg {
+            flex: none;
+        }
+    }
+
+    .pf-osd-option[aria-checked='true'] {
+        font-weight: 600;
+        background: var(--pf-osd-selected);
+    }
+
+    .pf-osd-option__label,
+    .pf-osd-row__label {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pf-osd-option__label {
+        white-space: nowrap;
+    }
+
+    .pf-osd-option__aside {
+        flex: none;
+        color: #a3a3a3;
+        font-weight: 500;
+        font-size: 13px;
+    }
+
+    .pf-osd-row__value {
+        display: flex;
+        flex: none;
+        gap: 6px;
+        align-items: center;
+        color: #a3a3a3;
+        font-size: 14px;
+    }
+
+    .pf-osd-separator {
+        height: 1px;
+        margin: 6px 12px;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    // Switches: white when on, a dark track when off
+
+    .pf-osd-switch {
+        position: relative;
+        flex: none;
+        width: 40px;
+        height: 24px;
+        background: #3a3a3a;
+        border-radius: 999px;
+        transition: background-color 160ms ease;
+
+        &::after {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 999px;
+            transition:
+                transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 160ms ease;
+            content: '';
+        }
+    }
+
+    .pf-osd-row--switch[aria-checked='true'] .pf-osd-switch {
+        background: #fff;
+
+        &::after {
+            background: #000;
+            transform: translateX(16px);
+        }
+    }
+
+    // A list opened from the settings: a way back, then its title
+
+    .pf-osd-subheader {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 0 0 8px;
+    }
+
+    .pf-osd-subheader__title {
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .pf-osd-iconbutton {
+        display: inline-grid;
+        flex: none;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        margin: 0;
+        padding: 0;
+        color: #fff;
+        background: transparent;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background-color 120ms ease;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        &:focus {
+            outline: none;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: 2px;
+        }
+    }
+
+    .pf-osd-iconbutton--small {
+        width: 36px;
+        height: 36px;
+    }
+
+    // Audio and subtitles: two columns side by side
+
+    .pf-osd-tracks {
+        display: flex;
+        gap: 12px;
+    }
+
+    .pf-osd-tracks__column {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    // Episodes: a header with the season and Close, then the list
+
+    .pf-osd-drawer__header {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 10px;
+    }
+
+    .pf-osd-drawer__title {
+        font-weight: 700;
+        font-size: 20px;
+    }
+
+    .pf-osd-drawer__actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .pf-osd-chip {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        min-height: 40px;
+        max-width: 200px;
+        margin: 0;
+        padding: 0 12px 0 16px;
+        overflow: hidden;
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        font-size: 14px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+        cursor: pointer;
+        transition: border-color 120ms ease;
+
+        &[hidden] {
+            display: none;
+        }
+
+        &:hover,
+        &[aria-expanded='true'] {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        &:focus {
+            outline: none;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: 2px;
+        }
+
+        svg {
+            flex: none;
+            transition: transform 160ms ease;
+        }
+
+        &[aria-expanded='true'] svg {
+            transform: rotate(180deg);
+        }
+    }
+
+    .pf-osd-drawer__body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .pf-osd-drawer__message {
+        margin: 0;
+        padding: 24px 8px;
+        color: #a3a3a3;
+        font-size: 14px;
+    }
+
+    .pf-osd-episodes {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .pf-osd-episode {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        width: 100%;
+        margin: 0;
+        padding: 8px;
+        color: #fff;
+        font: inherit;
+        text-align: start;
+        background: transparent;
+        border: 0;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background-color 120ms ease;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        &:focus {
+            outline: none;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: -2px;
+        }
+    }
+
+    .pf-osd-episode--current,
+    .pf-osd-episode--current:hover {
+        background: var(--pf-osd-selected);
+    }
+
+    .pf-osd-episode__art {
+        position: relative;
+        flex: none;
+        width: 128px;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: #0e0e0e;
+        border-radius: 8px;
+    }
+
+    .pf-osd-episode__image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    // A watched episode steps back
+    .pf-osd-episode--played .pf-osd-episode__image {
+        opacity: 0.55;
+    }
+
+    .pf-osd-episode__progress {
+        position: absolute;
+        right: 6px;
+        bottom: 6px;
+        left: 6px;
+        height: 3px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 999px;
+    }
+
+    .pf-osd-episode__progress-fill {
+        display: block;
+        height: 100%;
+        background: #fff;
+        border-radius: 999px;
+    }
+
+    .pf-osd-episode__text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .pf-osd-episode__number {
+        color: #a3a3a3;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .pf-osd-episode__title {
+        display: -webkit-box;
+        overflow: hidden;
+        font-weight: 600;
+        font-size: 15px;
+        line-height: 1.25;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .pf-osd-episode__status {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        color: #a3a3a3;
+        font-size: 13px;
+    }
+
+    // While the episodes load: grey blocks that shimmer
+    .pf-osd-episode--skeleton {
+        height: 88px;
+        background: linear-gradient(90deg, #111 0, #1c1c1c 50%, #111 100%);
+        background-size: 800px 100%;
+        cursor: default;
+        animation: pf-osd-shimmer 1.6s linear infinite;
+    }
+
+    // A phone: each panel rises from the bottom over a dimmed picture
+
+    @media (max-width: 40em) {
+        .pf-osd-scrim {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            display: block;
+            background: rgba(0, 0, 0, 0.55);
+            animation: pf-osd-scrim-in 160ms ease-out both;
+
+            &[hidden] {
+                display: none;
+            }
+        }
+
+        .pf-osd-panel,
+        .pf-osd-panel[data-kind='tracks'],
+        .pf-osd-panel[data-kind='tracks'].pf-osd-panel--single,
+        .pf-osd-panel[data-kind='episodes'] {
+            top: auto;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: auto;
+            max-width: none;
+            max-height: 80vh;
+            padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+            border-width: 1px 0 0;
+            border-radius: 18px 18px 0 0;
+            animation-name: pf-osd-sheet-in;
+        }
+
+        .pf-osd-panel[data-kind='episodes'] {
+            height: 80vh;
+        }
+
+        .pf-osd-tracks {
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .pf-osd-episode__art {
+            width: 112px;
+        }
+    }
+}
+
+// On a TV the focused choice fills white, readable from the couch
+:root.layout-tv.pf-player-skin {
+    .pf-osd-option:focus,
+    .pf-osd-row:focus,
+    .pf-osd-episode:focus,
+    .pf-osd-chip:focus,
+    .pf-osd-iconbutton:focus {
+        color: #000;
+        background: #fff;
+        outline: none;
+
+        .pf-osd-option__aside,
+        .pf-osd-row__value,
+        .pf-osd-episode__number,
+        .pf-osd-episode__status {
+            color: #404040;
+        }
+    }
+}
+
+@keyframes pf-osd-panel-in {
+    from {
+        transform: translateY(6px) scale(0.98);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@keyframes pf-osd-sheet-in {
+    from {
+        transform: translateY(24px);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@keyframes pf-osd-scrim-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pf-osd-shimmer {
+    from {
+        background-position: -400px 0;
+    }
+
+    to {
+        background-position: 400px 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root.pf-player-skin {
+        .pf-osd-panel,
+        .pf-osd-scrim,
+        .pf-osd-episode--skeleton {
+            animation: none;
+        }
+    }
+}

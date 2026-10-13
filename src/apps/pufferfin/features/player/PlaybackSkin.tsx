@@ -10,6 +10,7 @@ import './player.scss';
 import './playerMenus.scss';
 import './playerOverlays.scss';
 import './queue.scss';
+import './osd/osd.scss';
 
 /**
  * Serves every playback screen and every shared dialog in the Pufferfin style,

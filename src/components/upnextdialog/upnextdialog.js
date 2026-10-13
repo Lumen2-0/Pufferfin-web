@@ -3,9 +3,10 @@ import { playbackManager } from '../playback/playbackmanager';
 import Events from '../../utils/events.ts';
 import layoutManager from '../layoutManager';
 import focusManager from '../focusManager';
-import globalize from '../../lib/globalize';
 import { ServerConnections } from 'lib/jellyfin-apiclient';
 import itemHelper from '../itemHelper';
+import escapeHtml from 'escape-html';
+import { playerText } from 'apps/pufferfin/features/player/osd/strings';
 
 import './upnextdialog.scss';
 import '../../elements/emby-button/emby-button';
@@ -13,31 +14,32 @@ import '../../styles/flexstyles.scss';
 
 const transitionEndEventName = dom.whichTransitionEvent();
 
-// PUFFERFIN: a card of the next episode: its picture with the countdown along
-// its bottom edge, what it is, Play now and Cancel
-const PLAY_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z"/></svg>';
-
+// PUFFERFIN: a card of the next episode: its picture, "Up next", its name,
+// its numbers and the countdown; Play now and Cancel under it, and a thin
+// line along the bottom that fills up until it plays
 function getHtml() {
     let html = '';
 
     html += '<div class="pf-upnext">';
-    html += '<div class="pf-upnext__art"><img class="pf-upnext__image" alt="" loading="eager" /><span class="pf-upnext__countdown"><span class="pf-upnext__countdown-fill"></span></span></div>';
+    html += '<div class="pf-upnext__row">';
+    html += '<div class="pf-upnext__art"><img class="pf-upnext__image" alt="" loading="eager" /></div>';
     html += '<div class="pf-upnext__body">';
-    html += '<p class="upNextDialog-nextVideoText pf-upnext__eyebrow">&nbsp;</p>';
+    html += '<p class="pf-upnext__eyebrow">' + escapeHtml(playerText('Player.UpNext')) + '</p>';
     html += '<h3 class="upNextDialog-title pf-upnext__title"></h3>';
-    html += '<p class="pf-upnext__subtitle"></p>';
+    html += '<p class="upNextDialog-nextVideoText pf-upnext__meta"></p>';
+    html += '</div>';
+    html += '</div>';
+
     html += '<div class="upNextDialog-buttons pf-upnext__buttons">';
-
     html += '<button type="button" is="emby-button" class="btnStartNow upNextDialog-button pf-upnext__play">';
-    html += PLAY_ICON + '<span>' + globalize.translate('HeaderStartNow') + '</span>';
+    html += escapeHtml(playerText('Player.PlayNow'));
     html += '</button>';
-
     html += '<button type="button" is="emby-button" class="btnHide upNextDialog-button pf-upnext__cancel">';
-    html += globalize.translate('ButtonCancel');
+    html += escapeHtml(playerText('Player.Cancel'));
     html += '</button>';
+    html += '</div>';
 
-    html += '</div>';
-    html += '</div>';
+    html += '<span class="pf-upnext__countdown" aria-hidden="true"><span class="pf-upnext__countdown-fill"></span></span>';
     html += '</div>';
 
     return html;
@@ -50,29 +52,19 @@ function setNextVideoText() {
 
     const secondsRemaining = Math.max(Math.round(getTimeRemainingMs(instance) / 1000), 0);
 
-    console.debug('up next seconds remaining: ' + secondsRemaining);
+    // PUFFERFIN: "S1, E16 · Playing in 10 s", the numbers alone without autoplay
+    const parts = [ instance.numbersText ];
+    if (!instance.showStaticNextText) parts.push(playerText('Player.PlayingIn', secondsRemaining));
+    elem.querySelector('.upNextDialog-nextVideoText').textContent = parts.filter(Boolean).join(' · ');
 
-    const timeText = '<span class="upNextDialog-countdownText">' + globalize.translate('HeaderSecondsValue', secondsRemaining) + '</span>';
-
-    let nextVideoText;
-    if (instance.itemType === 'Episode') {
-        nextVideoText = instance.showStaticNextText ?
-            globalize.translate('HeaderNextEpisode') :
-            globalize.translate('HeaderNextEpisodePlayingInValue', timeText);
-    } else {
-        nextVideoText = instance.showStaticNextText ?
-            globalize.translate('HeaderNextVideo') :
-            globalize.translate('HeaderNextVideoPlayingInValue', timeText);
-    }
-
-    elem.querySelector('.upNextDialog-nextVideoText').innerHTML = nextVideoText;
-
-    // PUFFERFIN: the bar along the picture empties as the next episode nears
+    // The line along the bottom fills up as the next episode nears
+    const countdown = elem.querySelector('.pf-upnext__countdown');
     const fill = elem.querySelector('.pf-upnext__countdown-fill');
-    if (fill) {
+    if (countdown && fill) {
+        countdown.classList.toggle('hide', !!instance.showStaticNextText);
         if (!instance.showStaticNextText && !instance._countdownStartMs) instance._countdownStartMs = Math.max(getTimeRemainingMs(instance), 1);
         const ratio = instance.showStaticNextText ? 0 : Math.min(Math.max(getTimeRemainingMs(instance) / instance._countdownStartMs, 0), 1);
-        fill.style.transform = `scaleX(${ratio})`;
+        fill.style.transform = `scaleX(${1 - ratio})`;
     }
 }
 
@@ -81,14 +73,13 @@ function fillItem(item) {
 
     const elem = instance.options.parent;
 
-    // PUFFERFIN: the series as the title, the episode under it, its picture beside
+    // PUFFERFIN: the name of the episode as the title, its numbers under it, its picture beside
     // The name alone: the display name already starts with the numbers of an episode
-    const episode = item.Type === 'Episode' ? item.Name : itemHelper.getDisplayName(item);
-    const numbers = item.Type === 'Episode' && item.ParentIndexNumber != null && item.IndexNumber != null ?
-        `S${item.ParentIndexNumber}:E${item.IndexNumber}` :
+    const name = item.Type === 'Episode' ? item.Name : itemHelper.getDisplayName(item);
+    elem.querySelector('.upNextDialog-title').innerText = name || item.SeriesName || '';
+    instance.numbersText = item.Type === 'Episode' && item.ParentIndexNumber != null && item.IndexNumber != null ?
+        playerText('Player.EpisodeShort', item.ParentIndexNumber, item.IndexNumber) :
         '';
-    elem.querySelector('.upNextDialog-title').innerText = item.SeriesName || episode || '';
-    elem.querySelector('.pf-upnext__subtitle').innerText = item.SeriesName ? [ numbers, episode ].filter(Boolean).join(' · ') : '';
 
     const image = elem.querySelector('.pf-upnext__image');
     const imageUrl = getImageUrl(item);

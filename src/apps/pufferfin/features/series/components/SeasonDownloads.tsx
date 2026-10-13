@@ -14,6 +14,7 @@ import { useCreateRequest, useMyRequests } from '../../requests/api/useRequests'
 import DownloadTag from '../../requests/components/DownloadTag';
 import { findSeriesRequests, isOver, summarizeRequests } from '../../requests/utils/requests';
 import { getCreateErrorLabel } from '../../requests/utils/status';
+import { DownloadIcon } from '../../details/components/sheetIcons';
 
 /** Where a season stands, for its line in the window. */
 export enum SeasonStatus {
@@ -119,6 +120,8 @@ interface SeasonDownloadsProps {
     canRequest: boolean
     /** Gray underlined text next to Play, rather than a button next to Download all seasons. */
     asText?: boolean
+    /** Among the actions of a series on disk: a button with the download arrow. */
+    withDownloadIcon?: boolean
 }
 
 /**
@@ -126,7 +129,7 @@ interface SeasonDownloadsProps {
  * the library holds of it and where its download stands, each missing one
  * downloadable on its own.
  */
-const SeasonDownloads: FC<SeasonDownloadsProps> = ({ seriesTmdbId, seriesTitle, seasons, canRequest, asText }) => {
+const SeasonDownloads: FC<SeasonDownloadsProps> = ({ seriesTmdbId, seriesTitle, seasons, canRequest, asText, withDownloadIcon }) => {
     const t = useTranslation();
     const [ isOpen, setIsOpen ] = useState(false);
     const open = useCallback(() => setIsOpen(true), []);
@@ -141,7 +144,7 @@ const SeasonDownloads: FC<SeasonDownloadsProps> = ({ seriesTmdbId, seriesTitle, 
         <>
             {asText ?
                 <TextAction onClick={open}>{t('ActionDownloadSeason')}</TextAction> :
-                <RoundButton icon={<Tv />} label={t('ActionDownloadSeason')} onClick={open} />}
+                <RoundButton icon={withDownloadIcon ? <DownloadIcon /> : <Tv />} label={t('ActionDownloadSeason')} onClick={open} />}
             {isOpen && (
                 <Modal title={seriesTitle} icon={<Download fontSize='inherit' />} onClose={close} className='pf-seasons-modal'>
                     <ul className='pf-season-lines'>

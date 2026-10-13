@@ -1,8 +1,14 @@
 // Pufferfin skin for the upstream video player and its overlays (subtitle
-// offset, playback stats, up next). The document element always carries
+// offset, playback stats). The document element always carries
 // .pf-player-skin, so every playback gets it, whatever screen started it.
-// Full width, black veils, round glass buttons, no blue: the controls and
-// their logic stay upstream, only their look changes here.
+//
+// The player of the design: a soft black veil at the top with Back, the title
+// and the actions (Episodes, SyncPlay, cast); a soft black veil at the bottom
+// with a thin timeline over the whole width, its chapters notched in it, and
+// one line of icon buttons under it: previous, back, play, ahead, next and the
+// time on the left; subtitles, settings, picture in picture, the volume and
+// full screen on the right. Paused, a white round Play sits in the middle.
+// The upstream markup and logic stay; only the layout and the icons change.
 
 @use '../../styles/tokens' as *;
 @use 'sass:map';
@@ -20,69 +26,172 @@
         @include pf-overlay-palette;
     }
 
-    // The player of the former Lumen app, measure for measure: no card, no
-    // glass. A black veil at the top with Back and the title; a black veil at
-    // the bottom with a thin timeline over the whole width, then one line of
-    // small round filled buttons: play, back and forward ten seconds and the
-    // time on the left; subtitles, audio, settings, picture in picture, mute,
-    // a thin separator and full screen on the right. No volume bar.
-    // Paused, a large round Play sits in the middle of the picture.
-    // The upstream markup and logic stay; only the layout and the icons change.
+    --pf-osd-text: #fff;
+    --pf-osd-muted: #a3a3a3;
+    --pf-osd-hover: rgba(255, 255, 255, 0.14);
+    --pf-osd-gutter: 28px;
 
-    --pf-lumen-fill: #262626;
-    --pf-lumen-fill-hover: rgba(38, 38, 38, 0.8);
-    --pf-lumen-text: #fafafa;
-    --pf-lumen-muted: #a3a3a3;
+    // The top: Back and the title on the left, the actions on the right
 
     .skinHeader-withBackground.osdHeader {
-        padding: 0.5rem clamp(0.5rem, 1.5vw, 1rem);
-        background: linear-gradient(180deg, rgba(10, 10, 10, 0.8) 0%, rgba(10, 10, 10, 0) 100%);
+        height: auto;
+        padding: 0;
+        background: none;
         backdrop-filter: none;
-    }
 
-    .osdHeader .headerButton {
-        width: 2.25rem;
-        height: 2.25rem;
-        color: #d4d4d4;
-        border-radius: 50%;
-        transition:
-            color var(--pf-duration) var(--pf-ease),
-            background-color var(--pf-duration) var(--pf-ease);
-
-        // The icon alone, as the buttons of the controls
-        &:hover {
-            color: var(--pf-lumen-text);
-            background: transparent;
+        // The veil reaches further than the bar, over 18% of the picture
+        &::before {
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: -1;
+            height: max(18vh, 100%);
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+            pointer-events: none;
+            content: '';
         }
     }
 
-    .videoOsd-appBar .MuiTypography-root {
+    .pf-osd-top {
+        display: flex;
+        gap: 24px;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
+        padding: 14px var(--pf-osd-gutter);
+        pointer-events: all;
+    }
+
+    .pf-osd-top__start {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .pf-osd-top__title {
         overflow: hidden;
-        color: var(--pf-lumen-text);
+        color: rgba(255, 255, 255, 0.85);
         font-weight: 500;
-        font-size: 1rem;
+        font-size: 16px;
         white-space: nowrap;
         text-overflow: ellipsis;
     }
 
+    .pf-osd-top__actions {
+        display: flex;
+        flex: none;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .pf-osd-top__back,
+    .pf-osd-top__episodes,
+    .pf-osd-top__actions .MuiIconButton-root {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        height: 44px;
+        margin: 0;
+        padding: 0;
+        color: var(--pf-osd-text);
+        font: inherit;
+        background: transparent;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background-color var(--pf-duration) var(--pf-ease);
+    }
+
+    .pf-osd-top__back,
+    .pf-osd-top__actions .MuiIconButton-root {
+        width: 44px;
+    }
+
+    .pf-osd-top__actions .MuiSvgIcon-root {
+        font-size: 24px;
+    }
+
+    .pf-osd-top__episodes {
+        gap: 8px;
+        padding: 0 16px;
+        font-weight: 600;
+        font-size: 14px;
+
+        &[aria-expanded='true'] {
+            background: var(--pf-osd-hover);
+        }
+    }
+
+    .pf-osd-top__back:hover,
+    .pf-osd-top__episodes:hover,
+    .pf-osd-top__actions .MuiIconButton-root:hover {
+        background: var(--pf-osd-hover);
+    }
+
+    .pf-osd-top__back:focus-visible,
+    .pf-osd-top__episodes:focus-visible,
+    .pf-osd-top__actions .MuiIconButton-root:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+
+    // The legacy header of a TV: the same Episodes button
+    .osdHeader .pf-headerEpisodes {
+        display: inline-flex;
+        gap: 0.5rem;
+        align-items: center;
+        width: auto;
+        padding: 0 1rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-radius: 999px;
+
+        &.hide {
+            display: none;
+        }
+    }
+
+    // The legacy header: round buttons as the design draws them
+    .osdHeader .headerButton {
+        width: 44px;
+        height: 44px;
+        color: var(--pf-osd-text);
+        border-radius: 999px;
+        transition: background-color var(--pf-duration) var(--pf-ease);
+
+        &:hover {
+            background: var(--pf-osd-hover);
+        }
+    }
+
+    // The bottom: the timeline, then one line of controls
+
     .videoOsdBottom {
-        padding: 5rem clamp(1rem, 2.5vw, 1.5rem) clamp(1rem, 2.5vw, 1.5rem);
-        background: linear-gradient(0deg, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.7) 50%, rgba(10, 10, 10, 0) 100%);
+        padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        background: none;
+
+        // The veil starts at 72% of the picture
+        &::before {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: -1;
+            height: max(28vh, 100%);
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            pointer-events: none;
+            content: '';
+        }
     }
 
     .osdControls {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        padding: 0;
-    }
-
-    // The rows of the upstream markup step aside: their children line up in one flow
-    // Only the wrappers: the end time and the volume are blocks of their own
-    .osdControls > .flex,
-    .osdControls > .buttons,
-    .osdControls > .buttons > div[dir] {
-        display: contents;
+        flex-direction: column;
+        gap: 4px;
+        padding: 0 20px 14px;
     }
 
     // The title is in the bar at the top
@@ -93,204 +202,239 @@
         display: none;
     }
 
-    // Timeline: 4px, 6px under the pointer, its knob shown on hover
+    // Timeline: a 4px line, the watched part white, chapter notches in black,
+    // a white dot under the pointer
 
-    .osdControls > .flex > .sliderContainer {
-        flex: 0 0 100%;
-        order: 0;
-        margin: 0 0 0.5rem !important;
+    .pf-seek {
+        --pf-scrub-x: 0%;
+
+        position: relative;
+        height: 24px;
+        margin: 0;
+
+        &::after {
+            position: absolute;
+            top: 50%;
+            left: var(--pf-scrub-x);
+            z-index: 2;
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 999px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0;
+            transition:
+                opacity var(--pf-duration) var(--pf-ease),
+                transform var(--pf-duration) var(--pf-ease);
+            pointer-events: none;
+            content: '';
+        }
+
+        &:hover::after {
+            transform: translate(-50%, -50%);
+            opacity: 1;
+        }
     }
 
-    .sliderContainer .mdl-slider-background-flex-container {
+    .pf-seek .mdl-slider-background-flex-container,
+    .pf-seek .sliderBubbleTrack,
+    .pf-seek .sliderMarkerContainer {
+        margin: 0;
         padding: 0;
     }
 
-    .mdl-slider-background-flex {
+    .pf-seek .mdl-slider-background-flex {
         height: 4px;
         margin-top: -2px;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.28);
         border-radius: 999px;
-        transition:
-            height var(--pf-duration) var(--pf-ease),
-            margin var(--pf-duration) var(--pf-ease);
     }
 
-    .sliderContainer:hover .mdl-slider-background-flex {
-        height: 6px;
-        margin-top: -3px;
+    .pf-seek .mdl-slider {
+        color: #fff;
     }
 
-    .mdl-slider {
-        color: var(--pf-lumen-text);
-    }
-
-    .mdl-slider-background-lower {
-        background-color: #f5f5f5;
+    .pf-seek .mdl-slider-background-lower {
+        background-color: #fff;
         border-radius: 999px;
     }
 
     // What is already loaded ahead
-    .mdl-slider-background-upper {
-        background: rgba(255, 255, 255, 0.4);
+    .pf-seek .mdl-slider-background-upper {
+        background: rgba(255, 255, 255, 0.18);
     }
 
-    .mdl-slider::-webkit-slider-thumb {
-        width: 0.75rem;
-        height: 0.75rem;
-        background: #f5f5f5;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    // The knob shows while it is dragged or focused; the hover dot does the rest
+    .pf-seek .mdl-slider::-webkit-slider-thumb {
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border: 0;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
         opacity: 0;
         transition: opacity var(--pf-duration) var(--pf-ease);
     }
 
-    .mdl-slider::-moz-range-thumb {
-        width: 0.75rem;
-        height: 0.75rem;
-        background: #f5f5f5;
+    .pf-seek .mdl-slider::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        background: #fff;
         border: 0;
         opacity: 0;
         transition: opacity var(--pf-duration) var(--pf-ease);
     }
 
-    .sliderContainer:hover .mdl-slider::-webkit-slider-thumb,
-    .sliderContainer .mdl-slider:focus::-webkit-slider-thumb {
+    .pf-seek .mdl-slider:active::-webkit-slider-thumb,
+    .pf-seek .mdl-slider:focus-visible::-webkit-slider-thumb {
         opacity: 1;
     }
 
-    .sliderContainer:hover .mdl-slider::-moz-range-thumb,
-    .sliderContainer .mdl-slider:focus::-moz-range-thumb {
+    .pf-seek .mdl-slider:active::-moz-range-thumb,
+    .pf-seek .mdl-slider:focus-visible::-moz-range-thumb {
         opacity: 1;
     }
 
-    // The time under the pointer: a small dark tag above the line
-    .sliderBubble {
-        color: #f5f5f5;
-        font-weight: 500;
-        font-size: 0.75rem;
-        background: #0a0a0a;
-        border: 1px solid rgba(64, 64, 64, 0.8);
-        border-radius: 6px;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
-        font-variant-numeric: tabular-nums;
+    // Chapters: notches cut in the line
+    .pf-seek .sliderMarkerContainer {
+        top: 50%;
+        z-index: 2;
+        height: 0;
+        pointer-events: none;
     }
 
-    .sliderBubbleText {
-        padding: 0.25rem 0.5rem;
+    .pf-seek .sliderMarker,
+    .pf-seek .sliderMarker.watched,
+    .pf-seek .sliderMarker.unwatched {
+        top: -2px;
+        width: 3px;
+        height: 4px;
+        background: #000;
+        transform: none;
     }
 
-    // Chapters: small notches on the line
-    .sliderMarker {
-        width: 2px;
-        height: 8px;
-        border-radius: 1px;
+    // Above the pointer: the picture at that time framed in white, then the
+    // time and the chapter in a small dark tag
+
+    .pf-seek .sliderBubble {
+        padding: 0;
+        background: transparent;
+        transform: translate3d(-50%, calc(-100% - 14px), 0);
     }
 
-    .sliderMarker.unwatched {
-        background-color: rgba(255, 255, 255, 0.55);
+    .pf-scrub {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: center;
     }
 
-    .sliderMarker.watched {
-        background-color: rgba(0, 0, 0, 0.45);
-    }
-
-    // "0:12 / 1:42:00", small and quiet next to the buttons
-    .osdControls .osdPositionText,
-    .osdControls .osdDurationText {
-        margin: 0 !important;
-        color: var(--pf-lumen-muted);
-        font-size: 0.75rem;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .osdControls .osdPositionText {
-        order: 8;
-        margin-left: 0.25rem !important;
-    }
-
-    .osdControls .osdDurationText {
-        order: 9;
-    }
-
-    // When it ends ("Ends at 22:30"): right after the time code, smaller and
-    // dimmer. It takes the free width of the line, which pushes the actions to
-    // the right edge
-    .osdControls .osdTimeText {
-        flex: 1;
-        order: 10;
-        min-width: 0.5rem;
-        margin: 0 0.6rem 0 0.25rem;
+    .pf-scrub__frame {
+        position: relative;
+        aspect-ratio: 16 / 9;
         overflow: hidden;
-        color: #737373;
-        text-align: start;
-        text-overflow: ellipsis;
-        font-size: 0.6875rem;
+        background: #141414;
+        border: 2px solid #fff;
+        border-radius: 8px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .pf-scrub--trickplay .pf-scrub__frame {
+        aspect-ratio: auto;
+    }
+
+    .pf-scrub__tile {
+        background-repeat: no-repeat;
+        transform-origin: 0 0;
+    }
+
+    .pf-scrub__image {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .pf-scrub__label {
+        padding: 4px 10px;
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
         white-space: nowrap;
+        background: #141414;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
         font-variant-numeric: tabular-nums;
     }
 
-    // Upstream hides it under 75em; here it shows down to tablets
-    @media (min-width: 40em) {
-        .videoOsdBottom .osdTimeText .endsAtText {
-            display: inline !important;
-        }
+    .pf-scrub__chapter {
+        color: var(--pf-osd-muted);
+        font-weight: 500;
     }
 
-    .osdControls .osdDurationText::before {
-        padding: 0 0.3em;
-        content: '/';
+    // The line of controls
+
+    .videoOsdBottom .pf-osd-bar {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0;
     }
 
-    // Buttons: the icon alone, no circle behind it. Slightly dimmed at rest,
-    // full white and a touch larger under the pointer; the keyboard focus
-    // draws a soft ring
+    .pf-osd-bar__start,
+    .pf-osd-bar__end {
+        display: flex;
+        gap: 2px;
+        align-items: center;
+        min-width: 0;
+    }
+
+    // Buttons: the icon alone, a soft round fill under the pointer
 
     .videoOsdBottom .paper-icon-button-light {
         display: inline-flex;
         flex: none;
         align-items: center;
         justify-content: center;
-        // The hit area stays 36px at the base size, larger on large screens
-        width: 2.42rem;
-        height: 2.42rem;
-        margin: 0 0.1rem;
+        width: 44px;
+        height: 44px;
+        margin: 0;
         padding: 0;
-        color: rgba(250, 250, 250, 0.82);
+        color: var(--pf-osd-text);
         background: transparent;
         border: 0;
-        border-radius: 0.6rem;
-        transition:
-            color var(--pf-duration) var(--pf-ease),
-            transform var(--pf-duration) var(--pf-ease);
+        border-radius: 999px;
+        transition: background-color var(--pf-duration) var(--pf-ease);
+    }
+
+    .videoOsdBottom .paper-icon-button-light:disabled {
+        opacity: 0.4;
     }
 
     .videoOsdBottom .paper-icon-button-light:hover:not(:disabled),
-    .videoOsdBottom .paper-icon-button-light:active:not(:disabled) {
-        color: #fafafa;
-        background: transparent;
-        transform: scale(1.08);
-    }
-
-    .videoOsdBottom .paper-icon-button-light:active:not(:disabled) {
-        transform: scale(0.94);
+    .videoOsdBottom .paper-icon-button-light[aria-expanded='true'] {
+        color: var(--pf-osd-text);
+        background: var(--pf-osd-hover);
+        transform: none;
     }
 
     .videoOsdBottom .paper-icon-button-light:focus:not(:disabled) {
-        color: #fafafa;
-        background: transparent;
+        color: var(--pf-osd-text);
         box-shadow: none;
     }
 
     .videoOsdBottom .paper-icon-button-light:focus-visible:not(:disabled),
     .videoOsdBottom .paper-icon-button-light.show-focus:focus:not(:disabled) {
-        color: #fafafa;
-        background: transparent;
-        box-shadow: 0 0 0 2px rgba(250, 250, 250, 0.55);
+        outline: 2px solid #fff;
+        outline-offset: 2px;
     }
 
-    // Icons: lucide drawings, 18px, play and pause 24px
+    // Icons: the drawings of the design, 20px, play and the jumps 22px
     .videoOsdBottom .material-icons {
-        width: 1.15rem;
-        height: 1.15rem;
+        width: 20px;
+        height: 20px;
         font-size: 0;
 
         &::before {
@@ -303,9 +447,11 @@
         }
     }
 
-    .videoOsdBottom .btnPause .material-icons {
-        width: 1.5rem;
-        height: 1.5rem;
+    .videoOsdBottom .btnPause .material-icons,
+    .videoOsdBottom .btnRewind .material-icons,
+    .videoOsdBottom .btnFastForward .material-icons {
+        width: 22px;
+        height: 22px;
     }
 
     @each $class, $icon in $pf-player-icon-classes {
@@ -314,51 +460,62 @@
         }
     }
 
-    // Playback on the left, in the order of the timeline: previous episode,
-    // back a few seconds, play or pause, ahead a few seconds, next episode.
-    // The actions on the right
-    .osdControls .btnPreviousTrack { order: 1; }
-    .osdControls .btnPreviousChapter { order: 2; }
-    .osdControls .btnRewind { order: 3; }
-    .osdControls .btnPause { order: 4; }
-    .osdControls .btnFastForward { order: 5; }
-    .osdControls .btnNextChapter { order: 6; }
-    .osdControls .btnNextTrack { order: 7; }
-    .osdControls .btnRecord { order: 11; }
-    .osdControls .btnUserRating { order: 12; }
-    .osdControls .btnSubtitles { order: 13; }
-    .osdControls .btnAudio { order: 14; }
-    .osdControls .btnVideoOsdSettings { order: 15; }
-    .osdControls .btnAirPlay { order: 16; }
-    .osdControls .btnPip { order: 17; }
+    // The time: "23:59 / -20:14", then when it ends, quieter
 
-    // The volume: the mute button alone, no bar
-    .osdControls .volumeButtons {
+    .videoOsdBottom .pf-osd-time {
         display: flex;
-        order: 18;
-        align-items: center;
+        gap: 14px;
+        align-items: baseline;
+        min-width: 0;
+        margin: 0 0 0 10px;
+        overflow: hidden;
+        color: var(--pf-osd-text);
+        font-size: 13px;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
     }
 
-    .osdVolumeSliderContainer {
-        display: none;
+    .pf-osd-time .osdTextContainer {
+        display: inline;
+        margin: 0;
+        padding: 0;
     }
 
-    // A thin separator, then full screen
-    .osdControls .btnFullscreen {
-        position: relative;
-        order: 19;
-        margin-left: 0.6rem;
+    .pf-osd-time .osdDurationText {
+        color: var(--pf-osd-muted);
 
         &::before {
-            position: absolute;
-            top: 50%;
-            left: -0.45rem;
-            width: 1px;
-            height: 1.25rem;
-            background: #404040;
-            transform: translateY(-50%);
-            content: '';
+            content: '\00a0/ ';
         }
+    }
+
+    .pf-osd-time .osdPositionText.hide + .osdDurationText::before {
+        content: none;
+    }
+
+    .pf-osd-time .endsAtText {
+        overflow: hidden;
+        color: var(--pf-osd-muted);
+        text-overflow: ellipsis;
+    }
+
+    // Upstream hides these on narrow screens; here they show down to tablets
+    @media (min-width: 40em) {
+        .videoOsdBottom .pf-osd-time .endsAtText {
+            display: inline !important;
+        }
+
+        .videoOsdBottom .btnFastForward,
+        .videoOsdBottom .btnRewind {
+            display: inline-flex !important;
+        }
+    }
+
+    // The volume: the mute button, then a short bar beside it
+    .videoOsdBottom .volumeButtons {
+        display: flex;
+        align-items: center;
+        margin: 0;
     }
 
     // The volume indicator of the keys and the wheel does not show either
@@ -366,17 +523,17 @@
         display: none;
     }
 
-    // Paused: a large round Play in the middle of the picture, as in Lumen
+    // Paused: a white round Play in the middle of the picture
     #videoOsdPage:has(.btnPause .play_arrow)::after {
         position: fixed;
         top: 50%;
         left: 50%;
         z-index: 1;
-        width: 4rem;
-        height: 4rem;
+        width: 56px;
+        height: 56px;
         background:
-            var(--pf-player-paused-play) center / 1.75rem no-repeat,
-            rgba(245, 245, 245, 0.9);
+            var(--pf-player-paused-play) center / 24px no-repeat,
+            rgba(255, 255, 255, 0.92);
         border-radius: 50%;
         transform: translate(-50%, -50%);
         pointer-events: none;
@@ -386,46 +543,48 @@
     --pf-player-paused-play: #{map.get($pf-player-icons, 'play')};
 
     @media (max-width: 40em) {
-        .videoOsdBottom .paper-icon-button-light {
-            margin: 0 0.0625rem;
+        --pf-osd-gutter: 16px;
+
+        .osdControls {
+            padding: 0 8px 10px;
         }
 
         .osdControls .btnPip,
-        .osdControls .btnAirPlay,
-        .osdControls .osdDurationText::before {
+        .osdControls .btnAirPlay {
             display: none;
         }
 
-        // No room for the end time: it only keeps the actions on the right
-        .osdControls .osdTimeText {
-            visibility: hidden;
+        .videoOsdBottom .pf-osd-time {
+            margin-left: 4px;
+            font-size: 12px;
         }
 
-        .osdControls .osdPositionText,
-        .osdControls .osdDurationText {
-            font-size: 0.6875rem;
+        .pf-osd-top__episodes {
+            padding: 0 12px;
         }
     }
 
-    // Back button of the player header: the same halo as the controls
+    @media (max-width: 30em) {
+        .videoOsdBottom .paper-icon-button-light {
+            width: 40px;
+            height: 40px;
+        }
 
-    .osdHeader .headerButton:focus,
-    .osdHeader .headerButton.show-focus:focus {
-        color: var(--pf-color-text);
-        background: var(--pf-glass-background-strong);
-        border-radius: 50%;
-        box-shadow: var(--pf-focus-ring);
+        .pf-osd-top__episodes svg {
+            display: none;
+        }
     }
 
-    // Subtitle offset and playback stats float over the picture: dark glass
+    // Subtitle offset and playback stats float over the picture: solid, like the panels
 
     .subtitleSyncContainer,
     .playerStats {
         color: var(--pf-color-text);
-        background: var(--pf-glass-background-strong);
-        border: 1px solid var(--pf-glass-border);
-        border-radius: 20px;
-        backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
+        background: #141414;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+        backdrop-filter: none;
     }
 
     .subtitleSyncTextField {
@@ -447,7 +606,7 @@
     .subtitleSync-closeButton:focus,
     .playerStats-closeButton:focus {
         color: var(--pf-color-text);
-        background: var(--pf-glass-background-strong);
+        background: var(--pf-osd-hover);
         box-shadow: var(--pf-focus-ring);
     }
 
@@ -491,12 +650,15 @@
     }
 }
 
+// On a TV the focus must read from the couch: the focused button fills white
+
 :root.layout-tv.pf-player-skin {
     .videoOsdBottom .paper-icon-button-light:focus:not(:disabled),
-    .videoOsdBottom .paper-icon-button-light.show-focus:focus {
-        color: var(--pf-color-on-accent);
-        background: var(--pf-color-accent);
-        box-shadow: var(--pf-focus-ring);
+    .videoOsdBottom .paper-icon-button-light.show-focus:focus,
+    .osdHeader .headerButton:focus {
+        color: #000;
+        background: #fff;
+        outline: none;
     }
 }
 

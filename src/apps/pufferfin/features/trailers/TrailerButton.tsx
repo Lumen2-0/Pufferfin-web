@@ -3,6 +3,7 @@ import React, { type FC, useCallback, useState } from 'react';
 import Modal from '../../components/Modal';
 import RoundButton from '../../components/RoundButton';
 import { Movie } from '../../components/icons';
+import { TrailerIcon } from '../details/components/sheetIcons';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { CatalogVideo } from '../catalog/api/types';
 
@@ -33,7 +34,7 @@ const TrailerButton: FC<{ videos: CatalogVideo[] | undefined, title: string }> =
 
     return (
         <>
-            <RoundButton icon={<Movie />} label={t('ActionTrailer')} onClick={open} />
+            <RoundButton icon={<TrailerIcon />} label={t('ActionTrailer')} onClick={open} />
             {isOpen && (
                 <Modal title={title} icon={<Movie fontSize='inherit' />} onClose={close} className='pf-trailer'>
                     <div className='pf-trailer__frame'>

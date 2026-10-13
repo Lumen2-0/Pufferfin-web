@@ -1,36 +1,29 @@
 /**
- * The volume of the video player: the volume button opens, above it, a small
- * horizontal panel in the manner of a shadcn/ui popover with a slider. Mute
- * on the left, the slider, the level on the right. Escape, a click outside or
- * the volume button again closes it.
+ * The volume of the video player, as the design draws it: the mute button,
+ * then a short bar right beside it that sets the level. The bar is a real
+ * slider: drag it, click it, or move it with the arrow keys once focused.
  */
 
-export interface VolumePanelOptions {
-    /** The volume button, which opens and closes the panel. */
-    button: HTMLElement
-    /** The element the panel is placed in, around the button. */
+export interface InlineVolumeOptions {
+    /** The element the bar goes in, after the mute button. */
     container: HTMLElement
     /** Sets the volume, from 0 to 100. */
     setVolume: (volume: number) => void
-    /** Mutes or unmutes. */
+    /** Unmutes when the bar is moved while muted. */
     setMuted: (muted: boolean) => void
-    /** Words of the panel, in the language of the interface. */
-    labels: { volume: string, mute: string, unmute: string }
-    /** Told when the panel opens or closes, to hold the controls while it is open. */
-    onOpenChange?: (isOpen: boolean) => void
+    /** The name of the bar, in the language of the interface. */
+    label: string
 }
 
-export interface VolumePanel {
-    toggle: () => void
-    close: () => void
-    isOpen: () => boolean
+export interface InlineVolume {
     /** Shows the current state of the player. */
     update: (muted: boolean, volume: number) => void
+    /** Shows the bar only when the player can set the volume. */
+    setAvailable: (isAvailable: boolean) => void
     destroy: () => void
 }
 
-const OPEN_CLASS = 'pf-volume--open';
-const KEYS_OF_THE_SLIDER = new Set([ 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown', ' ' ]);
+const KEYS_OF_THE_SLIDER = new Set([ 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown' ]);
 
 /** The icon of a level: off when muted or at zero, low under half, full above. */
 export function getVolumeIcon(muted: boolean, volume: number) {
@@ -38,112 +31,58 @@ export function getVolumeIcon(muted: boolean, volume: number) {
     return volume < 50 ? 'volume_down' : 'volume_up';
 }
 
-export function createVolumePanel(options: VolumePanelOptions): VolumePanel {
-    const { button, container, labels } = options;
+export function createInlineVolume(options: InlineVolumeOptions): InlineVolume {
+    const { container } = options;
     let muted = false;
-    let volume = 100;
 
-    const panel = document.createElement('div');
-    panel.className = 'pf-volume';
-    panel.setAttribute('role', 'group');
-    panel.setAttribute('aria-label', labels.volume);
-    panel.innerHTML = `
-        <button type="button" class="pf-volume__mute"><span class="material-icons volume_up" aria-hidden="true"></span></button>
-        <input type="range" class="pf-volume__range" min="0" max="100" step="1" />
-        <span class="pf-volume__value" aria-hidden="true"></span>`;
-    container.appendChild(panel);
+    const range = document.createElement('input');
+    range.type = 'range';
+    range.className = 'pf-volume__range';
+    range.min = '0';
+    range.max = '100';
+    range.step = '1';
+    range.setAttribute('aria-label', options.label);
+    container.appendChild(range);
 
-    const muteButton = panel.querySelector<HTMLButtonElement>('.pf-volume__mute')!;
-    const muteIcon = muteButton.querySelector<HTMLElement>('.material-icons')!;
-    const range = panel.querySelector<HTMLInputElement>('.pf-volume__range')!;
-    const value = panel.querySelector<HTMLElement>('.pf-volume__value')!;
-    range.setAttribute('aria-label', labels.volume);
-    button.setAttribute('aria-expanded', 'false');
-
-    const render = () => {
-        const shown = muted ? 0 : Math.round(volume);
+    const render = (level: number) => {
+        const shown = muted ? 0 : Math.round(level);
         range.value = String(shown);
         range.style.setProperty('--pf-volume-fill', `${shown}%`);
-        value.textContent = String(shown);
-        muteIcon.className = `material-icons ${getVolumeIcon(muted, volume)}`;
-        const muteLabel = muted ? labels.unmute : labels.mute;
-        muteButton.setAttribute('aria-label', muteLabel);
-        muteButton.title = muteLabel;
+        range.setAttribute('aria-valuetext', `${shown} %`);
     };
-
-    const isOpen = () => container.classList.contains(OPEN_CLASS);
-
-    const onDocumentPointerDown = (event: PointerEvent) => {
-        if (!container.contains(event.target as Node)) close();
-    };
-
-    const onKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-            event.preventDefault();
-            event.stopPropagation();
-            close();
-            button.focus();
-            return;
-        }
-        // The keys of the slider move the volume, not the video
-        if (event.target === range && KEYS_OF_THE_SLIDER.has(event.key)) event.stopPropagation();
-    };
-
-    function open() {
-        if (isOpen()) return;
-        container.classList.add(OPEN_CLASS);
-        button.setAttribute('aria-expanded', 'true');
-        document.addEventListener('pointerdown', onDocumentPointerDown, true);
-        options.onOpenChange?.(true);
-    }
-
-    function close() {
-        if (!isOpen()) return;
-        container.classList.remove(OPEN_CLASS);
-        button.setAttribute('aria-expanded', 'false');
-        document.removeEventListener('pointerdown', onDocumentPointerDown, true);
-        options.onOpenChange?.(false);
-    }
-
-    const toggle = () => (isOpen() ? close() : open());
 
     const onInput = () => {
-        volume = Number(range.value);
-        // Moving the slider is wanting sound
-        if (muted && volume > 0) {
+        const level = Number(range.value);
+        // Moving the bar is wanting sound
+        if (muted && level > 0) {
             muted = false;
             options.setMuted(false);
         }
-        options.setVolume(volume);
-        render();
+        options.setVolume(level);
+        render(level);
     };
 
-    const onMute = () => {
-        muted = !muted;
-        options.setMuted(muted);
-        render();
+    // The keys of the bar move the volume, not the video
+    const onKeyDown = (event: KeyboardEvent) => {
+        if (KEYS_OF_THE_SLIDER.has(event.key)) event.stopPropagation();
     };
 
     range.addEventListener('input', onInput);
-    muteButton.addEventListener('click', onMute);
-    panel.addEventListener('keydown', onKeyDown);
-    render();
+    range.addEventListener('keydown', onKeyDown);
+    render(100);
 
     return {
-        toggle,
-        close,
-        isOpen,
         update: (isMuted, level) => {
             muted = isMuted;
-            volume = Math.max(0, Math.min(100, Number(level) || 0));
-            render();
+            render(Math.max(0, Math.min(100, Number(level) || 0)));
+        },
+        setAvailable: isAvailable => {
+            range.hidden = !isAvailable;
         },
         destroy: () => {
-            close();
             range.removeEventListener('input', onInput);
-            muteButton.removeEventListener('click', onMute);
-            panel.removeEventListener('keydown', onKeyDown);
-            panel.remove();
+            range.removeEventListener('keydown', onKeyDown);
+            range.remove();
         }
     };
 }

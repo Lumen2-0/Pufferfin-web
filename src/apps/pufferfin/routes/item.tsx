@@ -13,6 +13,10 @@ import MediaRow from '../components/MediaRow';
 import PersonCard from '../components/PersonCard';
 import PosterCard from '../components/PosterCard';
 import RoundButton from '../components/RoundButton';
+import { useTogglePlayed } from '../features/details/api/usePlayed';
+import ResumeButton, { type ResumeCard } from '../features/details/components/ResumeButton';
+import { CheckIcon, TrailerIcon } from '../features/details/components/sheetIcons';
+import { formatClock, getRemainingMinutes, getVersionTags, splitMinutes } from '../features/details/utils/sheet';
 import ChoicePicker from '../components/ChoicePicker';
 import { useEpisodes, useSeasons, useSeriesNextUp, useSimilarItems } from '../features/details/api/useDetails';
 import { useCanRequest } from '../features/requests/api/useCanRequest';
@@ -33,13 +37,98 @@ import { isPlayableItem, playItem as play, playTrailers } from '../utils/playbac
 import { getItemPath, getPersonPath } from './paths';
 import { DetailsSkeleton } from '../components/Skeleton';
 import { usePlayItem } from '../utils/usePlay';
-import { ErrorOutline, Movie, PlayArrow } from '../components/icons';
+import { ErrorOutline } from '../components/icons';
 import { type CreditLink, HeroFacts } from '../components/CreditLine';
+
+import '../features/details/details.scss';
 
 const CAST_LIMIT = 24;
 const GENRE_LIMIT = 3;
 
+type Translate = ReturnType<typeof useTranslation>;
+
 const getKey = (item: { Id?: string | null }) => item.Id ?? '';
+
+/** "1 h 11 min", "21 min". */
+const formatMinutes = (total: number, t: Translate) => {
+    const { hours, minutes } = splitMinutes(total);
+    return hours ? t('DurationHoursMinutes', hours, minutes) : t('DurationMinutes', minutes);
+};
+
+interface ResumeView {
+    label: string
+    ariaLabel?: string
+    card?: ResumeCard
+}
+
+const withAriaLabel = (label: string, card?: ResumeCard): ResumeView => ({
+    label,
+    ariaLabel: card ? [ label, card.title, card.detail ].filter(Boolean).join(', ') : undefined,
+    card
+});
+
+/** A series plays its next episode, and opens on it: its numbers, title, and what is left of it. */
+function getEpisodeResume(target: ItemDto, numbers: [ number, number ], imageUrl: string | undefined, t: Translate): ResumeView {
+    const resumable = isResumable(target);
+    const remaining = getRemainingMinutes(target.RunTimeTicks, resumable ? target.UserData?.PlaybackPositionTicks : 0);
+    const length = remaining ? formatMinutes(remaining, t) : undefined;
+    return withAriaLabel(
+        resumable ? t('ActionResumeEpisode', numbers[0], numbers[1]) : t('ActionPlayEpisode', numbers[0], numbers[1]),
+        {
+            imageUrl,
+            progress: resumable ? getPlayedPercentage(target) : undefined,
+            kicker: t('EpisodeKicker', numbers[0], numbers[1]),
+            title: target.Name ?? '',
+            detail: length && resumable ? t('TimeLeft', length) : length
+        }
+    );
+}
+
+/** A film started resumes at its time, and opens on its progress. */
+function getTitleResume(target: ItemDto, imageUrl: string | undefined, t: Translate): ResumeView {
+    const position = target.UserData?.PlaybackPositionTicks ?? 0;
+    const remaining = getRemainingMinutes(target.RunTimeTicks, position);
+    const kind = target.Type === ItemKind.Movie ? t('KindMovie') : undefined;
+    return withAriaLabel(t('ActionResumeAt', formatClock(position)), {
+        imageUrl,
+        progress: getPlayedPercentage(target),
+        kicker: [ kind, target.ProductionYear ].filter(Boolean).join(' · '),
+        title: getDisplayTitle(target),
+        detail: remaining ? t('TimeLeft', formatMinutes(remaining, t)) : undefined
+    });
+}
+
+/**
+ * The main button of a sheet: what it says, and the card it opens into. A film
+ * started resumes at its time; a series plays its next episode; anything else
+ * just plays, and stays a pill.
+ */
+function getResumeView(item: ItemDto, target: ItemDto | undefined, imageUrl: string | undefined, t: Translate): ResumeView {
+    const numbers = target && target !== item ? getEpisodeNumbers(target) : undefined;
+    if (target && numbers) return getEpisodeResume(target, numbers, imageUrl, t);
+    if (target && isResumable(target) && target.Type !== ItemKind.Series) return getTitleResume(target, imageUrl, t);
+    return { label: t('ActionWatch') };
+}
+
+/** What a film holds, readable before playing: resolution, sound, languages. */
+const getSheetTags = (item: ItemDto | undefined, t: Translate) => (item?.Type === ItemKind.Movie ?
+    getVersionTags(item.MediaSources, { stereo: t('TagStereo'), subtitles: codes => t('TagSubtitles', codes) }) :
+    []);
+
+/** "Mark as watched", then "Watched" with a firmer check: pressing again takes it back. */
+const WatchedButton: FC<{ item: ItemDto }> = ({ item }) => {
+    const t = useTranslation();
+    const { isPlayed, toggle } = useTogglePlayed(item);
+    return (
+        <RoundButton
+            icon={<CheckIcon strokeWidth={isPlayed ? 2.5 : 1.75} />}
+            label={isPlayed ? t('StateWatched') : t('ActionMarkPlayed')}
+            pressed={isPlayed}
+            onClick={toggle}
+        />
+    );
+};
+
 const getCastKey = (person: BaseItemPerson) => `${person.Id ?? ''}-${person.Role ?? ''}`;
 
 // Play is rendered before a series knows its next episode: it is then disabled and has nothing to play
@@ -87,16 +176,13 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
 
     // A series plays its next episode; without one, the whole series from the start
     const playTarget = seriesId && nextUp.data ? nextUp.data : item;
-    const playLabel = useMemo(() => {
-        if (!playTarget) return t('ActionPlay');
-        const numbers = playTarget !== item ? getEpisodeNumbers(playTarget) : undefined;
-        if (numbers) {
-            return isResumable(playTarget) ?
-                t('ActionResumeEpisode', numbers[0], numbers[1]) :
-                t('ActionPlayEpisode', numbers[0], numbers[1]);
-        }
-        return isResumable(playTarget) ? t('ActionResume') : t('ActionPlay');
-    }, [ item, playTarget, t ]);
+    const resume = useMemo(() => {
+        if (!item) return { label: t('ActionWatch') };
+        const imageUrl = api && playTarget ? getCardImageUrl(api, playTarget, 'landscape') : undefined;
+        return getResumeView(item, playTarget, imageUrl, t);
+    }, [ api, item, playTarget, t ]);
+
+    const versionTags = useMemo(() => getSheetTags(item, t), [ item, t ]);
 
     const meta = useMemo(() => {
         if (!item) return [];
@@ -197,48 +283,53 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
     }
 
     const hasTrailer = !!item.LocalTrailerCount || !!item.RemoteTrailers?.length;
-    const movieTmdbId = item.Type === ItemKind.Movie ? item.ProviderIds?.Tmdb : undefined;
+    const isMovie = item.Type === ItemKind.Movie;
+    const movieTmdbId = isMovie ? item.ProviderIds?.Tmdb : undefined;
 
     return (
         <div ref={pageRef} className='pf-details'>
             <Hero
+                variant='sheet'
                 title={getDisplayTitle(item)}
                 meta={<HeroFacts meta={meta} label={t('DirectedBy')} people={directors} />}
                 overview={item.Overview}
+                tags={versionTags}
+                tagsLabel={t('VersionsLabel')}
                 backdropUrl={api ? getBackdropUrl(api, item) : undefined}
                 actions={
                     <>
-                        <RoundButton
-                            variant='primary'
-                            icon={<PlayArrow />}
-                            label={playLabel}
+                        <ResumeButton
+                            label={resume.label}
+                            ariaLabel={resume.ariaLabel}
+                            card={resume.card}
                             disabled={!playTarget || (!!seriesId && nextUp.isPending)}
                             value={playTarget}
                             onClick={playIfAny}
                         />
-                        {bookmark && <BookmarkButton bookmark={bookmark} />}
                         {canRequestEpisodes && tmdbId && mergedSeasons && (
                             <SeasonDownloads
                                 seriesTmdbId={tmdbId}
                                 seriesTitle={getDisplayTitle(item)}
                                 seasons={mergedSeasons}
                                 canRequest={canRequestEpisodes}
-                                asText
+                                withDownloadIcon
                             />
                         )}
                         {hasTrailer && (
                             <RoundButton
-                                icon={<Movie />}
+                                icon={<TrailerIcon />}
                                 label={t('ActionTrailer')}
                                 value={item}
                                 onClick={playTrailers}
                             />
                         )}
-                        {(item.Type === ItemKind.Movie || item.Type === ItemKind.Series) && (
+                        {isMovie && <WatchedButton item={item} />}
+                        {bookmark && <BookmarkButton bookmark={bookmark} withLabel />}
+                        {(isMovie || item.Type === ItemKind.Series) && (
                             <ReviewLink
                                 title={getDisplayTitle(item)}
                                 year={item.ProductionYear}
-                                isMovie={item.Type === ItemKind.Movie}
+                                isMovie={isMovie}
                                 tmdbId={movieTmdbId}
                             />
                         )}
@@ -253,6 +344,7 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                         seasons={mergedSeasons}
                         seriesItemId={seriesId}
                         nextUpSeasonItemId={nextUp.data?.SeasonId}
+                        currentEpisodeItemId={nextUp.data?.Id}
                         canRequest={canRequestEpisodes}
                     />
                 ) : null}

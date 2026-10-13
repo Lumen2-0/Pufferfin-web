@@ -31,6 +31,8 @@ import { DetailsSkeleton } from '../components/Skeleton';
 import { ErrorOutline } from '../components/icons';
 import { type CreditLink, HeroFacts } from '../components/CreditLine';
 
+import '../features/details/details.scss';
+
 const GENRE_LIMIT = 3;
 const HTTP_SERVICE_UNAVAILABLE = 503;
 
@@ -133,6 +135,7 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
     return (
         <div ref={pageRef} className='pf-details'>
             <Hero
+                variant='sheet'
                 title={title.Title}
                 eyebrow={title.Tagline ?? undefined}
                 meta={<HeroFacts meta={meta} label={t(makers.labelKey)} people={makers.people} />}
@@ -145,7 +148,7 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                         canRequest={rights.canRequest}
                         lastSyncAt={requests.dataUpdatedAt}
                     >
-                        <BookmarkButton bookmark={bookmark} />
+                        <BookmarkButton bookmark={bookmark} withLabel />
                         <TrailerButton videos={title.Trailers} title={title.Title} />
                         <ReviewLink title={title.Title} year={title.Year} isMovie tmdbId={tmdbId} />
                     </RequestActions>
@@ -157,7 +160,7 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                         lastSyncAt={requests.dataUpdatedAt}
                         downloadLabel={t('ActionDownloadAllSeasons')}
                     >
-                        <BookmarkButton bookmark={bookmark} />
+                        <BookmarkButton bookmark={bookmark} withLabel />
                         {rights.canRequest && seriesSeasons.data && getListedSeasons(seriesSeasons.data.Seasons).length > 1 && (
                             <SeasonDownloads
                                 seriesTmdbId={tmdbId}

@@ -1,6 +1,6 @@
-// The search panel, in the manner of Spotlight on a Mac: a dark glass sheet
-// high on the screen over a dimmed page, one large field, filters as small
-// capsules, the results as a list. It is mounted on the body, outside the
+// The search panel, in the manner of Spotlight on a Mac: a plain dark sheet
+// high on the screen over a dimmed page, one large field, filters as
+// capsules, the results as a list, the keys to use at the bottom. It is mounted on the body, outside the
 // Pufferfin screens, so it carries the tokens itself.
 
 @use '../../../styles/tokens' as *;
@@ -29,11 +29,11 @@
 
 @keyframes pf-spotlight-shimmer {
     from {
-        background-position: 150% 0;
+        background-position: -400px 0;
     }
 
     to {
-        background-position: -50% 0;
+        background-position: 400px 0;
     }
 }
 
@@ -45,11 +45,10 @@
     z-index: 1100;
     display: flex;
     justify-content: center;
-    padding: clamp(4.5rem, 14vh, 9rem) 1rem 1rem;
-    color: var(--pf-color-text);
+    padding: 96px 24px 24px;
+    color: #fff;
     font-family: inherit;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.72);
     animation: pf-spotlight-dim 160ms var(--pf-ease) both;
 
     *,
@@ -62,48 +61,60 @@
 .pf-spotlight__panel {
     display: flex;
     flex-direction: column;
-    width: min(44rem, 100%);
-    max-height: min(38rem, 100%);
+    gap: 14px;
+    width: 720px;
+    max-width: 100%;
+    max-height: min(44rem, 100%);
+    align-self: flex-start;
+    padding: 16px;
     overflow: hidden;
-    background: rgba(24, 22, 20, 0.88);
-    border: 1px solid var(--pf-glass-border);
+    background: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 18px;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(30px) saturate(160%);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
     animation: pf-spotlight-in 200ms var(--pf-ease) both;
 }
 
 .pf-spotlight__field {
+    position: relative;
     display: flex;
     flex: none;
     align-items: center;
-    padding: 0 1.1rem;
-    border-bottom: 1px solid var(--pf-glass-border);
+    height: 52px;
+    padding: 0 14px 0 18px;
+    background: #0e0e0e;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    transition: border-color 0.2s ease;
+
+    &:focus-within {
+        border-color: rgba(255, 255, 255, 0.45);
+    }
 }
 
 .pf-spotlight__icon {
     flex: none;
-    color: var(--pf-color-text-secondary);
-    font-size: 1.5rem !important;
+    color: #a3a3a3;
+    font-size: 22px !important;
 }
 
 .pf-spotlight__input {
     flex: 1;
     min-width: 0;
-    height: 3.75rem;
-    margin: 0 0.75rem;
+    height: 100%;
+    margin: 0 12px;
     padding: 0;
-    color: var(--pf-color-text);
+    color: #fff;
     font: inherit;
-    font-size: 1.3rem;
+    font-size: 18px;
     background: none;
     border: 0;
     outline: none;
     appearance: none;
-    caret-color: var(--pf-color-text);
+    caret-color: #fff;
 
     &::placeholder {
-        color: rgba(245, 242, 236, 0.4);
+        color: #737373;
     }
 
     &::-webkit-search-cancel-button {
@@ -116,113 +127,127 @@
     flex: none;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    margin-right: 0.6rem;
+    width: 36px;
+    height: 36px;
+    margin-right: 8px;
     padding: 0;
-    color: var(--pf-color-text-secondary);
-    font-size: 1.15rem;
+    color: #a3a3a3;
+    font-size: 18px;
     background: none;
     border: 0;
     border-radius: 50%;
     cursor: pointer;
 
     &:hover {
-        color: var(--pf-color-text);
-        background: var(--pf-quiet-background);
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
     }
 }
 
 .pf-spotlight__voice--listening,
 .pf-spotlight__voice--listening:hover {
-    color: var(--pf-color-on-accent);
-    background: var(--pf-color-accent);
+    color: #000;
+    background: #fff;
 }
 
 .pf-spotlight__key {
     flex: none;
-    padding: 0.15rem 0.45rem;
-    color: var(--pf-color-text-secondary);
-    font-size: 0.7rem;
+    padding: 3px 8px;
+    color: #a3a3a3;
+    font-weight: 600;
+    font-size: 12px;
     font-family: inherit;
-    border: 1px solid var(--pf-glass-border);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 6px;
 }
 
 .pf-spotlight__filters {
     display: flex;
     flex: none;
-    padding: 0.65rem 0.9rem;
-    overflow-x: auto;
-    border-bottom: 1px solid var(--pf-glass-border);
-    scrollbar-width: none;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .pf-spotlight__chip {
+    display: inline-flex;
     flex: none;
-    height: 1.75rem;
-    margin-right: 0.4rem;
-    padding: 0 0.8rem;
-    color: var(--pf-color-text-secondary);
+    gap: 8px;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 20px;
+    color: #fff;
     font: inherit;
     font-weight: 500;
-    font-size: 0.8rem;
+    font-size: 15px;
     background: transparent;
-    border: 1px solid transparent;
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 999px;
     outline: none;
     cursor: pointer;
-    transition:
-        color var(--pf-duration) var(--pf-ease),
-        background-color var(--pf-duration) var(--pf-ease);
+    transition: border-color 0.2s ease;
 
     &:hover {
-        color: var(--pf-color-text);
-        background: var(--pf-quiet-background);
+        border-color: rgba(255, 255, 255, 0.4);
     }
 }
 
 .pf-spotlight__chip--selected,
 .pf-spotlight__chip--selected:hover {
-    color: var(--pf-color-on-accent);
-    background: var(--pf-color-accent);
+    font-weight: 600;
+    border-color: #fff;
+}
+
+.pf-spotlight__chip-check {
+    font-size: 16px !important;
 }
 
 .pf-spotlight__results {
     flex: 1;
     min-height: 0;
-    padding: 0.4rem 0.5rem 0.6rem;
+    margin: 0 -4px;
+    padding: 0 4px;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-color: #3a3a3a transparent;
+    scrollbar-width: thin;
 }
 
 .pf-spotlight__hint {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 9rem;
+    min-height: 8rem;
     margin: 0;
     padding: 1.5rem 1rem;
-    color: var(--pf-color-text-secondary);
-    font-size: 0.9rem;
+    color: #a3a3a3;
+    font-size: 14px;
     text-align: center;
 }
 
+.pf-spotlight__section {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
 .pf-spotlight__section + .pf-spotlight__section {
-    margin-top: 0.35rem;
+    margin-top: 12px;
 }
 
 .pf-spotlight__section-title {
     margin: 0;
-    padding: 0.6rem 0.6rem 0.3rem;
-    color: var(--pf-color-text-secondary);
-    font-weight: 600;
-    font-size: 0.7rem;
+    padding: 4px 8px 6px;
+    color: #a3a3a3;
+    font-weight: 700;
+    font-size: 12px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
 .pf-spotlight__list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -230,32 +255,33 @@
 
 .pf-spotlight__row {
     display: flex;
+    gap: 14px;
     align-items: center;
     width: 100%;
-    min-height: 3.5rem;
-    padding: 0.4rem 0.6rem;
-    color: var(--pf-color-text);
+    padding: 8px;
+    color: #fff;
     font: inherit;
     text-align: start;
-    background: none;
+    background: transparent;
     border: 0;
-    border-radius: 10px;
+    border-radius: 12px;
     outline: none;
     cursor: pointer;
+    transition: background 0.2s ease;
 }
 
 .pf-spotlight__row--active {
-    background: rgba(245, 242, 236, 0.1);
+    background: rgba(255, 255, 255, 0.14);
 }
 
 .pf-spotlight__thumb {
     position: relative;
     flex: none;
-    width: 2.1rem;
-    height: 3.1rem;
+    width: 48px;
+    height: 72px;
     overflow: hidden;
-    background: var(--pf-quiet-background);
-    border-radius: 6px;
+    background: #0e0e0e;
+    border-radius: 8px;
 
     img {
         display: block;
@@ -267,13 +293,12 @@
 
 // Covers of audiobooks are square, people are round
 .pf-spotlight__thumb--audiobook {
-    width: 3.1rem;
+    height: 48px;
 }
 
 .pf-spotlight__thumb--person {
-    width: 2.6rem;
-    height: 2.6rem;
-    border-radius: 50%;
+    height: 48px;
+    border-radius: 999px;
 }
 
 .pf-spotlight__text {
@@ -281,52 +306,71 @@
     flex: 1;
     flex-direction: column;
     min-width: 0;
-    margin: 0 0.85rem;
 }
 
 .pf-spotlight__title {
     overflow: hidden;
-    font-weight: 500;
-    font-size: 0.95rem;
+    font-weight: 600;
+    font-size: 15px;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
 .pf-spotlight__subtitle {
-    margin-top: 0.15rem;
     overflow: hidden;
-    color: var(--pf-color-text-secondary);
-    font-size: 0.78rem;
+    color: #a3a3a3;
+    font-size: 13px;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.pf-spotlight__open {
+    flex: none;
+    padding: 3px 10px;
+    font-weight: 600;
+    font-size: 12px;
+    background: #262626;
+    border-radius: 999px;
 }
 
 .pf-spotlight__badge {
     display: inline-flex;
     flex: none;
     align-items: center;
-    color: var(--pf-color-text-secondary);
-    font-size: 0.75rem;
+    color: #a3a3a3;
+    font-size: 12px;
 
     svg {
-        margin-right: 0.25rem;
-        font-size: 0.9rem;
+        margin-right: 4px;
+        font-size: 14px;
     }
 }
 
 .pf-spotlight__more {
-    min-height: 2.5rem;
-    color: var(--pf-color-text-secondary);
-    font-size: 0.85rem;
+    min-height: 44px;
+    padding: 0 8px;
+    color: #a3a3a3;
+    font-size: 14px;
 
     svg {
-        margin-left: 0.4rem;
-        font-size: 1rem;
+        margin-left: -6px;
+        font-size: 16px;
     }
 }
 
 .pf-spotlight__more-label {
-    margin-left: 0.15rem;
+    margin-left: 0;
+}
+
+.pf-spotlight__footer {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding: 10px 8px 0;
+    color: #a3a3a3;
+    font-size: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .pf-spotlight__row--skeleton {
@@ -334,66 +378,43 @@
 
     .pf-bone {
         display: block;
-        background:
-            linear-gradient(100deg, transparent 30%, rgba(245, 242, 236, 0.07) 50%, transparent 70%)
-            var(--pf-quiet-background);
-        background-size: 200% 100%;
+        background: linear-gradient(90deg, #111 0, #1c1c1c 50%, #111 100%);
+        background-size: 800px 100%;
         border-radius: 999px;
         animation: pf-spotlight-shimmer 1.6s linear infinite;
     }
 
     .pf-spotlight__thumb {
-        border-radius: 6px;
+        border-radius: 8px;
     }
 
     .pf-bone--line {
-        height: 0.75rem;
+        height: 12px;
     }
 
     .pf-bone--small {
-        height: 0.6rem;
-        margin-top: 0.45rem;
+        height: 10px;
+        margin-top: 8px;
     }
 }
 
 @media (max-width: 40em) {
     .pf-spotlight {
-        padding: 0.75rem 0.5rem 0.5rem;
+        padding: 12px;
     }
 
     .pf-spotlight__panel {
         max-height: 100%;
     }
 
-    .pf-spotlight__voice {
-        display: inline-flex;
-        flex: none;
-        align-items: center;
-        justify-content: center;
-        width: 2rem;
-        height: 2rem;
-        margin-right: 0.6rem;
-        padding: 0;
-        color: var(--pf-color-text-secondary);
-        font-size: 1.15rem;
-        background: none;
-        border: 0;
-        border-radius: 50%;
-        cursor: pointer;
-
-        &:hover {
-            color: var(--pf-color-text);
-            background: var(--pf-quiet-background);
-        }
+    .pf-spotlight__chip {
+        min-height: 40px;
+        padding: 0 16px;
+        font-size: 14px;
     }
 
-    .pf-spotlight__voice--listening,
-    .pf-spotlight__voice--listening:hover {
-        color: var(--pf-color-on-accent);
-        background: var(--pf-color-accent);
-    }
-
-    .pf-spotlight__key {
+    .pf-spotlight__key,
+    .pf-spotlight__footer {
         display: none;
     }
 }
