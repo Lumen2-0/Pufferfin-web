@@ -33,12 +33,29 @@ describe('Pufferfin: Discover types', () => {
         }
     });
 
-    it('keeps above the genres only what is being watched, the bookmarks, and live TV', () => {
-        expect(getDiscoverRows(DiscoverType.All)).toEqual([ DiscoverRow.ContinueWatching, DiscoverRow.Bookmarks ]);
+    it('opens films on the top films of the month, series on the top series', () => {
+        expect(getDiscoverRows(DiscoverType.All)[0]).toBe(DiscoverRow.TopMovies);
+        expect(getDiscoverRows(DiscoverType.Movies)[0]).toBe(DiscoverRow.TopMovies);
+        expect(getDiscoverRows(DiscoverType.Series)[0]).toBe(DiscoverRow.TopShows);
+        expect(getDiscoverRows(DiscoverType.Movies)).not.toContain(DiscoverRow.TopShows);
+        expect(getDiscoverRows(DiscoverType.Series)).not.toContain(DiscoverRow.TopMovies);
+    });
+
+    it('keeps what is being watched right under the top', () => {
+        for (const type of [ DiscoverType.All, DiscoverType.Movies, DiscoverType.Series ]) {
+            expect(getDiscoverRows(type)[1]).toBe(DiscoverRow.ContinueWatching);
+            expect(getDiscoverRows(type)).toContain(DiscoverRow.Bookmarks);
+        }
         expect(getDiscoverRows(DiscoverType.TvShows)).toEqual([ DiscoverRow.LiveTvOnNow, DiscoverRow.Recordings ]);
         for (const type of DISCOVER_TYPES) {
-            expect(getDiscoverRows(type)).not.toContain(DiscoverRow.TrendingMovies);
             expect(getDiscoverRows(type)).not.toContain(DiscoverRow.AudiobookBestSellers);
+        }
+    });
+
+    it('lists each row once on a screen', () => {
+        for (const type of DISCOVER_TYPES) {
+            const rows = getDiscoverRows(type);
+            expect(new Set(rows).size).toBe(rows.length);
         }
     });
 

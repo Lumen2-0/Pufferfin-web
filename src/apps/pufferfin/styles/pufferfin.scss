@@ -595,6 +595,11 @@ body,
     width: clamp(7.5rem, 10vw, 10.5rem);
 }
 
+// An audiobook cover: square, a little wider than a poster so it reads at the same weight
+.pf-card--square {
+    width: clamp(9rem, 12vw, 12.5rem);
+}
+
 .pf-card__art {
     position: relative;
     display: block;
@@ -614,6 +619,10 @@ body,
 
     .pf-card--portrait &::before {
         padding-top: 150%;
+    }
+
+    .pf-card--square &::before {
+        padding-top: 100%;
     }
 }
 
@@ -1187,6 +1196,10 @@ body,
 
 .pf-grid .pf-card--portrait {
     width: clamp(8rem, 10vw, 10.5rem);
+}
+
+.pf-grid .pf-card--square {
+    width: clamp(9.5rem, 12vw, 12.5rem);
 }
 
 // Top bar: one compact line over the screen content, like the toolbar of a Mac
@@ -1927,6 +1940,10 @@ body,
 
 .pf-card-play--portrait .pf-card-play__zone::before {
     padding-top: 150%;
+}
+
+.pf-card-play--square .pf-card-play__zone::before {
+    padding-top: 100%;
 }
 
 .pf-card-play__button {

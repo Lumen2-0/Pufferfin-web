@@ -20,7 +20,7 @@ import { FOCUS_GROUP_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { getCardImageUrl } from '../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage } from '../utils/items';
-import { useOpenItem } from '../utils/navigation';
+import { usePlayItem } from '../utils/usePlay';
 
 import '../features/library/library.scss';
 
@@ -41,13 +41,13 @@ const getBookAuthors = (item: ItemDto) => (isAudiobookEntry(item) ? item.AlbumAr
 
 const SKELETON_CARDS = 4;
 
-/** What is being watched or listened to, in wide cards: a title opens its page, a cross stops watching it. */
+/** What is being watched or listened to, in wide cards: a card plays right away, a cross stops watching it. */
 const ResumeRow: FC<{ title: string, items: ItemDto[] | undefined, isPending: boolean, progressKey: StringKey }> = ({
     title, items, isPending, progressKey
 }) => {
     const t = useTranslation();
     const { api } = useApi();
-    const openItem = useOpenItem();
+    const playItem = usePlayItem();
     const dismiss = useDismissResume();
     const onDismiss = useCallback((item: ItemDto) => {
         if (item.Id) dismiss.mutate(item.Id);
@@ -80,9 +80,10 @@ const ResumeRow: FC<{ title: string, items: ItemDto[] | undefined, isPending: bo
                                 title={item.SeriesName && numbers ? item.SeriesName : getDisplayTitle(item)}
                                 subtitle={numbers ? t('EpisodeNumber', numbers[0], numbers[1]) : getBookAuthors(item)}
                                 imageUrl={api ? getCardImageUrl(api, item, 'landscape') : undefined}
+                                isSquare={isAudiobookEntry(item)}
                                 progress={progress}
                                 progressLabel={progress ? t(progressKey, progress) : undefined}
-                                onOpen={openItem}
+                                onPlay={playItem}
                                 dismissLabel={t('ActionStopWatching')}
                                 onDismiss={onDismiss}
                             />

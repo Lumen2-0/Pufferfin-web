@@ -8,18 +8,18 @@
 
     .skip-button-container {
         right: 0;
-        bottom: 100px;
+        bottom: 88px;
         left: 0;
     }
 
     .skip-button {
-        gap: 10px;
-        min-height: 48px;
-        margin-right: 28px;
-        padding: 0 22px 0 18px;
+        gap: 9px;
+        min-height: 42px;
+        margin-right: var(--pf-osd-gutter, 24px);
+        padding: 0 19px 0 16px;
         color: #000;
         font-weight: 700;
-        font-size: 15px;
+        font-size: 14px;
         font-family: inherit;
         line-height: 1;
         background: rgba(255, 255, 255, 0.94);
@@ -45,6 +45,8 @@
 
         svg {
             flex: none;
+            width: 16px;
+            height: 16px;
         }
     }
 
@@ -62,16 +64,17 @@
     // along the bottom that fills up until it plays
 
     .upNextContainer {
-        right: 28px;
-        bottom: 100px;
-        width: min(400px, calc(100vw - 32px));
+        right: var(--pf-osd-gutter, 24px);
+        bottom: 88px;
+        box-sizing: border-box;
+        width: min(360px, calc(100vw - 32px));
         margin: 0;
         padding: 0;
         overflow: hidden;
         color: #fff;
         background: #141414;
         border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 18px;
+        border-radius: 16px;
         box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
         backdrop-filter: none;
         transition:
@@ -87,14 +90,15 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 12px;
+        box-sizing: border-box;
         width: 100%;
-        padding: 16px;
+        padding: 14px;
     }
 
     .pf-upnext__row {
         display: flex;
-        gap: 14px;
+        gap: 12px;
         align-items: center;
         min-width: 0;
     }
@@ -102,7 +106,7 @@
     .pf-upnext__art {
         position: relative;
         flex: none;
-        width: 128px;
+        width: 112px;
         aspect-ratio: 16 / 9;
         overflow: hidden;
         background: #0e0e0e;
@@ -128,7 +132,7 @@
         margin: 0;
         color: #a3a3a3;
         font-weight: 700;
-        font-size: 12px;
+        font-size: 11px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
     }
@@ -138,7 +142,7 @@
         margin: 0;
         overflow: hidden;
         font-weight: 700;
-        font-size: 16px;
+        font-size: 15px;
         line-height: 1.25;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -148,7 +152,7 @@
         margin: 0;
         overflow: hidden;
         color: #a3a3a3;
-        font-size: 13px;
+        font-size: 12px;
         white-space: nowrap;
         text-overflow: ellipsis;
         font-variant-numeric: tabular-nums;
@@ -160,7 +164,7 @@
 
     .pf-upnext__buttons {
         display: flex;
-        gap: 10px;
+        gap: 8px;
         width: auto;
         margin: 0;
     }
@@ -170,11 +174,11 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 44px;
+        min-height: 38px;
         margin: 0;
-        padding: 0 20px;
+        padding: 0 18px;
         font-weight: 600;
-        font-size: 15px;
+        font-size: 14px;
         font-family: inherit;
         border-radius: 999px;
         box-shadow: none;
@@ -236,7 +240,7 @@
     // On a narrow phone the card takes the width, the picture leaves the room to the words
     @media (max-width: 40em) {
         .skip-button-container {
-            bottom: 88px;
+            bottom: 80px;
         }
 
         .skip-button {
@@ -245,7 +249,15 @@
 
         .upNextContainer {
             right: 16px;
-            bottom: 88px;
+            bottom: 80px;
+        }
+    }
+
+    // A finger needs room: the two buttons keep 40px
+    @media (pointer: coarse) {
+        .upNextDialog-button.pf-upnext__play,
+        .upNextDialog-button.pf-upnext__cancel {
+            min-height: 40px;
         }
     }
 

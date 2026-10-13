@@ -1,5 +1,5 @@
 // The panels of the video player, as the design draws them: one solid sheet
-// (#141414, a hairline, 18px corners, a deep shadow, no frosted glass) on the
+// (#141414, a hairline, 16px corners, a deep shadow, no frosted glass) on the
 // right, above the controls. Audio and subtitles in two columns, the settings
 // with their lists, and the Episodes drawer that runs from under the header.
 // On a phone each one rises from the bottom over a dimmed picture.
@@ -13,27 +13,35 @@
 
     .pf-osd-panel {
         position: fixed;
-        right: 28px;
-        bottom: 100px;
+        right: var(--pf-osd-gutter, 24px);
+        bottom: 88px;
         z-index: 3;
         display: flex;
         flex-direction: column;
-        width: 340px;
-        max-width: calc(100vw - 56px);
-        max-height: calc(100vh - 176px);
-        padding: 12px;
+        box-sizing: border-box;
+        width: 306px;
+        max-width: calc(100vw - 48px);
+        max-height: calc(100vh - 156px);
+        padding: 10px;
         overflow-y: auto;
         color: #fff;
-        font-size: 15px;
+        font-size: 14px;
         background: var(--pf-osd-sheet);
         border: 1px solid var(--pf-osd-sheet-border);
-        border-radius: 18px;
+        border-radius: 16px;
         box-shadow: var(--pf-osd-sheet-shadow);
         animation: pf-osd-panel-in 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
         overscroll-behavior: contain;
         scrollbar-color: #3a3a3a transparent;
         scrollbar-width: thin;
         user-select: none;
+
+        // Sizes include the padding and the hairline, as the design measures them
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
 
         &[hidden] {
             display: none;
@@ -59,20 +67,20 @@
     }
 
     .pf-osd-panel[data-kind='tracks'] {
-        width: 580px;
-        padding: 16px;
+        width: 522px;
+        padding: 14px;
     }
 
     .pf-osd-panel[data-kind='tracks'].pf-osd-panel--single {
-        width: 300px;
+        width: 270px;
     }
 
     // The Episodes drawer: from under the header down to the controls
     .pf-osd-panel[data-kind='episodes'] {
-        top: 76px;
-        width: 440px;
+        top: 66px;
+        width: 396px;
         max-height: none;
-        padding: 16px;
+        padding: 14px;
     }
 
     .pf-osd-scrim {
@@ -82,15 +90,15 @@
     // Headings: small capitals, quiet
 
     .pf-osd-heading {
-        padding: 4px 12px 8px;
+        padding: 4px 10px 6px;
         color: #a3a3a3;
         font-weight: 700;
-        font-size: 12px;
+        font-size: 11px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
     }
 
-    // Choices: a 44px line, the current one filled and checked
+    // Choices: a 38px line, the current one filled and checked
 
     .pf-osd-options,
     .pf-osd-settings {
@@ -102,21 +110,21 @@
     .pf-osd-option,
     .pf-osd-row {
         display: flex;
-        gap: 16px;
+        gap: 14px;
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        min-height: 44px;
+        min-height: 38px;
         margin: 0;
-        padding: 0 12px;
+        padding: 0 10px;
         color: #fff;
         font: inherit;
         font-weight: 500;
-        font-size: 15px;
+        font-size: 14px;
         text-align: start;
         background: transparent;
         border: 0;
-        border-radius: 12px;
+        border-radius: 10px;
         cursor: pointer;
         transition: background-color 120ms ease;
 
@@ -159,7 +167,7 @@
         flex: none;
         color: #a3a3a3;
         font-weight: 500;
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .pf-osd-row__value {
@@ -168,12 +176,12 @@
         gap: 6px;
         align-items: center;
         color: #a3a3a3;
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .pf-osd-separator {
         height: 1px;
-        margin: 6px 12px;
+        margin: 5px 10px;
         background: rgba(255, 255, 255, 0.1);
     }
 
@@ -182,8 +190,8 @@
     .pf-osd-switch {
         position: relative;
         flex: none;
-        width: 40px;
-        height: 24px;
+        width: 34px;
+        height: 20px;
         background: #3a3a3a;
         border-radius: 999px;
         transition: background-color 160ms ease;
@@ -192,8 +200,8 @@
             position: absolute;
             top: 3px;
             left: 3px;
-            width: 18px;
-            height: 18px;
+            width: 14px;
+            height: 14px;
             background: #fff;
             border-radius: 999px;
             transition:
@@ -208,7 +216,7 @@
 
         &::after {
             background: #000;
-            transform: translateX(16px);
+            transform: translateX(14px);
         }
     }
 
@@ -218,20 +226,20 @@
         display: flex;
         gap: 8px;
         align-items: center;
-        padding: 0 0 8px;
+        padding: 0 0 6px;
     }
 
     .pf-osd-subheader__title {
         font-weight: 700;
-        font-size: 16px;
+        font-size: 15px;
     }
 
     .pf-osd-iconbutton {
         display: inline-grid;
         flex: none;
         place-items: center;
-        width: 44px;
-        height: 44px;
+        width: 38px;
+        height: 38px;
         margin: 0;
         padding: 0;
         color: #fff;
@@ -256,15 +264,15 @@
     }
 
     .pf-osd-iconbutton--small {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
     }
 
     // Audio and subtitles: two columns side by side
 
     .pf-osd-tracks {
         display: flex;
-        gap: 12px;
+        gap: 10px;
     }
 
     .pf-osd-tracks__column {
@@ -282,12 +290,12 @@
         gap: 12px;
         align-items: center;
         justify-content: space-between;
-        padding-bottom: 10px;
+        padding-bottom: 8px;
     }
 
     .pf-osd-drawer__title {
         font-weight: 700;
-        font-size: 20px;
+        font-size: 17px;
     }
 
     .pf-osd-drawer__actions {
@@ -300,15 +308,15 @@
         display: inline-flex;
         gap: 8px;
         align-items: center;
-        min-height: 40px;
-        max-width: 200px;
+        min-height: 34px;
+        max-width: 180px;
         margin: 0;
-        padding: 0 12px 0 16px;
+        padding: 0 10px 0 14px;
         overflow: hidden;
         color: #fff;
         font: inherit;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 13px;
         white-space: nowrap;
         text-overflow: ellipsis;
         background: transparent;
@@ -352,9 +360,9 @@
 
     .pf-osd-drawer__message {
         margin: 0;
-        padding: 24px 8px;
+        padding: 20px 8px;
         color: #a3a3a3;
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .pf-osd-episodes {
@@ -365,17 +373,17 @@
 
     .pf-osd-episode {
         display: flex;
-        gap: 14px;
+        gap: 12px;
         align-items: center;
         width: 100%;
         margin: 0;
-        padding: 8px;
+        padding: 7px;
         color: #fff;
         font: inherit;
         text-align: start;
         background: transparent;
         border: 0;
-        border-radius: 12px;
+        border-radius: 10px;
         cursor: pointer;
         transition: background-color 120ms ease;
 
@@ -401,7 +409,7 @@
     .pf-osd-episode__art {
         position: relative;
         flex: none;
-        width: 128px;
+        width: 112px;
         aspect-ratio: 16 / 9;
         overflow: hidden;
         background: #0e0e0e;
@@ -449,7 +457,7 @@
     .pf-osd-episode__number {
         color: #a3a3a3;
         font-weight: 700;
-        font-size: 12px;
+        font-size: 11px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
     }
@@ -458,7 +466,7 @@
         display: -webkit-box;
         overflow: hidden;
         font-weight: 600;
-        font-size: 15px;
+        font-size: 14px;
         line-height: 1.25;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
@@ -469,12 +477,12 @@
         gap: 6px;
         align-items: center;
         color: #a3a3a3;
-        font-size: 13px;
+        font-size: 12px;
     }
 
     // While the episodes load: grey blocks that shimmer
     .pf-osd-episode--skeleton {
-        height: 88px;
+        height: 77px;
         background: linear-gradient(90deg, #111 0, #1c1c1c 50%, #111 100%);
         background-size: 800px 100%;
         cursor: default;
@@ -524,7 +532,19 @@
         }
 
         .pf-osd-episode__art {
-            width: 112px;
+            width: 100px;
+        }
+    }
+
+    // A finger needs room: choices and round buttons keep 40px at least
+    @media (pointer: coarse) {
+        .pf-osd-option,
+        .pf-osd-row,
+        .pf-osd-chip,
+        .pf-osd-iconbutton,
+        .pf-osd-iconbutton--small {
+            min-width: 40px;
+            min-height: 40px;
         }
     }
 }

@@ -6,7 +6,8 @@ import { getImageApi } from '@jellyfin/sdk/lib/utils/api/image-api';
 import type { ItemDto } from 'types/base/models/item-dto';
 import { ItemKind } from 'types/base/models/item-kind';
 
-export type CardShape = 'landscape' | 'portrait';
+/** An audiobook cover is square: the 'square' shape, never stretched into a poster. */
+export type CardShape = 'landscape' | 'portrait' | 'square';
 
 interface ImageSource {
     itemId: string
@@ -64,9 +65,30 @@ function toUrl(api: Api, sources: Array<ImageSource | undefined>, maxWidth: numb
 
 /** Image for a card, falling back from the item's own art to its parent's. */
 export function getCardImageUrl(api: Api, item: ItemDto, shape: CardShape) {
+    // A book shows its own cover, whatever the shape asked: it has no still nor backdrop
+    if (shape === 'square' || isAudiobookItem(item)) {
+        return toUrl(api, [ source(item.Id, ImageType.Primary, item.ImageTags?.Primary) ], 400);
+    }
     return shape === 'landscape' ?
         toUrl(api, getLandscapeSources(item), 640) :
         toUrl(api, getPortraitSources(item), 400);
+}
+
+/** An audiobook of the library: the book itself, or the folder that groups its parts. */
+export function isAudiobookItem(item: { Type?: string | null }): boolean {
+    return item.Type === ItemKind.AudioBook || item.Type === ItemKind.Folder;
+}
+
+/**
+ * The shape a card takes for what it shows: an audiobook is always square,
+ * whatever row it sits in. Anything else keeps the shape asked.
+ */
+export function getCardShape(shape: CardShape, value: unknown): CardShape {
+    if (typeof value !== 'object' || value === null) return shape;
+    const { Type, Kind } = value as { Type?: unknown, Kind?: unknown };
+    if (Kind === 'Audiobook') return 'square';
+    if (typeof Type === 'string' && isAudiobookItem({ Type })) return 'square';
+    return shape;
 }
 
 /** Full width background art for the featured area. */

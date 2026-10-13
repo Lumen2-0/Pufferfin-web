@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import React, { type FC, useCallback } from 'react';
 
 import type { ItemDto } from 'types/base/models/item-dto';
@@ -26,10 +27,11 @@ const ProgressBar: FC<{ progress: number }> = ({ progress }) => (
 
 /**
  * A poster of the library grid: the art lifts under the pointer, a small round
- * Play shows at its bottom right, a check tells a title already watched.
+ * Play shows at its bottom right, a check tells a title already watched. A
+ * book is a square cover.
  */
-export const LibraryPoster: FC<CardProps & { isPlayed: boolean, onPlay?: (item: ItemDto) => void }> = ({
-    item, title, subtitle, imageUrl, progress, progressLabel, isPlayed, onOpen, onPlay
+export const LibraryPoster: FC<CardProps & { isPlayed: boolean, isSquare?: boolean, onPlay?: (item: ItemDto) => void }> = ({
+    item, title, subtitle, imageUrl, progress, progressLabel, isPlayed, isSquare, onOpen, onPlay
 }) => {
     const t = useTranslation();
     const onClick = useCallback(() => onOpen(item), [ item, onOpen ]);
@@ -45,7 +47,7 @@ export const LibraryPoster: FC<CardProps & { isPlayed: boolean, onPlay?: (item: 
                 onClick={onClick}
                 {...{ [FOCUSABLE_ATTRIBUTE]: true }}
             >
-                <span className='pf-lib-poster__tile'>
+                <span className={classNames('pf-lib-poster__tile', { 'pf-lib-poster__tile--square': isSquare })}>
                     {imageUrl ?
                         <img className='pf-lib-poster__image' src={imageUrl} alt='' loading='lazy' /> :
                         <span className='pf-lib-poster__placeholder' aria-hidden='true'>{title}</span>}
@@ -63,7 +65,7 @@ export const LibraryPoster: FC<CardProps & { isPlayed: boolean, onPlay?: (item: 
             </button>
             {onPlay && (
                 // Over the art, beside the button that opens the title: a button is never in another
-                <span className='pf-lib-poster__overlay'>
+                <span className={classNames('pf-lib-poster__overlay', { 'pf-lib-poster__overlay--square': isSquare })}>
                     <button
                         type='button'
                         className='pf-lib-poster__play'
@@ -80,16 +82,26 @@ export const LibraryPoster: FC<CardProps & { isPlayed: boolean, onPlay?: (item: 
     );
 };
 
-/** A card of Resume: a wide still with the progress, and a cross under the pointer to stop watching. */
-export const ResumeCard: FC<CardProps & { dismissLabel: string, onDismiss: (item: ItemDto) => void }> = ({
-    item, title, subtitle, imageUrl, progress, progressLabel, onOpen, dismissLabel, onDismiss
+/**
+ * A card of Resume: a wide still with the progress. Under the pointer a Play
+ * triangle shows at its center, and the card plays right away; a cross stops
+ * watching it. A book is a square cover of the same height.
+ */
+export const ResumeCard: FC<Omit<CardProps, 'onOpen'> & {
+    isSquare?: boolean
+    onPlay: (item: ItemDto) => void
+    dismissLabel: string
+    onDismiss: (item: ItemDto) => void
+}> = ({
+    item, title, subtitle, imageUrl, progress, progressLabel, isSquare, onPlay, dismissLabel, onDismiss
 }) => {
-    const onClick = useCallback(() => onOpen(item), [ item, onOpen ]);
+    const t = useTranslation();
+    const onClick = useCallback(() => onPlay(item), [ item, onPlay ]);
     const onDismissClick = useCallback(() => onDismiss(item), [ item, onDismiss ]);
-    const accessibleName = [ title, subtitle, progressLabel ].filter(Boolean).join(', ');
+    const accessibleName = [ t('ActionPlayTitle', title), subtitle, progressLabel ].filter(Boolean).join(', ');
 
     return (
-        <div className='pf-lib-resume'>
+        <div className={classNames('pf-lib-resume', { 'pf-lib-resume--square': isSquare })}>
             <button
                 type='button'
                 className='pf-lib-resume__open'
@@ -102,6 +114,9 @@ export const ResumeCard: FC<CardProps & { dismissLabel: string, onDismiss: (item
                         <img className='pf-lib-poster__image' src={imageUrl} alt='' loading='lazy' /> :
                         <span className='pf-lib-poster__placeholder' aria-hidden='true'>{title}</span>}
                     {!!progress && progress > 0 && <ProgressBar progress={progress} />}
+                    <span className='pf-lib-resume__play' aria-hidden='true'>
+                        <PlayArrow fontSize='inherit' />
+                    </span>
                 </span>
                 <span className='pf-lib-poster__caption' aria-hidden='true'>
                     <span className='pf-lib-poster__title pf-lib-poster__title--one-line'>{title}</span>

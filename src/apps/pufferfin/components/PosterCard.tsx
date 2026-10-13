@@ -3,7 +3,7 @@ import React, { type ReactNode, useCallback } from 'react';
 
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
-import type { CardShape } from '../utils/images';
+import { type CardShape, getCardShape } from '../utils/images';
 import { Close, PlayArrow } from './icons';
 
 interface PosterCardProps<T> {
@@ -38,7 +38,7 @@ const PosterCard = <T, >({
     title,
     subtitle,
     imageUrl,
-    shape,
+    shape: askedShape,
     progress,
     progressLabel,
     badge,
@@ -49,6 +49,8 @@ const PosterCard = <T, >({
     dismissLabel
 }: PosterCardProps<T>) => {
     const t = useTranslation();
+    // An audiobook is square in any row, so callers need not know what they show
+    const shape = getCardShape(askedShape, value);
     const onClick = useCallback(() => onSelect?.(value), [ onSelect, value ]);
     const onPlayClick = useCallback(() => onPlay?.(value), [ onPlay, value ]);
     const onDismissClick = useCallback(() => onDismiss?.(value), [ onDismiss, value ]);

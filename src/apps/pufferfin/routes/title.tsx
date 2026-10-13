@@ -27,6 +27,7 @@ import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { ItemDetails } from './item';
 import { type CatalogTitleKind, getMarketParam, getTmdbPersonPath, parseSheetTarget } from './paths';
+import CatalogCastRow from '../features/details/components/CatalogCastRow';
 import { DetailsSkeleton } from '../components/Skeleton';
 import { ErrorOutline } from '../components/icons';
 import { type CreditLink, HeroFacts } from '../components/CreditLine';
@@ -192,6 +193,18 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                     </p>
                 )}
 
+                <CatalogCastRow cast={title.Cast} />
+
+                <MediaRow
+                    title={t('RowMoreLikeThis')}
+                    shape='portrait'
+                    items={getOpenableItems(title.Recommendations)}
+                    isPending={false}
+                    isError={false}
+                    getKey={getKey}
+                    renderItem={renderCard}
+                />
+
                 <section
                     className='pf-about'
                     aria-labelledby='pf-about-title'
@@ -224,16 +237,6 @@ const CatalogTitle: FC<{ kind: CatalogTitleKind, tmdbId: number }> = ({ kind, tm
                         </dl>
                     </div>
                 </section>
-
-                <MediaRow
-                    title={t('RowMoreLikeThis')}
-                    shape='portrait'
-                    items={getOpenableItems(title.Recommendations)}
-                    isPending={false}
-                    isError={false}
-                    getKey={getKey}
-                    renderItem={renderCard}
-                />
             </div>
         </div>
     );

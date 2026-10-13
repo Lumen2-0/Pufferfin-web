@@ -1,3 +1,4 @@
+import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
 import classNames from 'classnames';
 import React, { type FC, type RefObject, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -42,7 +43,11 @@ import {
 } from '../features/discover/utils/discover';
 import { pickThemeRows } from '../features/discover/utils/themes';
 import BookmarksRow from '../features/bookmarks/BookmarksRow';
-import { useDismissResume, useResumeItems } from '../features/home/api/useHomeRows';
+import { BecauseYouWatchedRow, LatestRow, SortedCatalogRow } from '../features/discover/components/DiscoverRows';
+import ResumeRow from '../features/discover/components/ResumeRow';
+import TopTenRow from '../features/discover/components/TopTenRow';
+import { useResumeItems } from '../features/home/api/useHomeRows';
+import '../features/discover/discover.scss';
 import DownloadsRow from '../features/requests/components/DownloadsRow';
 import type { StringKey } from '../i18n/translate';
 import { useTranslation } from '../i18n/useTranslation';
@@ -114,49 +119,18 @@ interface RowProps {
     type: DiscoverType
 }
 
-/** What is being watched; each card has a cross to stop watching it. */
-const ContinueWatchingRow: FC<RowProps> = ({ type }) => {
-    const t = useTranslation();
-    const { api } = useApi();
-    const openItem = useOpenItem();
-    const playCard = usePlayItem();
-    const { getEpisodeLabel } = useCardRenderers();
-    const resume = useResumeItems(getDiskItemTypes(type));
-    const dismiss = useDismissResume();
-    const onDismiss = useCallback((item: ItemDto) => {
-        if (item.Id) dismiss.mutate(item.Id);
-    }, [ dismiss ]);
+/** What just arrived on the server, of the type: films, series (grouped from their episodes), or both. */
+const getLatestItemTypes = (type: DiscoverType): BaseItemKind[] | undefined => {
+    if (type === DiscoverType.Movies) return [ BaseItemKind.Movie ];
+    if (type === DiscoverType.Series) return [ BaseItemKind.Episode ];
+    return [ BaseItemKind.Movie, BaseItemKind.Episode ];
+};
 
-    const renderItem = useCallback((item: ItemDto) => {
-        const progress = getPlayedPercentage(item);
-        return (
-            <PosterCard
-                title={getDisplayTitle(item)}
-                subtitle={getEpisodeLabel(item)}
-                imageUrl={api ? getCardImageUrl(api, item, 'landscape') : undefined}
-                shape='landscape'
-                progress={progress}
-                progressLabel={progress ? t('WatchedPercent', progress) : undefined}
-                value={item}
-                onSelect={openItem}
-                onPlay={isPlayableItem(item) ? playCard : undefined}
-                onDismiss={onDismiss}
-                dismissLabel={t('ActionStopWatching')}
-            />
-        );
-    }, [ api, getEpisodeLabel, onDismiss, openItem, playCard, t ]);
-
-    return (
-        <MediaRow
-            title={t('RowContinueWatching')}
-            shape='landscape'
-            items={resume.data}
-            isPending={resume.isPending}
-            isError={resume.isError}
-            getKey={getKey}
-            renderItem={renderItem}
-        />
-    );
+/** The kinds "Because you watched" looks back at. */
+const getTitleKinds = (type: DiscoverType): Array<CatalogItemKind.Movie | CatalogItemKind.Series> => {
+    if (type === DiscoverType.Movies) return [ CatalogItemKind.Movie ];
+    if (type === DiscoverType.Series) return [ CatalogItemKind.Series ];
+    return [ CatalogItemKind.Movie, CatalogItemKind.Series ];
 };
 
 const getBookmarkKind = (type: DiscoverType) => {
@@ -289,8 +263,24 @@ const RecordingsRow: FC = () => {
 /** One row of a Discover screen; each fetches its own data, only when it is shown. */
 const DiscoverRowView: FC<RowProps> = ({ row, type }) => {
     switch (row) {
+        case DiscoverRow.TopMovies:
+            return <TopTenRow kind={CatalogItemKind.Movie} />;
+        case DiscoverRow.TopShows:
+            return <TopTenRow kind={CatalogItemKind.Series} />;
         case DiscoverRow.ContinueWatching:
-            return <ContinueWatchingRow row={row} type={type} />;
+            return <ResumeRow itemTypes={getDiskItemTypes(type)} />;
+        case DiscoverRow.NewOnServer:
+            return <LatestRow itemTypes={getLatestItemTypes(type)} />;
+        case DiscoverRow.BecauseYouWatched:
+            return <BecauseYouWatchedRow kinds={getTitleKinds(type)} />;
+        case DiscoverRow.NewReleasesMovies:
+            return <SortedCatalogRow kind={CatalogItemKind.Movie} sort='Newest' />;
+        case DiscoverRow.NewReleasesSeries:
+            return <SortedCatalogRow kind={CatalogItemKind.Series} sort='Newest' />;
+        case DiscoverRow.ClassicsMovies:
+            return <SortedCatalogRow kind={CatalogItemKind.Movie} sort='TopRated' />;
+        case DiscoverRow.ClassicsSeries:
+            return <SortedCatalogRow kind={CatalogItemKind.Series} sort='TopRated' />;
         case DiscoverRow.Bookmarks:
             return <BookmarksRow kind={getBookmarkKind(type)} />;
         case DiscoverRow.RecommendedForYou:

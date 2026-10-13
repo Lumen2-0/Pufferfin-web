@@ -2,8 +2,8 @@
 // offset, playback stats). The document element always carries
 // .pf-player-skin, so every playback gets it, whatever screen started it.
 //
-// The player of the design: a soft black veil at the top with Back, the title
-// and the actions (Episodes, SyncPlay, cast); a soft black veil at the bottom
+// The player of the design: at the top, with no veil, Back, the title and the
+// actions (Episodes, SyncPlay, cast); a soft black veil at the bottom
 // with a thin timeline over the whole width, its chapters notched in it, and
 // one line of icon buttons under it: previous, back, play, ahead, next and the
 // time on the left; subtitles, settings, picture in picture, the volume and
@@ -29,52 +29,43 @@
     --pf-osd-text: #fff;
     --pf-osd-muted: #a3a3a3;
     --pf-osd-hover: rgba(255, 255, 255, 0.14);
-    --pf-osd-gutter: 28px;
+    --pf-osd-gutter: 24px;
+    --pf-osd-button: 38px;
 
     // The top: Back and the title on the left, the actions on the right
 
+    // No veil and no bar at the top: the title and the icons carry a soft shadow
+    // so they read on a bright picture
     .skinHeader-withBackground.osdHeader {
         height: auto;
         padding: 0;
         background: none;
         backdrop-filter: none;
-
-        // The veil reaches further than the bar, over 18% of the picture
-        &::before {
-            position: absolute;
-            top: 0;
-            right: 0;
-            left: 0;
-            z-index: -1;
-            height: max(18vh, 100%);
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
-            pointer-events: none;
-            content: '';
-        }
     }
 
     .pf-osd-top {
         display: flex;
-        gap: 24px;
+        gap: 20px;
         align-items: center;
         justify-content: space-between;
         margin: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
-        padding: 14px var(--pf-osd-gutter);
+        padding: 12px var(--pf-osd-gutter);
         pointer-events: all;
     }
 
     .pf-osd-top__start {
         display: flex;
-        gap: 14px;
+        gap: 10px;
         align-items: center;
         min-width: 0;
     }
 
     .pf-osd-top__title {
         overflow: hidden;
-        color: rgba(255, 255, 255, 0.85);
+        color: rgba(255, 255, 255, 0.9);
         font-weight: 500;
-        font-size: 16px;
+        font-size: 14px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
         white-space: nowrap;
         text-overflow: ellipsis;
     }
@@ -93,11 +84,12 @@
         flex: none;
         align-items: center;
         justify-content: center;
-        height: 44px;
+        height: var(--pf-osd-button);
         margin: 0;
         padding: 0;
         color: var(--pf-osd-text);
         font: inherit;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
         background: transparent;
         border: 0;
         border-radius: 999px;
@@ -107,18 +99,28 @@
 
     .pf-osd-top__back,
     .pf-osd-top__actions .MuiIconButton-root {
-        width: 44px;
+        width: var(--pf-osd-button);
+    }
+
+    .pf-osd-top__back svg {
+        width: 20px;
+        height: 20px;
     }
 
     .pf-osd-top__actions .MuiSvgIcon-root {
-        font-size: 24px;
+        font-size: 21px;
     }
 
     .pf-osd-top__episodes {
-        gap: 8px;
-        padding: 0 16px;
+        gap: 7px;
+        padding: 0 14px;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 13px;
+
+        svg {
+            width: 18px;
+            height: 18px;
+        }
 
         &[aria-expanded='true'] {
             background: var(--pf-osd-hover);
@@ -144,9 +146,9 @@
         gap: 0.5rem;
         align-items: center;
         width: auto;
-        padding: 0 1rem;
+        padding: 0 0.875rem;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.8125rem;
         border-radius: 999px;
 
         &.hide {
@@ -156,8 +158,8 @@
 
     // The legacy header: round buttons as the design draws them
     .osdHeader .headerButton {
-        width: 44px;
-        height: 44px;
+        width: var(--pf-osd-button);
+        height: var(--pf-osd-button);
         color: var(--pf-osd-text);
         border-radius: 999px;
         transition: background-color var(--pf-duration) var(--pf-ease);
@@ -190,15 +192,13 @@
     .osdControls {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        padding: 0 20px 14px;
+        gap: 2px;
+        padding: 0 18px 12px;
     }
 
     // The title is in the bar at the top
     .osdMainTextContainer,
-    .osdSecondaryMediaInfo,
-    .osdControls .btnPreviousChapter,
-    .osdControls .btnNextChapter {
+    .osdSecondaryMediaInfo {
         display: none;
     }
 
@@ -209,7 +209,7 @@
         --pf-scrub-x: 0%;
 
         position: relative;
-        height: 24px;
+        height: 20px;
         margin: 0;
 
         &::after {
@@ -217,8 +217,8 @@
             top: 50%;
             left: var(--pf-scrub-x);
             z-index: 2;
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             background: #fff;
             border-radius: 999px;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
@@ -267,8 +267,8 @@
 
     // The knob shows while it is dragged or focused; the hover dot does the rest
     .pf-seek .mdl-slider::-webkit-slider-thumb {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         background: #fff;
         border: 0;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
@@ -277,8 +277,8 @@
     }
 
     .pf-seek .mdl-slider::-moz-range-thumb {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         background: #fff;
         border: 0;
         opacity: 0;
@@ -319,13 +319,13 @@
     .pf-seek .sliderBubble {
         padding: 0;
         background: transparent;
-        transform: translate3d(-50%, calc(-100% - 14px), 0);
+        transform: translate3d(-50%, calc(-100% - 12px), 0);
     }
 
     .pf-scrub {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 5px;
         align-items: center;
     }
 
@@ -356,10 +356,10 @@
     }
 
     .pf-scrub__label {
-        padding: 4px 10px;
+        padding: 3px 9px;
         color: #fff;
         font-weight: 600;
-        font-size: 13px;
+        font-size: 12px;
         white-space: nowrap;
         background: #141414;
         border: 1px solid rgba(255, 255, 255, 0.12);
@@ -377,7 +377,7 @@
     .videoOsdBottom .pf-osd-bar {
         display: flex;
         flex-wrap: nowrap;
-        gap: 16px;
+        gap: 14px;
         align-items: center;
         justify-content: space-between;
         padding: 0;
@@ -398,8 +398,8 @@
         flex: none;
         align-items: center;
         justify-content: center;
-        width: 44px;
-        height: 44px;
+        width: var(--pf-osd-button);
+        height: var(--pf-osd-button);
         margin: 0;
         padding: 0;
         color: var(--pf-osd-text);
@@ -407,6 +407,12 @@
         border: 0;
         border-radius: 999px;
         transition: background-color var(--pf-duration) var(--pf-ease);
+    }
+
+    // Only previous, back, play, ahead and next on the left: no chapter jumps
+    .videoOsdBottom .paper-icon-button-light.btnPreviousChapter,
+    .videoOsdBottom .paper-icon-button-light.btnNextChapter {
+        display: none;
     }
 
     .videoOsdBottom .paper-icon-button-light:disabled {
@@ -431,10 +437,10 @@
         outline-offset: 2px;
     }
 
-    // Icons: the drawings of the design, 20px, play and the jumps 22px
+    // Icons: the drawings of the design, 18px, play and the jumps 20px
     .videoOsdBottom .material-icons {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         font-size: 0;
 
         &::before {
@@ -450,8 +456,8 @@
     .videoOsdBottom .btnPause .material-icons,
     .videoOsdBottom .btnRewind .material-icons,
     .videoOsdBottom .btnFastForward .material-icons {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
     }
 
     @each $class, $icon in $pf-player-icon-classes {
@@ -464,13 +470,13 @@
 
     .videoOsdBottom .pf-osd-time {
         display: flex;
-        gap: 14px;
+        gap: 12px;
         align-items: baseline;
         min-width: 0;
-        margin: 0 0 0 10px;
+        margin: 0 0 0 8px;
         overflow: hidden;
         color: var(--pf-osd-text);
-        font-size: 13px;
+        font-size: 12px;
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
     }
@@ -481,16 +487,15 @@
         padding: 0;
     }
 
-    .pf-osd-time .osdDurationText {
+    // A real "/" between the two, so it reads and copies as "23:59 / -20:14"
+    .pf-osd-time .osdDurationText,
+    .pf-osd-time .pf-osd-time__sep {
         color: var(--pf-osd-muted);
-
-        &::before {
-            content: '\00a0/ ';
-        }
     }
 
-    .pf-osd-time .osdPositionText.hide + .osdDurationText::before {
-        content: none;
+    .pf-osd-time .pf-osd-time__sep:has(+ .osdDurationText.hide),
+    .pf-osd-time .osdPositionText.hide + .pf-osd-time__sep {
+        display: none;
     }
 
     .pf-osd-time .endsAtText {
@@ -529,10 +534,10 @@
         top: 50%;
         left: 50%;
         z-index: 1;
-        width: 56px;
-        height: 56px;
+        width: 50px;
+        height: 50px;
         background:
-            var(--pf-player-paused-play) center / 24px no-repeat,
+            var(--pf-player-paused-play) center / 21px no-repeat,
             rgba(255, 255, 255, 0.92);
         border-radius: 50%;
         transform: translate(-50%, -50%);
@@ -556,7 +561,7 @@
 
         .videoOsdBottom .pf-osd-time {
             margin-left: 4px;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .pf-osd-top__episodes {
@@ -564,11 +569,13 @@
         }
     }
 
+    // A finger needs room: the round buttons keep 40px
+    @media (pointer: coarse) {
+        --pf-osd-button: 40px;
+    }
+
     @media (max-width: 30em) {
-        .videoOsdBottom .paper-icon-button-light {
-            width: 40px;
-            height: 40px;
-        }
+        --pf-osd-button: 40px;
 
         .pf-osd-top__episodes svg {
             display: none;

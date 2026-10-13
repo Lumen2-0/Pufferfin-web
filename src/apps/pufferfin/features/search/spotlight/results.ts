@@ -45,10 +45,35 @@ export function getResultPath(item: CatalogItem): string | undefined {
     return getCatalogItemPath(item);
 }
 
-/** The results of one kind that lead somewhere, each title once. */
+/**
+ * What a result is, whatever entry carries it: the same film can come once
+ * from the library and once from TMDB under different keys. Its TMDB id when
+ * known, else its title and year.
+ */
+export function getResultIdentity(item: CatalogItem): string {
+    return item.TmdbId ? `${item.Kind}:tmdb:${item.TmdbId}` : getHomonymKey(item);
+}
+
+/** Title and year of a result, accents and punctuation aside: two entries alike for whoever reads the list. */
+export function getHomonymKey(item: CatalogItem): string {
+    const title = item.Title.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[\s!-/:-@[-`{-~\u2018\u2019\u201c\u201d\u00ab\u00bb\u00b7\u2026\u2013\u2014]+/g, ' ').trim();
+    return `${item.Kind}:${title}:${item.Year ?? ''}`;
+}
+
+/**
+ * The results of one kind that lead somewhere, each title once. When a title
+ * comes twice, the entry on disk wins, at the place of the first.
+ */
 export function getKindResults(items: CatalogItem[] | undefined, kind: CatalogItemKind): CatalogItem[] {
-    const keys = new Set<string>();
-    return (items ?? []).filter(item => item.Kind === kind && !!getResultPath(item) && !keys.has(item.Key) && !!keys.add(item.Key));
+    const byIdentity = new Map<string, CatalogItem>();
+    for (const item of items ?? []) {
+        if (item.Kind !== kind || !getResultPath(item)) continue;
+        const identity = getResultIdentity(item);
+        const known = byIdentity.get(identity);
+        const isBetter = !known || (known.Availability !== CatalogAvailability.OnDisk && item.Availability === CatalogAvailability.OnDisk);
+        if (isBetter) byIdentity.set(identity, item);
+    }
+    return [ ...byIdentity.values() ];
 }
 
 /** A section of the list: the titles on disk first, then one per kind. */
@@ -104,13 +129,16 @@ export function getSpotlightSections(
     const order = new Map((titles ?? []).map((item, index) => [ item.Key, index ]));
     onDisk.sort((a, b) => (order.get(a.Key) ?? 0) - (order.get(b.Key) ?? 0));
     const library = onDisk.slice(0, LIBRARY_SECTION_LIMIT);
-    const shownKeys = new Set(library.map(item => item.Key));
+    // A title on disk is not listed again below, nor a homonym of the same year
+    // that would read the same: the filter of its kind still lists them all
+    const shownKeys = new Set(library.flatMap(item => [ getResultIdentity(item), getHomonymKey(item) ]));
+    const isShown = (item: CatalogItem) => shownKeys.has(getResultIdentity(item)) || shownKeys.has(getHomonymKey(item));
 
     const sections: SpotlightSection[] = [ { id: 'library', source: 'titles', lines: toLines(library) } ];
     for (const kindFilter of KIND_FILTERS) {
         const results = resultsOf(kindFilter);
-        const shown = results.filter(item => !shownKeys.has(item.Key)).slice(0, SECTION_LIMIT);
-        const shownOfKind = shown.length + results.filter(item => shownKeys.has(item.Key)).length;
+        const shown = results.filter(item => !isShown(item)).slice(0, SECTION_LIMIT);
+        const shownOfKind = shown.length + results.filter(isShown).length;
         const lines = toLines(shown);
         if (results.length > shownOfKind) lines.push({ type: 'more', filter: kindFilter, count: results.length });
         sections.push({ id: kindFilter, source: sourceOf(kindFilter), lines });

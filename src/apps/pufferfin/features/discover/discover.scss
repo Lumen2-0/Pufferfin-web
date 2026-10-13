@@ -1,0 +1,305 @@
+// Discover: one hover for every card of the screen, the top 10 rows with their
+// large ranks, and the wide cards of what is being watched, which play at once
+
+$pf-lift-duration: 0.25s;
+
+// One hover everywhere: the art lifts by 4px. Only with a pointer that hovers;
+// a TV keeps its focus scale and halo
+@media (hover: hover) {
+    .pf-discover .pf-card__art,
+    .pf-discover .pf-card-play__zone,
+    .pf-resume-card__art {
+        transition:
+            transform $pf-lift-duration ease,
+            box-shadow $pf-lift-duration ease;
+    }
+
+    .pf-discover .pf-card:hover .pf-card__art,
+    .pf-discover .pf-card-play:hover .pf-card-play__zone,
+    .pf-resume-card:hover .pf-resume-card__art {
+        transform: translateY(-4px);
+    }
+}
+
+// Top 10: the rank stands behind the start of the poster, outlined, its foot
+// on the line of the art's foot
+
+.pf-top10 {
+    position: relative;
+    display: block;
+    padding-left: 4.25rem;
+
+    [dir='rtl'] & {
+        padding-right: 4.25rem;
+        padding-left: 0;
+    }
+}
+
+// Two digits need more room than one
+.pf-top10-row li:nth-child(n + 10) .pf-top10 {
+    padding-left: 7.25rem;
+
+    [dir='rtl'] & {
+        padding-right: 7.25rem;
+        padding-left: 0;
+    }
+}
+
+.pf-top10__rank {
+    position: absolute;
+    // The caption under the art: the rank ends where the art ends
+    bottom: 2.4rem;
+    left: 0;
+    z-index: 0;
+    color: #141414;
+    font-weight: 800;
+    font-size: clamp(7rem, 11vw, 11rem);
+    line-height: 0.74;
+    letter-spacing: -0.07em;
+    -webkit-text-stroke: 2px rgba(255, 255, 255, 0.55);
+    user-select: none;
+    pointer-events: none;
+
+    [dir='rtl'] & {
+        right: 0;
+        left: auto;
+    }
+}
+
+.pf-top10__card {
+    position: relative;
+    z-index: 1;
+    display: block;
+}
+
+// Being watched: wide cards; the whole card plays, a bare triangle says so under the pointer
+
+.pf-resume-card {
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.pf-resume-card__open {
+    display: block;
+    width: clamp(16rem, 22vw, 20rem);
+    margin: 0;
+    padding: 0;
+    color: var(--pf-color-text);
+    font-family: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    scroll-margin: 0 calc(var(--pf-gutter) + 4rem);
+
+    [dir='rtl'] & {
+        text-align: right;
+    }
+}
+
+.pf-resume-card__art {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background: var(--pf-color-surface);
+    border-radius: var(--pf-radius-card);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+    // Ratio box through padding: aspect-ratio is missing on older TV engines
+    &::before {
+        display: block;
+        padding-top: 56.25%;
+        content: '';
+    }
+}
+
+.pf-resume-card__image,
+.pf-resume-card__placeholder,
+.pf-resume-card__shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.pf-resume-card__image {
+    display: block;
+    object-fit: cover;
+}
+
+.pf-resume-card__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    text-align: center;
+}
+
+.pf-resume-card__shade {
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.pf-resume-card__triangle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin: -1.25rem 0 0 -1.25rem;
+    color: #fff;
+    opacity: 0;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.55));
+    transform: scale(0.88);
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+}
+
+.pf-resume-card__progress {
+    position: absolute;
+    right: 0.625rem;
+    bottom: 0.625rem;
+    left: 0.625rem;
+    height: 0.25rem;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+}
+
+.pf-resume-card__fill {
+    display: block;
+    height: 100%;
+    background: var(--pf-color-text);
+    border-radius: 999px;
+}
+
+.pf-resume-card__caption {
+    display: block;
+    padding-top: 0.625rem;
+}
+
+.pf-resume-card__title,
+.pf-resume-card__subtitle {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-resume-card__title {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.pf-resume-card__subtitle {
+    margin-top: 0.125rem;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.8rem;
+}
+
+.pf-resume-card__dismiss {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    color: #fff;
+    font-size: 1.05rem;
+    background: rgba(0, 0, 0, 0.78);
+    border: 0;
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    opacity: 0;
+    transition:
+        opacity 0.2s ease,
+        background-color 0.2s ease,
+        transform $pf-lift-duration ease;
+
+    &:hover {
+        background: #c0392b;
+    }
+
+    &:focus-visible {
+        opacity: 1;
+        box-shadow: 0 0 0 2px var(--pf-color-text);
+    }
+
+    [dir='rtl'] & {
+        right: auto;
+        left: 0.5rem;
+    }
+}
+
+.pf-resume-card:hover,
+.pf-resume-card:focus-within {
+    .pf-resume-card__dismiss {
+        opacity: 1;
+    }
+}
+
+.pf-resume-card__open:hover,
+.pf-resume-card__open:focus-visible {
+    .pf-resume-card__shade,
+    .pf-resume-card__triangle {
+        opacity: 1;
+    }
+
+    .pf-resume-card__triangle {
+        transform: none;
+    }
+}
+
+@media (hover: hover) {
+    // The cross rides with the lifted art
+    .pf-resume-card:hover .pf-resume-card__dismiss {
+        transform: translateY(-4px);
+    }
+}
+
+// No pointer to hover with: the cross stays in view, a tap plays
+@media (hover: none) {
+    .pf-resume-card__dismiss {
+        opacity: 1;
+    }
+}
+
+:root.layout-tv {
+    .pf-resume-card__open:focus .pf-resume-card__art {
+        transform: scale(var(--pf-focus-scale));
+        box-shadow: var(--pf-focus-ring);
+    }
+
+    .pf-resume-card__open:focus {
+        .pf-resume-card__shade,
+        .pf-resume-card__triangle {
+            opacity: 1;
+        }
+
+        .pf-resume-card__triangle {
+            transform: none;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-discover .pf-card__art,
+    .pf-discover .pf-card-play__zone,
+    .pf-resume-card__art,
+    .pf-resume-card__triangle,
+    .pf-resume-card__dismiss {
+        transition: none;
+    }
+}

@@ -24,6 +24,8 @@ import { useMergedSeasons } from '../features/series/api/useMergedSeasons';
 import SeasonDownloads from '../features/series/components/SeasonDownloads';
 import SeriesEpisodes from '../features/series/components/SeriesEpisodes';
 import { CatalogItemKind } from '../features/catalog/api/types';
+import { useCatalogCast } from '../features/details/api/useCatalogCast';
+import CatalogCastRow from '../features/details/components/CatalogCastRow';
 import type { Bookmark } from '../features/bookmarks/bookmarks';
 import BookmarkButton from '../features/bookmarks/BookmarkButton';
 import ReviewLink from '../features/reviews/ReviewLink';
@@ -225,6 +227,8 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
         () => (item?.People ?? []).filter(person => person.Type === PersonKind.Actor).slice(0, CAST_LIMIT),
         [ item ]
     );
+    // A title the library holds no actors for borrows the cast TMDB knows, when it has an id there
+    const catalogCast = useCatalogCast(item, cast.length > 0);
     // The directors, each opening their page with all their films
     const directors = useMemo<CreditLink[]>(
         () => (item?.People ?? [])
@@ -369,15 +373,19 @@ export const ItemDetails: FC<{ itemId: string }> = ({ itemId }) => {
                     </section>
                 )}
 
-                <MediaRow
-                    title={t('RowCast')}
-                    shape='portrait'
-                    items={cast}
-                    isPending={false}
-                    isError={false}
-                    getKey={getCastKey}
-                    renderItem={renderPerson}
-                />
+                {catalogCast.isNeeded ? (
+                    <CatalogCastRow cast={catalogCast.cast} isPending={catalogCast.isPending} />
+                ) : (
+                    <MediaRow
+                        title={t('RowCast')}
+                        shape='portrait'
+                        items={cast}
+                        isPending={false}
+                        isError={false}
+                        getKey={getCastKey}
+                        renderItem={renderPerson}
+                    />
+                )}
 
                 <MediaRow
                     title={t('RowMoreLikeThis')}

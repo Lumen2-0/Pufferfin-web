@@ -41,7 +41,7 @@ const CatalogCard: FC<{ item: CatalogItem }> = ({ item }) => {
             title={item.Title}
             subtitle={item.Kind === CatalogItemKind.Audiobook ? getAudiobookCaption(item, t) : yearText}
             imageUrl={imageUrl}
-            shape='portrait'
+            shape={item.Kind === CatalogItemKind.Audiobook ? 'square' : 'portrait'}
             badge={isMissing(item) ? { icon: <CloudOutlined fontSize='inherit' />, label: t('NotInLibrary') } : undefined}
             value={path}
             onSelect={openPath}

@@ -46,12 +46,12 @@ interface LibraryCatalogProps {
     onFiltersChange: (filters: CatalogFilters) => void
 }
 
-const GridSkeleton: FC = () => (
+const GridSkeleton: FC<{ isSquare: boolean }> = ({ isSquare }) => (
     <SkeletonRegion>
-        <ul className='pf-lib-grid' aria-hidden='true'>
+        <ul className={classNames('pf-lib-grid', { 'pf-lib-grid--square': isSquare })} aria-hidden='true'>
             {Array.from({ length: SKELETON_COUNT }, (_, index) => (
                 <li key={index} className='pf-lib-grid__item'>
-                    <Bone className='pf-lib-skeleton pf-lib-skeleton--poster' />
+                    <Bone className={classNames('pf-lib-skeleton', isSquare ? 'pf-lib-skeleton--square' : 'pf-lib-skeleton--poster')} />
                     <Bone className='pf-lib-skeleton pf-lib-skeleton--line' width='80%' />
                     <Bone className='pf-lib-skeleton pf-lib-skeleton--line pf-lib-skeleton--small' width='35%' />
                 </li>
@@ -165,12 +165,12 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
             </p>
         );
     } else if (isPending) {
-        grid = <GridSkeleton />;
+        grid = <GridSkeleton isSquare={isBookLibrary} />;
     } else if (!items.length) {
         grid = <p className='pf-lib__note'>{filters.query || filters.genreId || filters.decade || filters.isUnplayed ? t('LibraryNoMatch') : t('LibraryEmpty')}</p>;
     } else {
         grid = (
-            <ul ref={gridRef} className='pf-lib-grid' aria-busy={isFetchingNextPage}>
+            <ul ref={gridRef} className={classNames('pf-lib-grid', { 'pf-lib-grid--square': isBookLibrary })} aria-busy={isFetchingNextPage}>
                 {items.map(item => {
                     const progress = getPlayedPercentage(item);
                     const progressKey = isAudiobookEntry(item) ? 'ListenedPercent' : 'WatchedPercent';
@@ -181,6 +181,7 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
                                 title={item.SeriesName && getEpisodeNumbers(item) ? item.SeriesName : getDisplayTitle(item)}
                                 subtitle={getSubtitle(item)}
                                 imageUrl={api ? getCardImageUrl(api, item, 'portrait') : undefined}
+                                isSquare={isAudiobookEntry(item)}
                                 progress={progress}
                                 progressLabel={progress ? t(progressKey, progress) : undefined}
                                 isPlayed={!!item.UserData?.Played}

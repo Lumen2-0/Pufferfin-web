@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CatalogAvailability, type CatalogItem, CatalogItemKind } from '../../catalog/api/types';
 
-import { getSpotlightSections, LIBRARY_SECTION_LIMIT, SECTION_LIMIT, SpotlightFilter } from './results';
+import { getKindResults, getSpotlightSections, LIBRARY_SECTION_LIMIT, SECTION_LIMIT, SpotlightFilter } from './results';
 
 let next = 0;
 const entry = (kind: CatalogItemKind, onDisk = false): CatalogItem => {
@@ -60,5 +60,25 @@ describe('getSpotlightSections', () => {
         const book = entry(CatalogItemKind.Audiobook);
         const sections = getSpotlightSections(SpotlightFilter.Audiobooks, [], [ book ]);
         expect(sections[0]).toMatchObject({ source: 'audiobooks', lines: [ { type: 'result', item: book } ] });
+    });
+
+    it('does not list again under Films a title on disk, nor a homonym of the same year', () => {
+        const onDisk: CatalogItem = { ...entry(CatalogItemKind.Movie, true), Title: 'Aftersun', Year: 2022 };
+        const homonym: CatalogItem = { ...entry(CatalogItemKind.Movie), Title: 'Aftersun', Year: 2022 };
+        const other: CatalogItem = { ...entry(CatalogItemKind.Movie), Title: 'Aftersun', Year: 2024 };
+        const [ library, moviesSection ] = getSpotlightSections(SpotlightFilter.All, [ onDisk, homonym, other ], []);
+        expect(keysOf(library.lines)).toEqual([ onDisk.Key ]);
+        expect(keysOf(moviesSection.lines)).toEqual([ other.Key ]);
+        // The Films filter still lists every one of them
+        const [ films ] = getSpotlightSections(SpotlightFilter.Movies, [ onDisk, homonym, other ], []);
+        expect(films.lines).toHaveLength(3);
+    });
+});
+
+describe('getKindResults', () => {
+    it('keeps a title once, the entry on disk winning at the place of the first', () => {
+        const missing: CatalogItem = { ...entry(CatalogItemKind.Movie), TmdbId: 42 };
+        const onDisk: CatalogItem = { ...entry(CatalogItemKind.Movie, true), TmdbId: 42 };
+        expect(getKindResults([ missing, onDisk ], CatalogItemKind.Movie).map(item => item.Key)).toEqual([ onDisk.Key ]);
     });
 });

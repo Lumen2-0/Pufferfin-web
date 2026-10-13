@@ -42,7 +42,7 @@ import { episodesControl } from 'apps/pufferfin/features/player/osd/episodesCont
 import { renderEpisodesPanel } from 'apps/pufferfin/features/player/osd/episodesPanel';
 import { ICONS } from 'apps/pufferfin/features/player/osd/icons';
 import { getChapterAt, getChapterMarkers } from 'apps/pufferfin/features/player/osd/model';
-import { createPanelHost, PANEL_TOGGLE_ATTRIBUTE } from 'apps/pufferfin/features/player/osd/panelHost';
+import { createPanelHost, PANEL_OPEN_CLASS, PANEL_TOGGLE_ATTRIBUTE } from 'apps/pufferfin/features/player/osd/panelHost';
 import { renderSettingsPanel } from 'apps/pufferfin/features/player/osd/settingsPanel';
 import { loadPlayerText, playerText } from 'apps/pufferfin/features/player/osd/strings';
 import { renderTracksPanel } from 'apps/pufferfin/features/player/osd/tracksPanel';
@@ -1480,6 +1480,9 @@ export default function (view) {
 
     function onWheel(e) {
         if (getOpenedDialog()) return;
+        // A wheel over a panel, the episodes drawer or a menu scrolls it: it never changes the volume
+        if (document.documentElement.classList.contains(PANEL_OPEN_CLASS)) return;
+        if (e.target instanceof Element && e.target.closest('.pf-osd-panel, .pf-osd-episodes, .pf-osd-scrim, [role="menu"], [role="dialog"], [role="listbox"], .upNextContainer')) return;
         if (e.deltaY < 0) {
             playbackManager.volumeUp(currentPlayer);
         }
@@ -1507,7 +1510,7 @@ export default function (view) {
 
     // PUFFERFIN: above the pointer on the timeline, the picture at that time
     // framed in white, then a small tag with the time and the chapter
-    const SCRUB_WIDTH = 200;
+    const SCRUB_WIDTH = 176;
 
     function getScrubLabelHtml(timeText, chapterName) {
         let html = '<div class="pf-scrub__label"><span class="pf-scrub__time">' + escapeHtml(timeText) + '</span>';

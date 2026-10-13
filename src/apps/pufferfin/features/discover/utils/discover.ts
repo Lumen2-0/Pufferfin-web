@@ -14,12 +14,20 @@ export enum DiscoverType {
 
 /**
  * Rows a Discover screen can show. Discover is for finding something new:
- * catalog rows mix titles on disk and missing ones; the only disk rows are the
- * ones about what is being watched (Continue Watching) and the titles the
- * user put aside (Bookmarks). What the library already holds is the Library tab.
+ * catalog rows mix titles on disk and missing ones, opened by the tops of the
+ * moment; the disk rows are what is being watched, what just arrived on the
+ * server, and the titles the user put aside (Bookmarks).
  */
 export enum DiscoverRow {
+    TopMovies = 'topMovies',
+    TopShows = 'topShows',
     ContinueWatching = 'continueWatching',
+    NewOnServer = 'newOnServer',
+    BecauseYouWatched = 'becauseYouWatched',
+    NewReleasesMovies = 'newReleasesMovies',
+    NewReleasesSeries = 'newReleasesSeries',
+    ClassicsMovies = 'classicsMovies',
+    ClassicsSeries = 'classicsSeries',
     Bookmarks = 'bookmarks',
     RecommendedForYou = 'recommendedForYou',
     TrendingMovies = 'trendingMovies',
@@ -65,13 +73,41 @@ export const DISCOVER_TYPE_LABELS: Record<DiscoverType, StringKey> = {
 };
 
 /**
- * The rows above the genre rows: only what is being watched, the bookmarks, and live TV.
- * Everything else on Discover is a genre and its variants.
+ * The rows above the genre rows. Films and series open on the top 10 of the
+ * moment, then what is being watched, the picks for the user, what just
+ * arrived, and the new and the timeless; the genres and their variants follow.
  */
 const ROWS: Record<DiscoverType, DiscoverRow[]> = {
-    [DiscoverType.All]: [ DiscoverRow.ContinueWatching, DiscoverRow.Bookmarks ],
-    [DiscoverType.Movies]: [ DiscoverRow.ContinueWatching, DiscoverRow.Bookmarks ],
-    [DiscoverType.Series]: [ DiscoverRow.ContinueWatching, DiscoverRow.Bookmarks ],
+    [DiscoverType.All]: [
+        DiscoverRow.TopMovies,
+        DiscoverRow.ContinueWatching,
+        DiscoverRow.TopShows,
+        DiscoverRow.RecommendedForYou,
+        DiscoverRow.NewOnServer,
+        DiscoverRow.BecauseYouWatched,
+        DiscoverRow.Bookmarks,
+        DiscoverRow.NewReleasesMovies,
+        DiscoverRow.ClassicsMovies
+    ],
+    [DiscoverType.Movies]: [
+        DiscoverRow.TopMovies,
+        DiscoverRow.ContinueWatching,
+        DiscoverRow.RecommendedForYou,
+        DiscoverRow.BecauseYouWatched,
+        DiscoverRow.NewOnServer,
+        DiscoverRow.Bookmarks,
+        DiscoverRow.NewReleasesMovies,
+        DiscoverRow.ClassicsMovies
+    ],
+    [DiscoverType.Series]: [
+        DiscoverRow.TopShows,
+        DiscoverRow.ContinueWatching,
+        DiscoverRow.BecauseYouWatched,
+        DiscoverRow.NewOnServer,
+        DiscoverRow.Bookmarks,
+        DiscoverRow.NewReleasesSeries,
+        DiscoverRow.ClassicsSeries
+    ],
     [DiscoverType.TvShows]: [ DiscoverRow.LiveTvOnNow, DiscoverRow.Recordings ],
     [DiscoverType.Documentaries]: [],
     [DiscoverType.Audiobooks]: []
