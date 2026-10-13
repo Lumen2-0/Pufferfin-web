@@ -50,9 +50,8 @@ const Dot: FC<DotProps> = ({ index, count, isActive, onSelect, onDone }) => {
 
 /**
  * The featured titles of Discover, one screen high: a large card whose art
- * fades from one title to the next. It moves on by itself and stops while the
- * pointer or the focus is on it, so a title never slips away while the user
- * reads it or reaches for its button. Dots and a swipe move by hand.
+ * fades from one title to the next. It moves on by itself, also under the
+ * pointer, and stops while the keyboard or the remote focus is on it. Dots and a swipe move by hand.
  */
 const HeroCarousel: FC<{ slides: HeroSlide[] }> = ({ slides }) => {
     const t = useTranslation();
@@ -66,8 +65,10 @@ const HeroCarousel: FC<{ slides: HeroSlide[] }> = ({ slides }) => {
     // pauses while held, and never runs when the user asked for less motion
     const next = useCallback(() => setIndex(current => (current + 1) % count), [ count ]);
 
-    const hold = useCallback(() => setIsHeld(true), []);
-    const release = useCallback(() => setIsHeld(false), []);
+    // Only the keyboard and the remote hold it: under the mouse it keeps turning
+    const holdForKeyboard = useCallback((event: React.FocusEvent<HTMLElement>) => {
+        if (event.target.matches(':focus-visible')) setIsHeld(true);
+    }, []);
     const onBlur = useCallback((event: React.FocusEvent<HTMLElement>) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsHeld(false);
     }, []);
@@ -91,9 +92,7 @@ const HeroCarousel: FC<{ slides: HeroSlide[] }> = ({ slides }) => {
             className={classNames('pf-hero pf-hero--card pf-hero--viewport pf-carousel', { 'pf-carousel--held': isHeld })}
             aria-roledescription='carousel'
             aria-label={t('CarouselLabel')}
-            onMouseEnter={hold}
-            onMouseLeave={release}
-            onFocus={hold}
+            onFocus={holdForKeyboard}
             onBlur={onBlur}
         >
             <div className='pf-hero__frame' onPointerDown={onPointerDown} onPointerUp={onPointerUp}>

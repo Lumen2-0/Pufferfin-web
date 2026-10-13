@@ -16,6 +16,18 @@ interface RailProps extends HTMLAttributes<HTMLElement> {
 
 const NO_SCROLL: RailState = { canPrevious: false, canNext: false };
 
+// The picture of a card: the arrows sit level with its middle, not with the middle of picture and caption
+const PICTURE_SELECTOR = 'img, [class*="__tile"], [class*="__art"], [class*="__image"], [class*="__thumb"], [class*="__photo"]';
+
+/** Height of the middle of the first card's picture inside the rail, or undefined for a row without pictures. */
+const getPictureMiddle = (rail: HTMLElement, scroller: HTMLElement) => {
+    const picture = scroller.firstElementChild?.querySelector<HTMLElement>(PICTURE_SELECTOR);
+    if (!picture) return undefined;
+    const box = picture.getBoundingClientRect();
+    if (!box.height) return undefined;
+    return box.top + box.height / 2 - rail.getBoundingClientRect().top;
+};
+
 /**
  * A row that scrolls sideways, with a round arrow at each edge. The arrows show
  * when the pointer comes over the row, and only the ones with somewhere to go:
@@ -24,12 +36,19 @@ const NO_SCROLL: RailState = { canPrevious: false, canNext: false };
  */
 const Rail: FC<RailProps> = ({ as: Tag = 'ul', className, children, ...props }) => {
     const t = useTranslation();
+    const railRef = useRef<HTMLDivElement>(null);
     const scrollerRef = useRef<HTMLElement>(null);
     const [ state, setState ] = useState<RailState>(NO_SCROLL);
 
     const update = useCallback(() => {
         const scroller = scrollerRef.current;
         if (!scroller) return;
+        const rail = railRef.current;
+        const middle = rail ? getPictureMiddle(rail, scroller) : undefined;
+        if (rail) {
+            if (middle === undefined) rail.style.removeProperty('--pf-rail-arrow-y');
+            else rail.style.setProperty('--pf-rail-arrow-y', `${Math.round(middle)}px`);
+        }
         const next = getRailState(scroller);
         setState(previous => (
             previous.canPrevious === next.canPrevious && previous.canNext === next.canNext ? previous : next
@@ -59,7 +78,7 @@ const Rail: FC<RailProps> = ({ as: Tag = 'ul', className, children, ...props }) 
     const scrollNext = useCallback(() => scroll(1), [ scroll ]);
 
     return (
-        <div className='pf-rail' onPointerEnter={update}>
+        <div ref={railRef} className='pf-rail' onPointerEnter={update}>
             <Tag ref={scrollerRef as never} className={className} {...props}>
                 {children}
             </Tag>

@@ -165,6 +165,10 @@ export function createPanelHost(options: PanelHostOptions): PanelHost {
         panel.dataset.kind = kind;
         panel.setAttribute('aria-label', label);
         panel.className = PANEL_CLASS;
+        // The SyncPlay panel hangs under its button at the top; phones keep their bottom sheet
+        const anchor = kind === 'syncplay' && opener && window.innerWidth > 640 ? opener.getBoundingClientRect() : undefined;
+        if (anchor) panel.style.right = `${Math.max(8, Math.round(window.innerWidth - anchor.right))}px`;
+        else panel.style.removeProperty('right');
         setChildren(panel);
         panelRender(panel);
 

@@ -3,7 +3,18 @@
 
 :root.pf-player-skin {
     .pf-osd-panel[data-kind='syncplay'] {
+        top: 58px;
+        bottom: auto;
         width: 340px;
+        max-height: calc(100vh - 146px);
+        transform-origin: top right;
+
+        // Phones keep the bottom sheet of every panel
+        @media (max-width: 40em) {
+            top: auto;
+            bottom: 0;
+            max-height: 85vh;
+        }
     }
 
     .pf-sp-head {
