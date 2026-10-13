@@ -131,31 +131,6 @@
     }
 }
 
-.pf-cm-sort {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    color: #a3a3a3;
-    font-size: 13px;
-}
-
-.pf-cm-sort__select {
-    height: 38px;
-    padding: 0 12px;
-    color: #fff;
-    font: inherit;
-    font-size: 14px;
-    background: #0e0e0e;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 999px;
-    cursor: pointer;
-
-    &:focus-visible {
-        border-color: #fff;
-        outline: none;
-    }
-}
-
 .pf-cm-chips {
     display: flex;
     flex-wrap: wrap;
@@ -227,7 +202,7 @@
 
 .pf-cm-row {
     display: grid;
-    grid-template-columns: 36px minmax(0, 1fr) auto;
+    grid-template-columns: 36px minmax(0, 1fr) auto auto;
     gap: 12px;
     align-items: center;
     min-height: 60px;
@@ -416,13 +391,41 @@
 
     // The actions go under the title on a phone
     .pf-cm-row {
-        grid-template-columns: 36px minmax(0, 1fr);
+        grid-template-columns: 36px minmax(0, 1fr) auto;
     }
 
     .pf-cm-actions {
-        grid-column: 2;
+        grid-column: 2 / -1;
         justify-content: flex-start;
     }
+}
+
+// The ratio: a large figure of its own, easy to scan down the list
+.pf-cm-ratio {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 3.5rem;
+    line-height: 1.1;
+}
+
+.pf-cm-ratio__value {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.125rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.pf-cm-ratio__label {
+    color: #8a8a8a;
+    font-weight: 600;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.pf-cm-ratio--none .pf-cm-ratio__value {
+    color: #5a5a5a;
 }
 
 @media (prefers-reduced-motion: reduce) {

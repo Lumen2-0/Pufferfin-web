@@ -12,9 +12,11 @@ import { useTranslation } from '../../i18n/useTranslation';
 
 import { useCancelDeletion, useContentInventory, useDeleteContent, useScheduleDeletion } from './api';
 import { CONTENT_FILTERS, CONTENT_SORTS, type ContentFilter, type ContentSort, daysSince, daysUntil, formatSize, selectRows } from './content';
+import LibraryDropdown from '../library/components/LibraryDropdown';
 import { closeContentManager, useIsContentManagerOpen } from './store';
 import type { ContentCategory, ContentRow, ContentTracker } from './types';
 
+import '../library/library.scss';
 import './contentManager.scss';
 
 const FILTER_KEYS: Record<ContentFilter, StringKey> = {
@@ -116,7 +118,6 @@ const ContentLine: FC<RowProps> = ({ row, deleted, now, locale, onDeleted }) => 
     const facts = [
         formatSize(row.SizeBytes, locale),
         age !== undefined ? t('ContentSince', age) : undefined,
-        row.Ratio !== undefined && row.Ratio !== null ? t('ContentRatio', formatRatio(row.Ratio, locale)) : undefined,
         row.Torrents.length > 1 ? t('ContentTorrentCount', row.Torrents.length) : undefined
     ].filter((fact): fact is string => !!fact);
 
@@ -168,6 +169,11 @@ const ContentLine: FC<RowProps> = ({ row, deleted, now, locale, onDeleted }) => 
                 {note && <span className='pf-cm-row__note'>{note}</span>}
                 {state === 'failed' && <span className='pf-cm-row__note pf-cm-row__note--error' role='alert'>{t('ContentDeleteFailed')}</span>}
             </span>
+            {/* The ratio stands apart, large: the figure an admin looks for first */}
+            <span className={classNames('pf-cm-ratio', { 'pf-cm-ratio--none': row.Ratio === undefined || row.Ratio === null })}>
+                <span className='pf-cm-ratio__value'>{row.Ratio !== undefined && row.Ratio !== null ? formatRatio(row.Ratio, locale) : '—'}</span>
+                <span className='pf-cm-ratio__label'>{t('ContentRatioLabel')}</span>
+            </span>
             {actions}
         </li>
     );
@@ -208,7 +214,7 @@ const ContentManagerWindow: FC = () => {
         if (event.target === event.currentTarget) closeContentManager();
     }, []);
     const onSearch = useCallback((event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value), []);
-    const onSort = useCallback((event: ChangeEvent<HTMLSelectElement>) => setSort(event.target.value as ContentSort), []);
+    const sortOptions = useMemo(() => CONTENT_SORTS.map(option => ({ id: option, label: t(SORT_KEYS[option]) })), [ t ]);
     const onDeleted = useCallback((row: ContentRow, outcome: DeletionOutcome) => {
         setDeleted(current => new Map(current).set(row.ItemId, { row, keptDays: getKeptDays(outcome, Date.now()) }));
     }, []);
@@ -262,12 +268,15 @@ const ContentManagerWindow: FC = () => {
                             onChange={onSearch}
                         />
                     </label>
-                    <label className='pf-cm-sort'>
-                        <span className='pf-cm-sort__label'>{t('ContentSortLabel')}</span>
-                        <select className='pf-cm-sort__select' value={sort} onChange={onSort}>
-                            {CONTENT_SORTS.map(option => <option key={option} value={option}>{t(SORT_KEYS[option])}</option>)}
-                        </select>
-                    </label>
+                    <LibraryDropdown<ContentSort>
+                        label={t('ContentSortChip', t(SORT_KEYS[sort]))}
+                        ariaLabel={t('ContentSortLabel')}
+                        options={sortOptions}
+                        selectedId={sort}
+                        onSelect={setSort}
+                        align='end'
+                        isLabelled={false}
+                    />
                 </div>
                 <div className='pf-cm-chips' role='group' aria-label={t('ContentManagerFilters')}>
                     {CONTENT_FILTERS.map(option => (

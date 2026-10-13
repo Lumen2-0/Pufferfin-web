@@ -522,5 +522,10 @@
     "SpotlightHintNavigate": "↑ ↓ pour naviguer",
     "SpotlightHintOpen": "↵ pour ouvrir",
     "SpotlightHintClose": "Échap pour fermer",
-    "KindPerson": "Personne"
+    "KindPerson": "Personne",
+    "ContentRatioLabel": "Ratio",
+    "ContentSortChip": "Trier : {0}",
+    "LibraryTagMovie": "Film",
+    "LibraryTagSeries": "Série",
+    "LibraryTagAudio": "Audio"
 }

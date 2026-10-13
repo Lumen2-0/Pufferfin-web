@@ -46,6 +46,13 @@ interface LibraryCatalogProps {
     onFiltersChange: (filters: CatalogFilters) => void
 }
 
+// The kind of a title, on its poster: the library is the one place a book has a poster, not a square
+const getTypeTagKey = (item: ItemDto): 'LibraryTagMovie' | 'LibraryTagSeries' | 'LibraryTagAudio' => {
+    if (isAudiobookEntry(item)) return 'LibraryTagAudio';
+    if (item.Type === BaseItemKind.Series || item.Type === BaseItemKind.Episode) return 'LibraryTagSeries';
+    return 'LibraryTagMovie';
+};
+
 const GridSkeleton: FC<{ isSquare: boolean }> = ({ isSquare }) => (
     <SkeletonRegion>
         <ul className={classNames('pf-lib-grid', { 'pf-lib-grid--square': isSquare })} aria-hidden='true'>
@@ -165,12 +172,12 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
             </p>
         );
     } else if (isPending) {
-        grid = <GridSkeleton isSquare={isBookLibrary} />;
+        grid = <GridSkeleton isSquare={false} />;
     } else if (!items.length) {
         grid = <p className='pf-lib__note'>{filters.query || filters.genreId || filters.decade || filters.isUnplayed ? t('LibraryNoMatch') : t('LibraryEmpty')}</p>;
     } else {
         grid = (
-            <ul ref={gridRef} className={classNames('pf-lib-grid', { 'pf-lib-grid--square': isBookLibrary })} aria-busy={isFetchingNextPage}>
+            <ul ref={gridRef} className='pf-lib-grid' aria-busy={isFetchingNextPage}>
                 {items.map(item => {
                     const progress = getPlayedPercentage(item);
                     const progressKey = isAudiobookEntry(item) ? 'ListenedPercent' : 'WatchedPercent';
@@ -181,7 +188,7 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
                                 title={item.SeriesName && getEpisodeNumbers(item) ? item.SeriesName : getDisplayTitle(item)}
                                 subtitle={getSubtitle(item)}
                                 imageUrl={api ? getCardImageUrl(api, item, 'portrait') : undefined}
-                                isSquare={isAudiobookEntry(item)}
+                                tag={t(getTypeTagKey(item))}
                                 progress={progress}
                                 progressLabel={progress ? t(progressKey, progress) : undefined}
                                 isPlayed={!!item.UserData?.Played}

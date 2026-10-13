@@ -30,8 +30,8 @@ const ProgressBar: FC<{ progress: number }> = ({ progress }) => (
  * Play shows at its bottom right, a check tells a title already watched. A
  * book is a square cover.
  */
-export const LibraryPoster: FC<CardProps & { isPlayed: boolean, isSquare?: boolean, onPlay?: (item: ItemDto) => void }> = ({
-    item, title, subtitle, imageUrl, progress, progressLabel, isPlayed, isSquare, onOpen, onPlay
+export const LibraryPoster: FC<CardProps & { isPlayed: boolean, isSquare?: boolean, tag?: string, onPlay?: (item: ItemDto) => void }> = ({
+    item, title, subtitle, imageUrl, progress, progressLabel, isPlayed, isSquare, tag, onOpen, onPlay
 }) => {
     const t = useTranslation();
     const onClick = useCallback(() => onOpen(item), [ item, onOpen ]);
@@ -57,6 +57,7 @@ export const LibraryPoster: FC<CardProps & { isPlayed: boolean, isSquare?: boole
                         </span>
                     )}
                     {!!progress && progress > 0 && <ProgressBar progress={progress} />}
+                    {tag && <span className='pf-lib-poster__tag' aria-hidden='true'>{tag}</span>}
                 </span>
                 <span className='pf-lib-poster__caption' aria-hidden='true'>
                     <span className='pf-lib-poster__title'>{title}</span>

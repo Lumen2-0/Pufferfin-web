@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { ChevronDown, ExternalLink, Layers } from 'lucide-react';
+import { ChevronDown, ExternalLink } from 'lucide-react';
 import React, { type FC, useCallback, useId, useState } from 'react';
 
 import { useTranslation } from '../../i18n/useTranslation';
@@ -43,7 +43,6 @@ const StackLinksMenu: FC<StackLinksMenuProps> = ({ variant, onOpen }) => {
                 onClick={toggle}
                 {...{ [FOCUSABLE_ATTRIBUTE]: true }}
             >
-                <Layers className='pf-stack__icon' aria-hidden='true' focusable='false' size='1em' />
                 <span className='pf-stack__label'>{t('MenuStackArr')}</span>
                 <ChevronDown
                     className={classNames('pf-stack__chevron', { 'pf-stack__chevron--open': isOpen })}
