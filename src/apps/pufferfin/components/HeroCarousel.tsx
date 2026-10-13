@@ -48,14 +48,15 @@ const Dot: FC<DotProps> = ({ index, count, isActive, onSelect, onDone }) => {
     );
 };
 
-// Whether the last input was a key rather than a pointer: only then does a focus on the carousel hold it
-let hasUsedKeys = false;
+// When a key was last pressed, reset by a pointer: only a key pressed while the carousel is
+// shown lets a focus on it hold it, not the Enter that signed in or the focus put on load
+let lastKeyAt = 0;
 if (typeof window !== 'undefined') {
     window.addEventListener('keydown', () => {
-        hasUsedKeys = true;
+        lastKeyAt = Date.now();
     }, true);
     window.addEventListener('pointerdown', () => {
-        hasUsedKeys = false;
+        lastKeyAt = 0;
     }, true);
 }
 
@@ -78,8 +79,9 @@ const HeroCarousel: FC<{ slides: HeroSlide[] }> = ({ slides }) => {
 
     // Only the keyboard and the remote hold it: under the mouse it keeps turning, and the focus
     // the page itself puts on the hero when it opens is no reason to stop either
+    const mountedAt = useRef(Date.now());
     const holdForKeyboard = useCallback(() => {
-        if (hasUsedKeys || document.documentElement.classList.contains('layout-tv')) setIsHeld(true);
+        if (lastKeyAt > mountedAt.current || document.documentElement.classList.contains('layout-tv')) setIsHeld(true);
     }, []);
     const onBlur = useCallback((event: React.FocusEvent<HTMLElement>) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsHeld(false);
