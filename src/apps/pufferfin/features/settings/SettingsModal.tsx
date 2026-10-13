@@ -11,7 +11,9 @@ import { currentSettings as userSettings } from 'scripts/settings/userSettings';
 import { MediaSegmentAction } from 'apps/legacy/features/playback/constants/mediaSegmentAction';
 import { getId as getSegmentSettingId, getMediaSegmentAction } from 'apps/legacy/features/playback/utils/mediaSegmentSettings';
 
-import { Check, Close, Download, type IconProps, Lock, ManageAccounts, MenuBook, PlayArrow, Translate, Tv } from '../../components/icons';
+import { Check, Close, Download, type IconProps, Lock, ManageAccounts, MenuBook, PlayArrow, Translate, Tune, Tv } from '../../components/icons';
+import { type GenreKey, GENRE_PREFERENCES } from '../preferences/genres';
+import { useHiddenGenres } from '../preferences/useHiddenGenres';
 import type { StringKey } from '../../i18n/translate';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -38,6 +40,7 @@ import './settings.scss';
 
 const SECTION_LABELS: Record<SettingsSection, StringKey> = {
     [SettingsSection.Profile]: 'SettingsSectionProfile',
+    [SettingsSection.Preferences]: 'SettingsSectionPreferences',
     [SettingsSection.Playback]: 'SettingsSectionPlayback',
     [SettingsSection.Subtitles]: 'SettingsSectionSubtitles',
     [SettingsSection.Downloads]: 'SettingsSectionDownloads',
@@ -47,6 +50,7 @@ const SECTION_LABELS: Record<SettingsSection, StringKey> = {
 
 const SECTION_ICONS: Record<SettingsSection, FC<IconProps>> = {
     [SettingsSection.Profile]: ManageAccounts,
+    [SettingsSection.Preferences]: Tune,
     [SettingsSection.Playback]: PlayArrow,
     [SettingsSection.Subtitles]: MenuBook,
     [SettingsSection.Downloads]: Download,
@@ -350,6 +354,46 @@ const DownloadsSection: FC<{ onSaved: () => void }> = ({ onSaved }) => {
     );
 };
 
+/** One genre of the preferences: checked, its titles show on Discover and in the search. */
+const GenreCheck: FC<{ genre: GenreKey, label: string, checked: boolean, onChange: (genre: GenreKey, checked: boolean) => void }> = ({
+    genre, label, checked, onChange
+}) => {
+    const onInput = useCallback((event: ChangeEvent<HTMLInputElement>) => onChange(genre, event.target.checked), [ genre, onChange ]);
+    return (
+        <label className='pf-genre-check'>
+            <input type='checkbox' className='pf-genre-check__input' checked={checked} onChange={onInput} />
+            <span className='pf-genre-check__box' aria-hidden='true'><Check fontSize='inherit' /></span>
+            <span className='pf-genre-check__label'>{label}</span>
+        </label>
+    );
+};
+
+/** The genres of Discover and the search: all of them shown until the user unchecks some. */
+const PreferencesSection: FC = () => {
+    const t = useTranslation();
+    const { hidden, setShown, showAll } = useHiddenGenres();
+    const genres = useMemo(
+        () => GENRE_PREFERENCES
+            .map(genre => ({ key: genre.key, label: t(genre.label) }))
+            .sort((a, b) => a.label.localeCompare(b.label)),
+        [ t ]
+    );
+    return (
+        <SettingRow label={t('PreferencesGenres')} description={t('PreferencesGenresHint')} stacked>
+            <div className='pf-genre-checks'>
+                {genres.map(genre => (
+                    <GenreCheck key={genre.key} genre={genre.key} label={genre.label} checked={!hidden.has(genre.key)} onChange={setShown} />
+                ))}
+            </div>
+            {hidden.size > 0 && (
+                <div className='pf-settings-form__actions'>
+                    <SettingsButton onClick={showAll}>{t('PreferencesShowAll')}</SettingsButton>
+                </div>
+            )}
+        </SettingRow>
+    );
+};
+
 const InterfaceSection: FC = () => {
     const t = useTranslation();
     const { data: options } = useInterfaceLanguages();
@@ -470,6 +514,9 @@ const SettingsPanel: FC<{ section: SettingsSection }> = ({ section }) => {
         switch (section) {
             case SettingsSection.Profile:
                 content = <ProfileSection me={me} />;
+                break;
+            case SettingsSection.Preferences:
+                content = <PreferencesSection />;
                 break;
             case SettingsSection.Playback:
                 content = <PlaybackSection me={me} save={save} />;

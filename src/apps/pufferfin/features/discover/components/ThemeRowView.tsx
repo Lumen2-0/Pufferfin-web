@@ -5,7 +5,7 @@ import MediaRow from '../../../components/MediaRow';
 import { useTranslation } from '../../../i18n/useTranslation';
 import type { CatalogItem } from '../../catalog/api/types';
 import { useCatalogDiscover, usePopularAudiobooks } from '../../catalog/api/useCatalog';
-import { getOpenableItems } from '../../catalog/utils/catalog';
+import { useVisibleCatalogItems } from '../../preferences/useVisibleCatalogItems';
 import type { AudiobookThemeRow, ThemeRow, TitleThemeRow } from '../utils/themes';
 
 const getKey = (item: CatalogItem) => item.Key;
@@ -44,12 +44,13 @@ interface RowProps<T extends ThemeRow> {
 
 const TitleRow: FC<RowProps<TitleThemeRow>> = ({ row, isEnabled, brand }) => {
     const t = useTranslation();
+    const visible = useVisibleCatalogItems();
     const titles = useCatalogDiscover(row.kind, { ...row, brand }, isEnabled);
     return (
         <MediaRow
             title={row.title(t)}
             shape='portrait'
-            items={getOpenableItems(titles.data)}
+            items={visible(titles.data)}
             isPending={titles.isPending}
             isError={titles.isError}
             getKey={getKey}
@@ -60,12 +61,13 @@ const TitleRow: FC<RowProps<TitleThemeRow>> = ({ row, isEnabled, brand }) => {
 
 const AudiobookRow: FC<RowProps<AudiobookThemeRow>> = ({ row, isEnabled }) => {
     const t = useTranslation();
+    const visible = useVisibleCatalogItems();
     const audiobooks = usePopularAudiobooks(row.sort, row.theme, isEnabled);
     return (
         <MediaRow
             title={row.title(t)}
             shape='portrait'
-            items={getOpenableItems(audiobooks.data)}
+            items={visible(audiobooks.data)}
             isPending={audiobooks.isPending}
             isError={audiobooks.isError}
             getKey={getKey}

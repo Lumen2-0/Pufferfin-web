@@ -650,3 +650,63 @@
     color: var(--pf-color-text-secondary);
     font-size: 0.8rem;
 }
+
+// Preferences: every genre as a checkbox, in a grid, as the checkboxes of shadcn/ui
+
+.pf-genre-checks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: 0.4rem 1rem;
+    margin-top: 0.5rem;
+}
+
+.pf-genre-check {
+    position: relative;
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.35rem 0;
+    cursor: pointer;
+}
+
+.pf-genre-check__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.pf-genre-check__box {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    color: transparent;
+    font-size: 0.75rem;
+    border: 1px solid #525252;
+    border-radius: 0.25rem;
+    transition:
+        background-color var(--pf-duration) var(--pf-ease),
+        border-color var(--pf-duration) var(--pf-ease);
+}
+
+.pf-genre-check__input:checked + .pf-genre-check__box {
+    color: #0a0a0a;
+    background: #fafafa;
+    border-color: #fafafa;
+}
+
+.pf-genre-check__input:focus-visible + .pf-genre-check__box {
+    box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 4px #a3a3a3;
+}
+
+.pf-genre-check__label {
+    color: var(--pf-color-text);
+    font-size: 0.875rem;
+}
+
+.pf-genre-check__input:not(:checked) ~ .pf-genre-check__label {
+    color: var(--pf-color-text-secondary);
+}

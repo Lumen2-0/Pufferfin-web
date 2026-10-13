@@ -1,9 +1,12 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useCallback } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
 import { getPufferfin } from '../../../api/client';
 import type { CatalogItem } from '../../catalog/api/types';
+import { isOfHiddenGenre } from '../../preferences/genres';
+import { useHiddenGenres } from '../../preferences/useHiddenGenres';
 import { isSearchable, normalizeQuery } from '../utils/query';
 
 import { SpotlightFilter } from './results';
@@ -24,6 +27,12 @@ export function useSpotlightSearch(query: string, filter: SpotlightFilter) {
     const text = normalizeQuery(query);
     const isActive = !!api && !!user?.Id && isSearchable(text);
     const wants = (...filters: SpotlightFilter[]) => isActive && (filter === SpotlightFilter.All || filters.includes(filter));
+    // The genres the user turned off in their preferences are not found either
+    const { hiddenTmdbIds } = useHiddenGenres();
+    const withoutHiddenGenres = useCallback(
+        (items: CatalogItem[]) => items.filter(item => !isOfHiddenGenre(item, hiddenTmdbIds)),
+        [ hiddenTmdbIds ]
+    );
 
     const titles = useQuery({
         queryKey: [ 'Pufferfin', 'Spotlight', 'Titles', text, user?.Id ],
@@ -32,6 +41,7 @@ export function useSpotlightSearch(query: string, filter: SpotlightFilter) {
             signal
         })).Items,
         enabled: wants(SpotlightFilter.Movies, SpotlightFilter.Series, SpotlightFilter.People),
+        select: withoutHiddenGenres,
         placeholderData: keepPreviousData
     });
 

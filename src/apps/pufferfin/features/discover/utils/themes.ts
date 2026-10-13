@@ -1,5 +1,6 @@
 import type { StringKey } from '../../../i18n/translate';
 import { CatalogItemKind } from '../../catalog/api/types';
+import type { GenreKey } from '../../preferences/genres';
 
 import { DiscoverType, DOCUMENTARY_GENRE_ID } from './discover';
 
@@ -17,6 +18,8 @@ export type AudiobookTheme =
 export interface TitleThemeRow {
     source: 'tmdb'
     id: string
+    /** The genre of the row, as the user turns it on and off in their preferences. */
+    genre: GenreKey
     kind: CatalogItemKind.Movie | CatalogItemKind.Series
     genreId?: number
     tvTypes?: string[]
@@ -30,6 +33,7 @@ export interface TitleThemeRow {
 export interface AudiobookThemeRow {
     source: 'audible'
     id: string
+    genre: GenreKey
     theme: AudiobookTheme
     sort: 'BestSellers' | 'NewReleases'
     title: (t: Translate) => string
@@ -39,7 +43,7 @@ export type ThemeRow = TitleThemeRow | AudiobookThemeRow;
 
 /** A genre and its TMDB ids, which differ between films and series for some genres. */
 interface Genre {
-    key: string
+    key: GenreKey
     label: StringKey
     movieId?: number
     tvId?: number
@@ -65,26 +69,26 @@ const GENRES: Genre[] = [
 ];
 
 /** The genres of audiobooks: the Audible themes, named as genres. */
-const AUDIOBOOK_GENRES: Array<{ theme: AudiobookTheme, label: StringKey }> = [
-    { theme: 'Horror', label: 'GenreHorror' },
-    { theme: 'Thriller', label: 'GenreThriller' },
-    { theme: 'Crime', label: 'GenreCrime' },
-    { theme: 'Fantasy', label: 'GenreFantasy' },
-    { theme: 'ScienceFiction', label: 'GenreScienceFiction' },
-    { theme: 'Romance', label: 'GenreRomance' },
-    { theme: 'History', label: 'GenreHistory' },
-    { theme: 'Biography', label: 'GenreBiography' },
-    { theme: 'SelfDevelopment', label: 'GenreSelfHelp' },
-    { theme: 'Classics', label: 'GenreClassics' },
-    { theme: 'Children', label: 'GenreKids' },
-    { theme: 'Comedy', label: 'GenreComedy' }
+const AUDIOBOOK_GENRES: Array<{ theme: AudiobookTheme, genre: GenreKey, label: StringKey }> = [
+    { theme: 'Horror', genre: 'horror', label: 'GenreHorror' },
+    { theme: 'Thriller', genre: 'thriller', label: 'GenreThriller' },
+    { theme: 'Crime', genre: 'crime', label: 'GenreCrime' },
+    { theme: 'Fantasy', genre: 'fantasy', label: 'GenreFantasy' },
+    { theme: 'ScienceFiction', genre: 'scifi', label: 'GenreScienceFiction' },
+    { theme: 'Romance', genre: 'romance', label: 'GenreRomance' },
+    { theme: 'History', genre: 'history', label: 'GenreHistory' },
+    { theme: 'Biography', genre: 'biography', label: 'GenreBiography' },
+    { theme: 'SelfDevelopment', genre: 'selfhelp', label: 'GenreSelfHelp' },
+    { theme: 'Classics', genre: 'classics', label: 'GenreClassics' },
+    { theme: 'Children', genre: 'kids', label: 'GenreKids' },
+    { theme: 'Comedy', genre: 'comedy', label: 'GenreComedy' }
 ];
 
 /** The unscripted shows, as genres: TMDB series types. */
-const TV_GENRES: Array<{ type: string, label: StringKey }> = [
-    { type: 'Reality', label: 'GenreReality' },
-    { type: 'TalkShow', label: 'GenreTalkShow' },
-    { type: 'News', label: 'GenreNews' }
+const TV_GENRES: Array<{ type: string, genre: GenreKey, label: StringKey }> = [
+    { type: 'Reality', genre: 'reality', label: 'GenreReality' },
+    { type: 'TalkShow', genre: 'talkshow', label: 'GenreTalkShow' },
+    { type: 'News', genre: 'news', label: 'GenreNews' }
 ];
 
 /** How long one selection of themed rows stays: the screen changes a few times a day, never while browsing. */
@@ -138,27 +142,27 @@ function genreRows(kind: TitleKind, year: number): TitleThemeRow[] {
         const genreId = isMovie ? genre.movieId : genre.tvId;
         if (!genreId) return [];
         return variants<TitleThemeRow>(`${kind}-${genre.key}`, genre.label, isMovie ? MOVIE_TEMPLATES : SERIES_TEMPLATES, year,
-            (sort, rowYear) => ({ source: 'tmdb', kind, genreId, sort, year: rowYear }));
+            (sort, rowYear) => ({ source: 'tmdb', kind, genre: genre.key, genreId, sort, year: rowYear }));
     });
 }
 
 function documentaryRows(year: number): TitleThemeRow[] {
     return ([ CatalogItemKind.Movie, CatalogItemKind.Series ] as TitleKind[]).flatMap(kind => variants<TitleThemeRow>(
         `doc-${kind}`, 'GenreDocumentary', kind === CatalogItemKind.Movie ? MOVIE_TEMPLATES : SERIES_TEMPLATES, year,
-        (sort, rowYear) => ({ source: 'tmdb', kind, genreId: DOCUMENTARY_GENRE_ID, sort, year: rowYear })
+        (sort, rowYear) => ({ source: 'tmdb', kind, genre: 'documentary', genreId: DOCUMENTARY_GENRE_ID, sort, year: rowYear })
     ));
 }
 
 function tvShowRows(year: number): TitleThemeRow[] {
-    return TV_GENRES.flatMap(({ type, label }) => variants<TitleThemeRow>(`tv-${type}`, label, SHOW_TEMPLATES, year,
-        (sort, rowYear) => ({ source: 'tmdb', kind: CatalogItemKind.Series, tvTypes: [ type ], sort, year: rowYear })));
+    return TV_GENRES.flatMap(({ type, genre, label }) => variants<TitleThemeRow>(`tv-${type}`, label, SHOW_TEMPLATES, year,
+        (sort, rowYear) => ({ source: 'tmdb', kind: CatalogItemKind.Series, genre, tvTypes: [ type ], sort, year: rowYear })));
 }
 
 /** Audible knows best sellers and new releases only: best and new for each genre. */
 function audiobookRows(): AudiobookThemeRow[] {
-    return AUDIOBOOK_GENRES.flatMap(({ theme, label }) => [
-        { source: 'audible' as const, id: `audiobook-${theme}`, theme, sort: 'BestSellers' as const, title: (t: Translate) => t('ThemeAudiobooksBest', t(label)) },
-        { source: 'audible' as const, id: `audiobook-${theme}-new`, theme, sort: 'NewReleases' as const, title: (t: Translate) => t('ThemeAudiobooksNew', t(label)) }
+    return AUDIOBOOK_GENRES.flatMap(({ theme, genre, label }) => [
+        { source: 'audible' as const, id: `audiobook-${theme}`, genre, theme, sort: 'BestSellers' as const, title: (t: Translate) => t('ThemeAudiobooksBest', t(label)) },
+        { source: 'audible' as const, id: `audiobook-${theme}-new`, genre, theme, sort: 'NewReleases' as const, title: (t: Translate) => t('ThemeAudiobooksNew', t(label)) }
     ]);
 }
 
@@ -234,7 +238,11 @@ const subjectOf = (row: ThemeRow) => {
  * the mix stays varied. The same slot always gives the same rows: Back finds
  * the screen as it was, and it changes a few times a day.
  */
-export function pickThemeRows(type: DiscoverType, now: number, options: { titlesOnly?: boolean, seriesOnly?: boolean } = {}): ThemeRow[] {
+export function pickThemeRows(
+    type: DiscoverType,
+    now: number,
+    options: { titlesOnly?: boolean, seriesOnly?: boolean, hiddenGenres?: ReadonlySet<string> } = {}
+): ThemeRow[] {
     const year = new Date(now).getFullYear();
     const slot = Math.floor(now / THEME_SLOT_MS);
     const next = random(hash(`${type}:${slot}`));
@@ -243,6 +251,8 @@ export function pickThemeRows(type: DiscoverType, now: number, options: { titles
         .filter(row => !options.titlesOnly || row.source === 'tmdb')
         // A network airs series: no film row under it
         .filter(row => !options.seriesOnly || (row.source === 'tmdb' && row.kind === CatalogItemKind.Series))
+        // The genres the user turned off in their preferences never show
+        .filter(row => !options.hiddenGenres?.has(row.genre))
         .map(row => ({ row, order: next() }))
         .sort((a, b) => a.order - b.order)
         .map(({ row }) => row);

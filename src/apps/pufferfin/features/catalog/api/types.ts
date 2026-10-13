@@ -48,6 +48,8 @@ export interface CatalogItem {
     TmdbId?: number | null;
     /** Audible ASIN of an audiobook. */
     Asin?: string | null;
+    /** TMDB genre ids of a film or a series. */
+    GenreIds?: number[] | null;
     Authors?: string[];
     Narrators?: string[];
     SeriesName?: string | null;

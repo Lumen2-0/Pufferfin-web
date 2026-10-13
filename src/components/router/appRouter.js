@@ -35,6 +35,8 @@ class AppRouter {
     msgTimeout;
     promiseShow;
     resolveOnNextShow;
+    // PUFFERFIN: whether the pending show reached the history; the React pages of Pufferfin send no viewshow
+    isPendingShowPushed;
 
     constructor() {
         document.addEventListener('viewshow', () => this.onViewShow());
@@ -55,7 +57,19 @@ class AppRouter {
         return this.promiseShow || Promise.resolve();
     }
 
+    /**
+     * PUFFERFIN: a show to a page that sends no viewshow event (the React pages of Pufferfin) never settled, and
+     * every later show and back waited for it forever: Play started the video without opening the player. Once
+     * that show is in the history, a new one does not wait for it.
+     */
+    settlePushedShow() {
+        if (this.resolveOnNextShow && this.isPendingShowPushed) {
+            this.onViewShow();
+        }
+    }
+
     async back() {
+        this.settlePushedShow();
         if (this.promiseShow) await this.promiseShow;
 
         this.promiseShow = new Promise((resolve) => {
@@ -71,6 +85,7 @@ class AppRouter {
     }
 
     async show(path, options) {
+        this.settlePushedShow();
         if (this.promiseShow) await this.promiseShow;
 
         // ensure the path does not start with '#' since the router adds this
@@ -96,8 +111,12 @@ class AppRouter {
 
         this.promiseShow = new Promise((resolve) => {
             this.resolveOnNextShow = resolve;
+            this.isPendingShowPushed = false;
             // Schedule a call to return the promise
-            setTimeout(() => history.push(path, options), 0);
+            setTimeout(() => {
+                history.push(path, options);
+                this.isPendingShowPushed = true;
+            }, 0);
         });
 
         return this.promiseShow;
@@ -172,6 +191,7 @@ class AppRouter {
         if (resolve) {
             this.promiseShow = null;
             this.resolveOnNextShow = null;
+            this.isPendingShowPushed = false;
             resolve();
         }
     }

@@ -21,7 +21,9 @@ import {
     useTrending,
     useBrands
 } from '../features/catalog/api/useCatalog';
-import { getCatalogItemPath, getOpenableItems } from '../features/catalog/utils/catalog';
+import { getCatalogItemPath } from '../features/catalog/utils/catalog';
+import { useHiddenGenres } from '../features/preferences/useHiddenGenres';
+import { useVisibleCatalogItems } from '../features/preferences/useVisibleCatalogItems';
 import { useLiveTvOnNow, useRecordings } from '../features/discover/api/useDiscoverRows';
 import ThemeRowView from '../features/discover/components/ThemeRowView';
 import BrandPicker from '../features/discover/components/BrandPicker';
@@ -165,12 +167,13 @@ const getBookmarkKind = (type: DiscoverType) => {
 
 const RecommendedRow: FC = () => {
     const t = useTranslation();
+    const visible = useVisibleCatalogItems();
     const forYou = useRecommendedForYou();
     return (
         <MediaRow
             title={t('RowRecommendedForYou')}
             shape='portrait'
-            items={getOpenableItems(forYou.data)}
+            items={visible(forYou.data)}
             isPending={forYou.isPending}
             isError={forYou.isError}
             getKey={getCatalogKey}
@@ -181,12 +184,13 @@ const RecommendedRow: FC = () => {
 
 const TrendingRow: FC<{ kind: CatalogItemKind.Movie | CatalogItemKind.Series }> = ({ kind }) => {
     const t = useTranslation();
+    const visible = useVisibleCatalogItems();
     const trending = useTrending(kind);
     return (
         <MediaRow
             title={t(kind === CatalogItemKind.Movie ? 'RowTrendingMovies' : 'RowTrendingShows')}
             shape='portrait'
-            items={getOpenableItems(trending.data)}
+            items={visible(trending.data)}
             isPending={trending.isPending}
             isError={trending.isError}
             getKey={getCatalogKey}
@@ -204,12 +208,13 @@ interface CatalogDiscoverRowProps {
 /** Popular catalog titles matching a filter (a genre, a kind of series), on disk and missing mixed. */
 const CatalogDiscoverRow: FC<CatalogDiscoverRowProps> = ({ title, kind, filter }) => {
     const t = useTranslation();
+    const visible = useVisibleCatalogItems();
     const titles = useCatalogDiscover(kind, filter);
     return (
         <MediaRow
             title={t(title)}
             shape='portrait'
-            items={getOpenableItems(titles.data)}
+            items={visible(titles.data)}
             isPending={titles.isPending}
             isError={titles.isError}
             getKey={getCatalogKey}
@@ -224,12 +229,13 @@ const TV_SHOW_FILTER: CatalogDiscoverFilter = { tvTypes: TV_SHOW_TYPES };
 /** Best sellers or new releases of Audible, in the preferred languages: books to discover, on disk or missing. */
 const PopularAudiobooksRow: FC<{ sort: AudiobookPopularSort }> = ({ sort }) => {
     const t = useTranslation();
+    const visible = useVisibleCatalogItems();
     const audiobooks = usePopularAudiobooks(sort);
     return (
         <MediaRow
             title={t(sort === 'NewReleases' ? 'RowAudiobookNewReleases' : 'RowAudiobookBestSellers')}
             shape='portrait'
-            items={getOpenableItems(audiobooks.data)}
+            items={visible(audiobooks.data)}
             isPending={audiobooks.isPending}
             isError={audiobooks.isError}
             getKey={getCatalogKey}
@@ -340,13 +346,14 @@ const PROVIDER_ROW_TITLES: Record<ProviderSpec['kind'], Record<'Popular' | 'Newe
 
 const ProviderRow: FC<{ spec: ProviderSpec, sort: 'Popular' | 'Newest' | 'TopRated', brand: string, name: string }> = ({ spec, sort, brand, name }) => {
     const t = useTranslation();
+    const visible = useVisibleCatalogItems();
     const filter = useMemo(() => ({ ...spec.filter, sort, brand }), [ sort, spec.filter, brand ]);
     const titles = useCatalogDiscover(spec.kind, filter);
     return (
         <MediaRow
             title={t(PROVIDER_ROW_TITLES[spec.kind][sort], name)}
             shape='portrait'
-            items={getOpenableItems(titles.data)}
+            items={visible(titles.data)}
             isPending={titles.isPending}
             isError={titles.isError}
             getKey={getCatalogKey}
@@ -500,9 +507,10 @@ export const Component = () => {
     // The themed rows of the screen for this part of the day: the same on Back, others a few hours later
     const { data: brands } = useBrands();
     const isNetwork = brands?.find(item => item.Key === brand)?.Kind === 'Network';
+    const { hidden: hiddenGenres } = useHiddenGenres();
     const themeRows = useMemo(
-        () => pickThemeRows(type, Date.now(), { titlesOnly: !!brand, seriesOnly: isNetwork }),
-        [ type, brand, isNetwork ]
+        () => pickThemeRows(type, Date.now(), { titlesOnly: !!brand, seriesOnly: isNetwork, hiddenGenres }),
+        [ type, brand, isNetwork, hiddenGenres ]
     );
 
     // The type and the service live in the address, so Back finds the screen as it was
