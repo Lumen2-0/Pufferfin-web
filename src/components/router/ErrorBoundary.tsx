@@ -10,6 +10,8 @@ import { useRouteError } from 'react-router-dom';
 import loading from 'components/loading/loading';
 import Page from 'components/Page';
 
+import { reloadForStaleChunk } from './staleChunk';
+
 interface ErrorBoundaryParams {
     pageClasses?: string[]
 }
@@ -18,10 +20,14 @@ const ErrorBoundary: FC<ErrorBoundaryParams> = ({
     pageClasses = [ 'libraryPage' ]
 }) => {
     const error = useRouteError() as Error;
+    // PUFFERFIN: code of an older version, gone since an update: the page reloads onto the new one
+    const isReloading = reloadForStaleChunk(error);
 
     useEffect(() => {
         loading.hide();
     }, []);
+
+    if (isReloading) return null;
 
     return (
         <Page
