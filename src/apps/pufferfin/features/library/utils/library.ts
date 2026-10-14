@@ -1,6 +1,12 @@
 import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
 import { CollectionType } from '@jellyfin/sdk/lib/generated-client/models/collection-type';
 
+/** The id of the "All" choice of the library picker: every film and series of the server. */
+export const ALL_LIBRARIES = 'all';
+
+/** What the "All" choice lists. Audiobooks keep their own library: their parts are grouped book by book there. */
+export const ALL_LIBRARIES_ITEM_TYPES: BaseItemKind[] = [ BaseItemKind.Movie, BaseItemKind.Series ];
+
 /** Enough titles to fill a TV screen a few times over without a slow first load. */
 export const LIBRARY_PAGE_SIZE = 60;
 

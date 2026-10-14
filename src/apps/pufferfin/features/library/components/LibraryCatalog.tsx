@@ -27,7 +27,7 @@ import {
     SORT_LABELS,
     toItemsFilter
 } from '../utils/catalogFilters';
-import { isAudiobookEntry } from '../utils/library';
+import { ALL_LIBRARIES, isAudiobookEntry } from '../utils/library';
 
 import LibraryDropdown, { type DropdownOption } from './LibraryDropdown';
 import { LibraryPoster } from './LibraryCards';
@@ -39,6 +39,8 @@ const ALL = '';
 
 interface LibraryCatalogProps {
     view: ItemDto
+    /** Every film and series of the server rather than one library. */
+    isAll?: boolean
     itemTypes: BaseItemKind[] | null
     libraries: DropdownOption<string>[]
     onSelectLibrary: (id: string) => void
@@ -72,7 +74,7 @@ const GridSkeleton: FC<{ isSquare: boolean }> = ({ isSquare }) => (
  * not watched, order) over a grid of posters, a page at a time. After Show
  * more, the focus goes to the first new title.
  */
-const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, onSelectLibrary, filters, onFiltersChange }) => {
+const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, isAll = false, itemTypes, libraries, onSelectLibrary, filters, onFiltersChange }) => {
     const t = useTranslation();
     const { api } = useApi();
     const openItem = useOpenItem();
@@ -93,7 +95,10 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
     }, [ debouncedText ]);
     const onTextChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setText(event.target.value), []);
 
-    const itemsFilter = useMemo(() => toItemsFilter(filters, isBookLibrary), [ filters, isBookLibrary ]);
+    const itemsFilter = useMemo(
+        () => ({ ...toItemsFilter(filters, isBookLibrary), isServerWide: isAll || undefined }),
+        [ filters, isBookLibrary, isAll ]
+    );
     const {
         data,
         isPending,
@@ -224,7 +229,7 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
                         label={libraryName}
                         ariaLabel={t('DiscoverTypePicker')}
                         options={typeOptions}
-                        selectedId={parentId}
+                        selectedId={isAll ? ALL_LIBRARIES : parentId}
                         onSelect={onSelectLibrary}
                     />
                 )}

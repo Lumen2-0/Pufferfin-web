@@ -14,7 +14,7 @@ import { useResumeAudioItems } from '../features/library/api/useLibraryItems';
 import { ResumeCard } from '../features/library/components/LibraryCards';
 import LibraryCatalog from '../features/library/components/LibraryCatalog';
 import { type CatalogFilters, parseCatalogFilters, writeCatalogFilters } from '../features/library/utils/catalogFilters';
-import { getViewItemTypes, isAudiobookEntry } from '../features/library/utils/library';
+import { ALL_LIBRARIES, ALL_LIBRARIES_ITEM_TYPES, getViewItemTypes, isAudiobookEntry } from '../features/library/utils/library';
 import type { StringKey } from '../i18n/translate';
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE } from '../navigation/focus';
@@ -127,10 +127,16 @@ export const Component = () => {
     );
     const options = useMemo(
         // Library names come from the server, as the administrator typed them
-        () => libraries.map(view => ({ id: view.Id!, label: view.Name ?? '' })),
-        [ libraries ]
+        () => [
+            { id: ALL_LIBRARIES, label: t('LibraryTabAll') },
+            ...libraries.map(view => ({ id: view.Id!, label: view.Name ?? '' }))
+        ],
+        [ libraries, t ]
     );
-    const chosen = libraries.find(view => view.Id === searchParams.get(LIBRARY_PARAM)) ?? libraries[0];
+    // Every film and series together unless a library is chosen
+    const chosenLibrary = libraries.find(view => view.Id === searchParams.get(LIBRARY_PARAM));
+    const isAll = !chosenLibrary;
+    const chosen = chosenLibrary ?? ({ Name: t('LibraryTabAll') } as ItemDto);
     const filters = useMemo(() => parseCatalogFilters(searchParams), [ searchParams ]);
 
     // Another library starts with every filter cleared, but keeps its order
@@ -159,14 +165,15 @@ export const Component = () => {
         );
     } else if (views.isPending) {
         catalog = null;
-    } else if (!chosen) {
+    } else if (!libraries.length) {
         catalog = <p className='pf-lib__note'>{t('LibraryNoLibraries')}</p>;
     } else {
         catalog = (
             <LibraryCatalog
-                key={chosen.Id}
+                key={chosen.Id ?? ALL_LIBRARIES}
                 view={chosen}
-                itemTypes={getViewItemTypes(chosen.CollectionType)}
+                isAll={isAll}
+                itemTypes={isAll ? ALL_LIBRARIES_ITEM_TYPES : getViewItemTypes(chosen.CollectionType)}
                 libraries={options}
                 onSelectLibrary={onSelectLibrary}
                 filters={filters}
