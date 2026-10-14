@@ -1,74 +1,78 @@
-<h1 align="center">Jellyfin Web</h1>
-<h3 align="center">Part of the <a href="https://jellyfin.org">Jellyfin Project</a></h3>
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/pufferfin-logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset=".github/assets/pufferfin-logo.svg">
+  <img alt="Pufferfin logo" src=".github/assets/pufferfin-logo.svg" width="160">
+</picture>
+</p>
+
+<h1 align="center">Pufferfin Web</h1>
+
+<p align="center">
+The web client for Pufferfin: a complete media server, forked from <a href="https://github.com/jellyfin/jellyfin">Jellyfin</a>,<br/>
+with an Apple TV style interface and built-in control of the *arr stack.
+</p>
 
 ---
 
-<p align="center">
-<img alt="Logo Banner" src="https://raw.githubusercontent.com/jellyfin/jellyfin-ux/master/branding/SVG/banner-logo-solid.svg?sanitize=true"/>
-<br/>
-<br/>
-<a href="https://github.com/jellyfin/jellyfin-web">
-<img alt="GPL 2.0 License" src="https://img.shields.io/github/license/jellyfin/jellyfin-web.svg"/>
-</a>
-<a href="https://github.com/jellyfin/jellyfin-web/releases">
-<img alt="Current Release" src="https://img.shields.io/github/release/jellyfin/jellyfin-web.svg"/>
-</a>
-<a href="https://translate.jellyfin.org/projects/jellyfin/jellyfin-web/?utm_source=widget">
-<img src="https://translate.jellyfin.org/widgets/jellyfin/-/jellyfin-web/svg-badge.svg" alt="Translation Status"/>
-</a>
-<br/>
-<a href="https://opencollective.com/jellyfin">
-<img alt="Donate" src="https://img.shields.io/opencollective/all/jellyfin.svg?label=backers"/>
-</a>
-<a href="https://features.jellyfin.org">
-<img alt="Feature Requests" src="https://img.shields.io/badge/fider-vote%20on%20features-success.svg"/>
-</a>
-<a href="https://matrix.to/#/+jellyfin:matrix.org">
-<img alt="Chat on Matrix" src="https://img.shields.io/matrix/jellyfin:matrix.org.svg?logo=matrix"/>
-</a>
-<a href="https://www.reddit.com/r/jellyfin">
-<img alt="Join our Subreddit" src="https://img.shields.io/badge/reddit-r%2Fjellyfin-%23FF5700.svg"/>
-</a>
-</p>
+> [!WARNING]
+> **Work in progress.** No release yet. The Pufferfin interface lives in
+> `src/apps/pufferfin`; the rest of the client is still Jellyfin Web.
 
-Jellyfin Web is the frontend used for most of the clients available for end users, such as desktop browsers, Android, and iOS. We welcome all contributions and pull requests! If you have a larger feature in mind please open an issue so we can discuss the implementation before you start. Translations can be improved very easily from our <a href="https://translate.jellyfin.org/projects/jellyfin/jellyfin-web">Weblate</a> instance. Look through the following graphic to see if your native language could use some work!
+## What Pufferfin adds to Jellyfin
 
-<a href="https://translate.jellyfin.org/engage/jellyfin/?utm_source=widget">
-<img src="https://translate.jellyfin.org/widgets/jellyfin/-/jellyfin-web/multi-auto.svg" alt="Detailed Translation Status"/>
-</a>
+Pufferfin keeps everything Jellyfin does (library, playback, transcoding, accounts, resume,
+subtitles) and adds:
 
-## Build Process
+- **An Apple TV style interface**: large artwork, black background, smooth animations,
+  keyboard and remote navigation.
+- **A complete catalog, not just your disks**: movies, shows and people from TMDB,
+  audiobooks from Audible. Titles missing from your disks appear next to the ones you
+  own.
+- **A single "Play" / "Download" button**: if the title is there, it plays; otherwise,
+  Pufferfin drives Radarr, Sonarr, Prowlarr, qBittorrent, Bazarr and Shelfmark to fetch
+  it.
 
-### Dependencies
+## A fork of Jellyfin
 
-- [Node.js](https://nodejs.org/en/download)
-- npm (included in Node.js)
+Pufferfin is a fork of [Jellyfin](https://github.com/jellyfin/jellyfin), the free software
+media system; this repository is a fork of
+[`jellyfin/jellyfin-web`](https://github.com/jellyfin/jellyfin-web). Most of the code in
+this repository is the work of Jellyfin and its contributors, and Pufferfin would not exist
+without them. Pufferfin is neither affiliated with nor endorsed by the Jellyfin team: for
+an issue specific to Pufferfin, open it here, not with Jellyfin.
 
-### Getting Started
+The fork tracks upstream closely: Jellyfin Web releases are merged into Pufferfin
+regularly, and Pufferfin's own code is kept isolated so these merges stay simple.
 
-1. Clone or download this repository.
+## This repository
 
-   ```sh
-   git clone https://github.com/jellyfin/jellyfin-web.git
-   cd jellyfin-web
-   ```
+This repository contains the **official web client** for Pufferfin. It serves browsers,
+mobile and TV.
 
-2. Install build dependencies in the project directory.
+It is not distributed on its own: it is built and **shipped in the same Docker image as
+the server** ([`Lumen2-0/Pufferfin`](https://github.com/Lumen2-0/Pufferfin)), and follows
+the same major version. To install Pufferfin, follow the deployment described in the server
+repository.
 
-   ```sh
-   npm install
-   ```
+## Development
 
-3. Run the web client with webpack for local development.
+Prerequisites: [Node.js](https://nodejs.org/en/download) (version specified in
+[`package.json`](package.json), `engines` field) and npm.
 
-   ```sh
-   npm start
-   ```
+```sh
+git clone https://github.com/Lumen2-0/Pufferfin-web.git
+cd Pufferfin-web
+npm install
+npm start                   # development server
+npm run build:development   # build with sourcemaps
+```
 
-4. Build the client with sourcemaps available.
+The client needs a Pufferfin server to run: see
+[`Lumen2-0/Pufferfin`](https://github.com/Lumen2-0/Pufferfin).
 
-   ```sh
-   npm run build:development
-   ```
+## License
 
-Review the [Contributing Guide](./CONTRIBUTING.md) for more information on our process and tech stack.
+Like Jellyfin Web, Pufferfin Web is distributed under the **GNU General Public License
+v2.0**. See [`LICENSE`](LICENSE). Code originating from Jellyfin remains the property of
+its authors; changes made by Pufferfin are released under the same license.
