@@ -3,8 +3,10 @@ import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 
 import { playbackManager } from 'components/playback/playbackmanager';
+import { ServerConnections } from 'lib/jellyfin-apiclient';
 import type { ItemDto } from 'types/base/models/item-dto';
 import { ItemKind } from 'types/base/models/item-kind';
+import { toApi } from 'utils/jellyfin-apiclient/compat';
 
 import { getPufferfinBook } from '../features/audiobooks/api/usePufferfinBook';
 
@@ -15,14 +17,37 @@ const startPositionOf = (item: ItemDto | undefined) =>
     (item && isResumable(item) ? item.UserData?.PlaybackPositionTicks : 0) ?? 0;
 
 /**
+ * Reads an item again for its saved position. The item a page holds was read
+ * when the page loaded: a play since then saved a new position the page does
+ * not know, and starting from it would start where the page last saw the
+ * item, at the beginning the first time, and save that over the real one.
+ * Falls back to the item given when it cannot be read.
+ */
+export async function withSavedPosition(item: ItemDto): Promise<ItemDto> {
+    const apiClient = ServerConnections.getApiClient(item.ServerId ?? undefined) ?? ServerConnections.currentApiClient();
+    const userId = apiClient?.getCurrentUserId();
+    if (!apiClient || !userId || !item.Id) return item;
+    try {
+        const response = await getLibraryApi(toApi(apiClient)).getItem({ userId, itemId: item.Id });
+        return response.data as ItemDto;
+    } catch (err) {
+        console.error('[Pufferfin] Failed to read the saved position', err);
+        return item;
+    }
+}
+
+/**
  * Plays an item, from where the user stopped when there is a saved position.
  * Playback just starts: no loader over the page (see `quietPlay`).
  */
 export function playItem(item: ItemDto) {
-    return quietPlay(() => playbackManager.play({
-        items: [ item ],
-        startPositionTicks: startPositionOf(item)
-    }), `item:${item.Id ?? ''}`).catch((err: unknown) => {
+    return quietPlay(async () => {
+        const current = await withSavedPosition(item);
+        await playbackManager.play({
+            items: [ current ],
+            startPositionTicks: startPositionOf(current)
+        });
+    }, `item:${item.Id ?? ''}`).catch((err: unknown) => {
         console.error('[Pufferfin] Failed to start playback', err);
     });
 }
@@ -49,11 +74,14 @@ export function getStartPart(parts: ItemDto[]): number {
 export function playAudiobookParts(parts: ItemDto[], startIndex: number) {
     if (!parts.length) return Promise.resolve();
     const start = parts[startIndex];
-    return quietPlay(() => playbackManager.play({
-        items: parts,
-        startIndex,
-        startPositionTicks: startPositionOf(start)
-    }), `book:${start?.Id ?? ''}`).catch((err: unknown) => {
+    return quietPlay(async () => {
+        const current = start ? await withSavedPosition(start) : start;
+        await playbackManager.play({
+            items: parts,
+            startIndex,
+            startPositionTicks: startPositionOf(current)
+        });
+    }, `book:${start?.Id ?? ''}`).catch((err: unknown) => {
         console.error('[Pufferfin] Failed to play the audiobook', err);
     });
 }

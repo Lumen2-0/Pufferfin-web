@@ -9,6 +9,7 @@ import { useLiveRequests } from './features/requests/api/useLiveRequests';
 import { TranslationProvider } from './i18n/useTranslation';
 import { useSpatialNavigation } from './navigation/useSpatialNavigation';
 import { getHomePath } from './routes/paths';
+import { useLiveUserData } from './utils/useLiveUserData';
 
 import './styles/pufferfin.scss';
 
@@ -48,6 +49,9 @@ export const Component = () => {
 
     // Request progress is pushed while any Pufferfin screen is open
     useLiveRequests();
+
+    // Watch progress saved by a play shows on the screen the player goes back to
+    useLiveUserData();
 
     return (
         <TranslationProvider>
