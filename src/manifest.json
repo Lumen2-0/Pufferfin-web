@@ -5,7 +5,7 @@
     "description": "Films, séries et livres audio, en streaming chez vous",
     "lang": "fr",
     "dir": "ltr",
-    "start_url": "index.html#/home",
+    "start_url": "index.html#/",
     "scope": "./",
     "display": "standalone",
     "orientation": "any",

@@ -1,7 +1,7 @@
 import { matchRoutes, type RouteObject } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
-import { getCatalogTitlePath, getItemPath, isPufferfinPath, parseSheetTarget } from './paths';
+import { getCatalogTitlePath, getItemPath, getLibraryPath, isPufferfinPath, parseSheetTarget } from './paths';
 import { CatalogItemKind } from '../features/catalog/api/types';
 import { PUFFERFIN_APP_ROUTES } from './routes';
 
@@ -9,12 +9,14 @@ import { PUFFERFIN_APP_ROUTES } from './routes';
 vi.mock('components/ConnectionRequired', () => ({ default: () => null }));
 vi.mock('components/router/ErrorBoundary', () => ({ default: () => null }));
 
-// Same shape as the upstream app routes: `home` nested under the `/*` app route
+// Same shape as the upstream app routes: an index redirect and `home` nested under the `/*` app route
 const UPSTREAM_HOME_ID = 'upstream-home';
+const UPSTREAM_INDEX_ID = 'upstream-index';
 const UPSTREAM_ROUTES: RouteObject[] = [
     {
         path: '/*',
         children: [
+            { index: true, id: UPSTREAM_INDEX_ID },
             { children: [ { path: 'home', id: UPSTREAM_HOME_ID }, { path: 'movies', id: 'upstream-movies' } ] }
         ]
     }
@@ -33,6 +35,16 @@ describe('Pufferfin: routes', () => {
         const leaf = matchLeaf(routes, '/home');
         expect(leaf?.id).not.toBe(UPSTREAM_HOME_ID);
         expect(leaf?.lazy).toBeDefined();
+    });
+
+    it.each([
+        [ 'upstream routes first', [ ...UPSTREAM_ROUTES, ...PUFFERFIN_APP_ROUTES ] ],
+        [ 'Pufferfin routes first', [ ...PUFFERFIN_APP_ROUTES, ...UPSTREAM_ROUTES ] ]
+    ])('sends the bare address of the site to the library, %s', (_, routes) => {
+        const leaf = matchLeaf(routes, '/');
+        expect(leaf?.id).not.toBe(UPSTREAM_INDEX_ID);
+        expect(leaf?.index).toBe(true);
+        expect((leaf?.element as { props?: { to?: string } } | undefined)?.props?.to).toBe(getLibraryPath());
     });
 
     it('leaves the other upstream pages alone', () => {

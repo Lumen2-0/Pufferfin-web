@@ -19,6 +19,8 @@ import toast from 'components/toast/toast';
 import dialogHelper from 'components/dialogHelper/dialogHelper';
 import baseAlert from 'components/alert';
 import { getDefaultBackgroundClass } from 'components/cardbuilder/utils/builder';
+// PUFFERFIN: the page a sign in lands on
+import { getLibraryPath } from 'apps/pufferfin/routes/paths';
 
 import './login.scss';
 
@@ -211,7 +213,8 @@ export default function (view, params) {
             }
         }
 
-        return '/home';
+        // PUFFERFIN: a sign in with no page to return to opens the library
+        return getLibraryPath();
     }
 
     function showVisualForm() {
