@@ -1,80 +1,68 @@
-// A sideways row and its two round arrows, shown when the pointer comes over it.
-// --pf-rail-inset is where the cards start inside the scroller: the arrows sit
-// astride that edge.
+// A sideways row and its slider bar, shown when the pointer comes over it.
+// --pf-rail-inset is where the cards start inside the scroller: the bar spans
+// the same width. The thumb size and place come from --pf-rail-ratio and
+// --pf-rail-progress, set by the component.
 
 .pf-rail {
     position: relative;
 }
 
-.pf-rail__arrow {
+.pf-rail__track {
     position: absolute;
-    top: var(--pf-rail-arrow-y, 50%);
+    right: var(--pf-rail-inset, var(--pf-gutter));
+    bottom: -0.5rem;
+    left: var(--pf-rail-inset, var(--pf-gutter));
     z-index: 2;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    margin-top: -1.125rem;
-    padding: 0;
-    color: #fff;
-    background: rgba(20, 20, 20, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 50%;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    height: 0.5rem;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s ease, background-color 0.2s ease;
+    transition: opacity 0.2s ease;
     pointer-events: none;
-
-    &:hover {
-        background: #262626;
-    }
-
-    &:focus-visible {
-        outline: 2px solid #fff;
-        outline-offset: 2px;
-    }
+    touch-action: none;
 }
 
-.pf-rail__arrow--previous {
-    left: max(0.25rem, calc(var(--pf-rail-inset, var(--pf-gutter)) - 1.125rem));
+.pf-rail__thumb {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc((100% - 100% * var(--pf-rail-ratio, 1)) * var(--pf-rail-progress, 0));
+    width: calc(100% * var(--pf-rail-ratio, 1));
+    min-width: 2rem;
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 999px;
+    transition: background-color 0.2s ease;
 }
 
-.pf-rail__arrow--next {
-    right: max(0.25rem, calc(var(--pf-rail-inset, var(--pf-gutter)) - 1.125rem));
-}
-
-[dir='rtl'] .pf-rail__arrow--previous {
-    right: max(0.25rem, calc(var(--pf-rail-inset, var(--pf-gutter)) - 1.125rem));
+[dir='rtl'] .pf-rail__thumb {
+    right: calc((100% - 100% * var(--pf-rail-ratio, 1)) * var(--pf-rail-progress, 0));
     left: auto;
-    transform: scaleX(-1);
 }
 
-[dir='rtl'] .pf-rail__arrow--next {
-    right: auto;
-    left: max(0.25rem, calc(var(--pf-rail-inset, var(--pf-gutter)) - 1.125rem));
-    transform: scaleX(-1);
+.pf-rail__track:hover .pf-rail__thumb {
+    background: #fff;
 }
 
-// Fingers swipe and the remote moves the focus: no arrows there
+// Fingers swipe and the remote moves the focus: no bar there
 @media (hover: none) {
-    .pf-rail__arrow {
+    .pf-rail__track {
         display: none;
     }
 }
 
-:root.layout-tv .pf-rail__arrow {
+:root.layout-tv .pf-rail__track {
     display: none;
 }
 
-.pf-rail:hover .pf-rail__arrow:not(.pf-rail__arrow--off) {
+.pf-rail[data-overflow]:hover .pf-rail__track {
     opacity: 1;
     pointer-events: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .pf-rail__arrow {
+    .pf-rail__track,
+    .pf-rail__thumb {
         transition: none;
     }
 }

@@ -4,7 +4,7 @@ import { Navigate, type RouteObject } from 'react-router-dom';
 import ConnectionRequired from 'components/ConnectionRequired';
 import ErrorBoundary from 'components/router/ErrorBoundary';
 
-import { getHomePath, getLibraryPath, HOME_APP_PATH, LEGACY_ITEM_ROUTE, PUFFERFIN_APP_PATH } from './paths';
+import { getHomePath, HOME_APP_PATH, LEGACY_ITEM_ROUTE, PUFFERFIN_APP_PATH } from './paths';
 import SearchRedirect from './SearchRedirect';
 
 /**
@@ -12,14 +12,14 @@ import SearchRedirect from './SearchRedirect';
  * upstream `home` nested under the `/*` app route, so it replaces it without
  * touching the upstream route tables. Both paths share one layout, so moving
  * between the home and the other screens keeps the top bar mounted.
- * The bare address of the site opens the library tab the same way: a top
- * level index route outranks the upstream index redirect to `home`.
+ * The bare address of the site opens the home the same way: a top level
+ * index route outranks the upstream index redirect.
  */
 export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
     {
-        // Arriving on the site opens the library; the library route asks for a sign in when needed
+        // Arriving on the site opens the home; the home route asks for a sign in when needed
         index: true,
-        element: <Navigate replace to={getLibraryPath()} />
+        element: <Navigate replace to={getHomePath()} />
     },
     {
         Component: ConnectionRequired,
@@ -65,6 +65,10 @@ export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
                                 lazy: () => import('./library')
                             },
                             {
+                                path: 'explore',
+                                lazy: () => import('./explore')
+                            },
+                            {
                                 path: 'library/:viewId',
                                 lazy: () => import('./libraryView')
                             },
@@ -76,6 +80,10 @@ export const PUFFERFIN_APP_ROUTES: RouteObject[] = [
                             {
                                 path: 'downloads',
                                 lazy: () => import('./downloads')
+                            },
+                            {
+                                path: 'stats',
+                                lazy: () => import('./stats')
                             },
                             {
                                 // Former menu screen: the menu is now a dropdown of the bar

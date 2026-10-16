@@ -10,7 +10,7 @@
 
     --jf-palette-background-default: #000;
     --jf-palette-background-defaultChannel: 0 0 0;
-    --jf-palette-background-paper: #161412;
+    --jf-palette-background-paper: #000;
     --jf-palette-background-paperChannel: 22 20 18;
     --jf-palette-primary-main: #f5f2ec;
     --jf-palette-primary-mainChannel: 245 242 236;
@@ -41,8 +41,8 @@
 // (warm white fill, black text, the thick ring)
 @mixin pf-round-button {
     color: var(--pf-color-text);
-    background: transparent;
-    border: 1px solid var(--pf-hairline);
+    background: rgba(255, 255, 255, 0.08);
+    border: 0;
     border-radius: 999px;
     box-shadow: none;
     text-transform: none;

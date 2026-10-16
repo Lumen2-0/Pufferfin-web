@@ -9,9 +9,9 @@ import shell from 'scripts/shell';
 import Dashboard from 'utils/dashboard';
 
 import { openContentManager } from '../contentManager/store';
-import { getAvatarUrl } from '../settings/api';
+import { getAvatarUrl, useMe } from '../settings/api';
 import { openSettings } from '../settings/store';
-import { getAccountEntries, getAdminEntries, type MenuActionId, type MenuEntry } from './utils/menu';
+import { getAccountEntries, getAdminEntries, getSessionEntries, type MenuActionId, type MenuEntry } from './utils/menu';
 
 const MENU_ACTIONS: Record<MenuActionId, () => void> = {
     settings: () => openSettings(),
@@ -30,6 +30,7 @@ const MENU_ACTIONS: Record<MenuActionId, () => void> = {
  */
 export function useMenuEntries() {
     const { api, user } = useApi();
+    const { data: me } = useMe();
     const navigate = useNavigate();
     const { data: isQuickConnectEnabled } = useQuickConnectEnabled();
 
@@ -44,6 +45,7 @@ export function useMenuEntries() {
     }), [ user, isQuickConnectEnabled ]);
     const accountEntries = useMemo(() => getAccountEntries(context), [ context ]);
     const adminEntries = useMemo(() => getAdminEntries(context), [ context ]);
+    const sessionEntries = useMemo(() => getSessionEntries(context), [ context ]);
 
     const choose = useCallback((entry: MenuEntry) => {
         if (entry.kind === 'link') navigate(entry.path);
@@ -53,9 +55,10 @@ export function useMenuEntries() {
     return {
         userName: user?.Name ?? undefined,
         // The account picture, when the user has one
-        avatarUrl: getAvatarUrl(api, user),
+        avatarUrl: getAvatarUrl(api, me ?? user),
         accountEntries,
         adminEntries,
+        sessionEntries,
         choose
     };
 }

@@ -36,8 +36,6 @@ const RoundButton = <T, >({
             type='button'
             className={classNames('pf-button', `pf-button--${variant}`, { 'pf-button--icon': !label })}
             aria-label={label ? undefined : ariaLabel}
-            // A circle says what it does under the pointer
-            title={label ? undefined : ariaLabel}
             aria-pressed={pressed}
             onClick={handleClick}
             disabled={disabled}

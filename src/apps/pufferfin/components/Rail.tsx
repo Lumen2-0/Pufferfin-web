@@ -1,9 +1,6 @@
-import classNames from 'classnames';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import React, { type FC, type HTMLAttributes, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type FC, type HTMLAttributes, type PointerEvent, type ReactNode, useCallback, useEffect, useRef } from 'react';
 
 import { useTranslation } from '../i18n/useTranslation';
-import { getRailState, getRailStep, type RailState } from './railMetrics';
 
 import './rail.scss';
 
@@ -14,68 +11,83 @@ interface RailProps extends HTMLAttributes<HTMLElement> {
     children: ReactNode
 }
 
-const NO_SCROLL: RailState = { canPrevious: false, canNext: false };
-
-// The picture of a card: the arrows sit level with its middle, not with the middle of picture and caption
-const PICTURE_SELECTOR = 'img, [class*="__tile"], [class*="__art"], [class*="__image"], [class*="__thumb"], [class*="__photo"]';
-
-/** Height of the middle of the first card's picture inside the rail, or undefined for a row without pictures. */
-const getPictureMiddle = (rail: HTMLElement, scroller: HTMLElement) => {
-    const picture = scroller.firstElementChild?.querySelector<HTMLElement>(PICTURE_SELECTOR);
-    if (!picture) return undefined;
-    const box = picture.getBoundingClientRect();
-    if (!box.height) return undefined;
-    return box.top + box.height / 2 - rail.getBoundingClientRect().top;
-};
+const clamp = (value: number) => Math.max(0, Math.min(1, value));
 
 /**
- * A row that scrolls sideways, with a round arrow at each edge. The arrows show
- * when the pointer comes over the row, and only the ones with somewhere to go:
- * no left arrow before the row has scrolled. A mouse affordance: touch screens
- * swipe and a remote moves the focus, so there they never show.
+ * A row that scrolls sideways, with a slider bar under it: the thumb shows
+ * where the row is and how much of it is in view, and drags it. The bar shows
+ * when the pointer comes over the row, and only for a row wider than the
+ * screen. A mouse affordance: touch screens swipe and a remote moves the
+ * focus, so there it never shows.
  */
 const Rail: FC<RailProps> = ({ as: Tag = 'ul', className, children, ...props }) => {
     const t = useTranslation();
     const railRef = useRef<HTMLDivElement>(null);
     const scrollerRef = useRef<HTMLElement>(null);
-    const [ state, setState ] = useState<RailState>(NO_SCROLL);
+    const trackRef = useRef<HTMLDivElement>(null);
+    const scrollFrame = useRef(0);
+    const isDragging = useRef(false);
 
+    // The thumb is moved through custom properties: a scroll does not render the component
     const update = useCallback(() => {
         const scroller = scrollerRef.current;
-        if (!scroller) return;
         const rail = railRef.current;
-        const middle = rail ? getPictureMiddle(rail, scroller) : undefined;
-        if (rail) {
-            if (middle === undefined) rail.style.removeProperty('--pf-rail-arrow-y');
-            else rail.style.setProperty('--pf-rail-arrow-y', `${Math.round(middle)}px`);
-        }
-        const next = getRailState(scroller);
-        setState(previous => (
-            previous.canPrevious === next.canPrevious && previous.canNext === next.canNext ? previous : next
-        ));
+        if (!scroller || !rail) return;
+        const max = scroller.scrollWidth - scroller.clientWidth;
+        const ratio = scroller.scrollWidth ? scroller.clientWidth / scroller.scrollWidth : 1;
+        rail.style.setProperty('--pf-rail-ratio', String(ratio));
+        rail.style.setProperty('--pf-rail-progress', String(max > 0 ? clamp(Math.abs(scroller.scrollLeft) / max) : 0));
+        rail.toggleAttribute('data-overflow', max > 1);
     }, []);
+
+    // One update per frame while the row scrolls, not one per scroll event
+    const onScroll = useCallback(() => {
+        if (scrollFrame.current) return;
+        scrollFrame.current = requestAnimationFrame(() => {
+            scrollFrame.current = 0;
+            update();
+        });
+    }, [ update ]);
 
     useEffect(() => {
         const scroller = scrollerRef.current;
         if (!scroller) return;
         update();
-        scroller.addEventListener('scroll', update, { passive: true });
-        // A window resize changes the room; the arrows are checked again whenever the pointer comes over the row
+        scroller.addEventListener('scroll', onScroll, { passive: true });
+        // A window resize changes the room; the bar is checked again whenever the pointer comes over the row
         window.addEventListener('resize', update);
         return () => {
-            scroller.removeEventListener('scroll', update);
+            scroller.removeEventListener('scroll', onScroll);
             window.removeEventListener('resize', update);
+            cancelAnimationFrame(scrollFrame.current);
         };
-    }, [ update ]);
+    }, [ update, onScroll ]);
 
-    const scroll = useCallback((direction: 1 | -1) => {
+    const moveTo = useCallback((clientX: number) => {
         const scroller = scrollerRef.current;
-        if (!scroller) return;
-        const isRtl = getComputedStyle(scroller).direction === 'rtl';
-        scroller.scrollBy({ left: getRailStep(scroller.clientWidth, direction, isRtl), behavior: 'smooth' });
+        const track = trackRef.current;
+        if (!scroller || !track) return;
+        const box = track.getBoundingClientRect();
+        const thumb = (scroller.clientWidth / scroller.scrollWidth) * box.width;
+        const fraction = clamp((clientX - box.left - thumb / 2) / (box.width - thumb));
+        const max = scroller.scrollWidth - scroller.clientWidth;
+        scroller.scrollLeft = (getComputedStyle(scroller).direction === 'rtl' ? -1 : 1) * fraction * max;
     }, []);
-    const scrollPrevious = useCallback(() => scroll(-1), [ scroll ]);
-    const scrollNext = useCallback(() => scroll(1), [ scroll ]);
+
+    const onPointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+        isDragging.current = true;
+        event.currentTarget.setPointerCapture(event.pointerId);
+        // The stylesheet's smooth scrolling would lag behind the thumb
+        scrollerRef.current?.style.setProperty('scroll-behavior', 'auto');
+        moveTo(event.clientX);
+    }, [ moveTo ]);
+    const onPointerMove = useCallback((event: PointerEvent<HTMLDivElement>) => {
+        if (isDragging.current) moveTo(event.clientX);
+    }, [ moveTo ]);
+    const onPointerEnd = useCallback(() => {
+        isDragging.current = false;
+        scrollerRef.current?.style.removeProperty('scroll-behavior');
+    }, []);
 
     return (
         <div ref={railRef} className='pf-rail' onPointerEnter={update}>
@@ -83,24 +95,24 @@ const Rail: FC<RailProps> = ({ as: Tag = 'ul', className, children, ...props }) 
                 {children}
             </Tag>
             {/* Out of the tab order: the keyboard and the remote move through the cards themselves */}
-            <button
-                type='button'
-                className={classNames('pf-rail__arrow', 'pf-rail__arrow--previous', { 'pf-rail__arrow--off': !state.canPrevious })}
-                aria-label={t('ActionScrollPrevious')}
+            <div
+                ref={trackRef}
+                className='pf-rail__track'
+                role='scrollbar'
+                aria-orientation='horizontal'
+                aria-controls={undefined}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={0}
+                aria-label={t('ActionScrollRow')}
                 tabIndex={-1}
-                onClick={scrollPrevious}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerEnd}
+                onPointerCancel={onPointerEnd}
             >
-                <ChevronLeft aria-hidden='true' focusable='false' size='1.125rem' strokeWidth={2} />
-            </button>
-            <button
-                type='button'
-                className={classNames('pf-rail__arrow', 'pf-rail__arrow--next', { 'pf-rail__arrow--off': !state.canNext })}
-                aria-label={t('ActionScrollNext')}
-                tabIndex={-1}
-                onClick={scrollNext}
-            >
-                <ChevronRight aria-hidden='true' focusable='false' size='1.125rem' strokeWidth={2} />
-            </button>
+                <div className='pf-rail__thumb' />
+            </div>
         </div>
     );
 };

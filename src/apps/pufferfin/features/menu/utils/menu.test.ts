@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getAccountEntries, getAdminEntries, type MenuContext } from './menu';
+import { getAccountEntries, getAdminEntries, getSessionEntries, type MenuContext } from './menu';
 
 const BROWSER_USER: MenuContext = {
     userId: 'user',
@@ -15,8 +15,9 @@ const BROWSER_USER: MenuContext = {
 const ids = (entries: { id: string }[]) => entries.map(entry => entry.id);
 
 describe('Pufferfin: menu', () => {
-    it('always offers the settings window and sign out', () => {
-        expect(ids(getAccountEntries(BROWSER_USER))).toEqual([ 'settings', 'signOut' ]);
+    it('always offers the settings window, and sign out at the end', () => {
+        expect(ids(getAccountEntries(BROWSER_USER))).toEqual([ 'settings', 'stats' ]);
+        expect(ids(getSessionEntries(BROWSER_USER))).toEqual([ 'signOut' ]);
     });
 
     it('opens the settings as a window, the profile at its top, not as a page', () => {
@@ -33,12 +34,13 @@ describe('Pufferfin: menu', () => {
             supportsExit: true
         });
         expect(ids(entries)).toEqual([
-            'settings', 'downloadManager', 'clientSettings', 'selectServer', 'signOut', 'exitApp'
+            'settings', 'stats', 'downloadManager', 'clientSettings'
         ]);
+        expect(ids(getSessionEntries({ ...BROWSER_USER, supportsMultiServer: true, supportsExit: true }))).toEqual([ 'selectServer', 'signOut', 'exitApp' ]);
     });
 
     it('shows the administration entries to administrators only', () => {
         expect(getAdminEntries(BROWSER_USER)).toEqual([]);
-        expect(ids(getAdminEntries({ ...BROWSER_USER, isAdministrator: true }))).toEqual([ 'dashboard', 'metadata', 'contentManager' ]);
+        expect(ids(getAdminEntries({ ...BROWSER_USER, isAdministrator: true }))).toEqual([ 'dashboard', 'contentManager', 'metadata' ]);
     });
 });

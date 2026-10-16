@@ -6,11 +6,11 @@ const movie = { Id: 'a', MediaType: 'Video', LocationType: 'FileSystem', IsFolde
 const allowed = { EnableContentDownloading: true };
 
 describe('parseContentDownload', () => {
-    it('is off unless set to true', () => {
-        expect(parseContentDownload(null)).toBe(false);
-        expect(parseContentDownload('')).toBe(false);
-        expect(parseContentDownload('false')).toBe(false);
+    it('is on unless set to false', () => {
+        expect(parseContentDownload(null)).toBe(true);
+        expect(parseContentDownload('')).toBe(true);
         expect(parseContentDownload('true')).toBe(true);
+        expect(parseContentDownload('false')).toBe(false);
     });
 });
 

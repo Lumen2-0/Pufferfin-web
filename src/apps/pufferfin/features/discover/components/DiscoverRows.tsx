@@ -15,7 +15,7 @@ import { useOpenItem } from '../../../utils/navigation';
 import { isPlayableItem } from '../../../utils/playback';
 import { usePlayItem } from '../../../utils/usePlay';
 import { type CatalogItem, CatalogItemKind } from '../../catalog/api/types';
-import { useCatalogDiscover, useCatalogTitle } from '../../catalog/api/useCatalog';
+import { useCatalogDiscover, useCatalogTitle, useRecommendedForYou } from '../../catalog/api/useCatalog';
 import { useLatestItems } from '../../home/api/useHomeRows';
 import { useVisibleCatalogItems } from '../../preferences/useVisibleCatalogItems';
 import { type LastWatched, useLastWatched } from '../api/useLastWatched';
@@ -38,6 +38,49 @@ const RecommendationsOf: FC<{ watched: LastWatched }> = ({ watched }) => {
             items={visible(title.data?.Recommendations)}
             isPending={title.isPending}
             isError={title.isError}
+            getKey={getCatalogKey}
+            renderItem={renderCatalogCard}
+        />
+    );
+};
+
+/**
+ * Suggestions for the user: what TMDB recommends from the last film and the
+ * last series watched, mixed with the picks from the Letterboxd diary.
+ */
+export const SuggestionsRow: FC = () => {
+    const t = useTranslation();
+    const visible = useVisibleCatalogItems();
+    const lastMovie = useLastWatched([ CatalogItemKind.Movie ]).data;
+    const lastSeries = useLastWatched([ CatalogItemKind.Series ]).data;
+    const movie = useCatalogTitle(CatalogItemKind.Movie, lastMovie?.tmdbId ?? 0, !!lastMovie);
+    const series = useCatalogTitle(CatalogItemKind.Series, lastSeries?.tmdbId ?? 0, !!lastSeries);
+    const forYou = useRecommendedForYou();
+
+    const items = useMemo(() => {
+        const lists = [ movie.data?.Recommendations, series.data?.Recommendations, forYou.data ];
+        const keys = new Set<string>();
+        const mixed: CatalogItem[] = [];
+        const longest = Math.max(0, ...lists.map(list => list?.length ?? 0));
+        for (let index = 0; index < longest; index++) {
+            for (const list of lists) {
+                const item = list?.[index];
+                if (item && !keys.has(item.Key)) {
+                    keys.add(item.Key);
+                    mixed.push(item);
+                }
+            }
+        }
+        return mixed;
+    }, [ movie.data, series.data, forYou.data ]);
+
+    return (
+        <MediaRow
+            title={t('RowRecommendedForYou')}
+            shape='portrait'
+            items={visible(items)}
+            isPending={forYou.isPending || movie.isPending && !!lastMovie || series.isPending && !!lastSeries}
+            isError={false}
             getKey={getCatalogKey}
             renderItem={renderCatalogCard}
         />

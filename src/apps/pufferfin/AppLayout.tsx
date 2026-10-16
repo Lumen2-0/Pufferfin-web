@@ -6,6 +6,7 @@ import viewManager from 'components/viewManager/viewManager';
 
 import AppNav from './components/AppNav';
 import { useLiveRequests } from './features/requests/api/useLiveRequests';
+import { useInterfaceSizes } from './features/settings/interfaceSize';
 import { TranslationProvider } from './i18n/useTranslation';
 import { useSpatialNavigation } from './navigation/useSpatialNavigation';
 import { getHomePath } from './routes/paths';
@@ -53,11 +54,14 @@ export const Component = () => {
     // Watch progress saved by a play shows on the screen the player goes back to
     useLiveUserData();
 
+    // The size of the posters and of the featured card, as the user set it
+    useInterfaceSizes();
+
     return (
         <TranslationProvider>
             <div ref={rootRef} className='pf-app'>
                 <AppNav />
-                <main className='pf-app__main'>
+                <main key={location.pathname} className='pf-app__main'>
                     <Outlet />
                 </main>
             </div>

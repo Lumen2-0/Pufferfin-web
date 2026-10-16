@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { type ReactNode, useCallback } from 'react';
+import React, { type ReactNode, type SyntheticEvent, useCallback } from 'react';
 
 import { useTranslation } from '../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../navigation/focus';
@@ -15,7 +15,9 @@ interface PosterCardProps<T> {
     progress?: number
     progressLabel?: string
     /** Discreet state on the art, such as a title missing from the library. Told by an icon and words, never by color alone. */
-    badge?: { icon: ReactNode, label: string }
+    badge?: { icon?: ReactNode, label: string }
+    /** What the title is (Film, Series), at the bottom left of the art, for rows that mix both. */
+    tag?: string
     /** Passed back to `onSelect`, so callers hand over a stable callback instead of a new closure per card. */
     value: T
     /** Without it, the card is a plain tile: shown, read by screen readers, but not a focus stop with nothing to do. */
@@ -32,7 +34,18 @@ interface PosterCardProps<T> {
      */
     onDismiss?: (value: T) => void
     dismissLabel?: string
+    /** More buttons over the art under the pointer, such as the bookmark and Download. */
+    overlay?: ReactNode
 }
+
+// A card is a hundred pixels or so wide: TMDB's 500 px poster is three times the bytes for nothing
+const getLightArt = (url: string) => url.replace('://image.tmdb.org/t/p/w500/', '://image.tmdb.org/t/p/w342/');
+
+// The art fades in once it has loaded, instead of popping in. Done on the element, with no state per card
+const showImage = (event: SyntheticEvent<HTMLImageElement>) => event.currentTarget.classList.add('pf-card__image--loaded');
+const showIfLoaded = (image: HTMLImageElement | null) => {
+    if (image?.complete) image.classList.add('pf-card__image--loaded');
+};
 
 const PosterCard = <T, >({
     title,
@@ -42,11 +55,13 @@ const PosterCard = <T, >({
     progress,
     progressLabel,
     badge,
+    tag,
     value,
     onSelect,
     onPlay,
     onDismiss,
-    dismissLabel
+    dismissLabel,
+    overlay
 }: PosterCardProps<T>) => {
     const t = useTranslation();
     // An audiobook is square in any row, so callers need not know what they show
@@ -54,23 +69,24 @@ const PosterCard = <T, >({
     const onClick = useCallback(() => onSelect?.(value), [ onSelect, value ]);
     const onPlayClick = useCallback(() => onPlay?.(value), [ onPlay, value ]);
     const onDismissClick = useCallback(() => onDismiss?.(value), [ onDismiss, value ]);
-    const accessibleName = [ title, subtitle, progressLabel, badge?.label ].filter(Boolean).join(', ');
+    const accessibleName = [ title, tag, subtitle, progressLabel, badge?.label ].filter(Boolean).join(', ');
 
     const content = (
         <>
             <span className='pf-card__art'>
                 {imageUrl ? (
-                    <img className='pf-card__image' src={imageUrl} alt='' loading='lazy' />
+                    <img className='pf-card__image' src={getLightArt(imageUrl)} alt='' loading='lazy' decoding='async' ref={showIfLoaded} onLoad={showImage} onError={showImage} />
                 ) : (
                     // No art: the title stands in, on a neutral surface
                     <span className='pf-card__placeholder' aria-hidden='true'>{title}</span>
                 )}
                 {badge && (
                     <span className='pf-card__badge' aria-hidden='true'>
-                        <span className='pf-card__badge-icon'>{badge.icon}</span>
+                        {badge.icon && <span className='pf-card__badge-icon'>{badge.icon}</span>}
                         <span className='pf-card__badge-label'>{badge.label}</span>
                     </span>
                 )}
+                {tag && <span className='pf-card__tag' aria-hidden='true'>{tag}</span>}
                 {progress !== undefined && progress > 0 && (
                     <span className='pf-card__progress' aria-hidden='true'>
                         <span className='pf-card__progress-fill' style={{ width: `${Math.min(progress, 100)}%` }} />
@@ -104,13 +120,14 @@ const PosterCard = <T, >({
         </button>
     );
 
-    if (!onPlay && !onDismiss) return card;
+    if (!onPlay && !onDismiss && !overlay) return card;
 
     // Buttons side by side, not one in the other: the card opens the page, Play plays, the cross takes it out
     return (
         <span className={classNames('pf-card-play', `pf-card-play--${shape}`)}>
             {card}
             <span className='pf-card-play__zone'>
+                {overlay}
                 {onDismiss && dismissLabel && (
                     <button
                         type='button'

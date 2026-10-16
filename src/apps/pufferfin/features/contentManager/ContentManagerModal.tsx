@@ -87,6 +87,12 @@ interface RowProps {
     onDeleted: (row: ContentRow, outcome: DeletionOutcome) => void;
 }
 
+/** The way around the tracker minimum, offered only to a title whose torrents are still held by it. */
+const ImmediateButton: FC<{ days?: number, busy: boolean, onClick: () => void }> = ({ days, busy, onClick }) => {
+    const t = useTranslation();
+    return days ? <button type='button' className='pf-cm-button pf-cm-button--danger' onClick={onClick} disabled={busy}>{t('ContentConfirmImmediate')}</button> : null;
+};
+
 const ContentLine: FC<RowProps> = ({ row, deleted, now, locale, onDeleted }) => {
     const t = useTranslation();
     const [ state, setState ] = useState<RowState>('idle');
@@ -97,13 +103,15 @@ const ContentLine: FC<RowProps> = ({ row, deleted, now, locale, onDeleted }) => 
 
     const ask = useCallback(() => setState('confirm'), []);
     const back = useCallback(() => setState('idle'), []);
-    const confirm = useCallback(() => {
+    const remove = useCallback((immediate: boolean) => {
         setState('busy');
-        deleteContent.mutate(row.ItemId, {
+        deleteContent.mutate({ itemId: row.ItemId, immediate }, {
             onSuccess: outcome => onDeleted(row, outcome),
             onError: () => setState('failed')
         });
     }, [ deleteContent, onDeleted, row ]);
+    const confirm = useCallback(() => remove(false), [ remove ]);
+    const confirmImmediate = useCallback(() => remove(true), [ remove ]);
     const schedule = useCallback(() => {
         setState('busy');
         scheduleDeletion.mutate(row.ItemId, { onSettled: () => setState('idle') });
@@ -128,6 +136,7 @@ const ContentLine: FC<RowProps> = ({ row, deleted, now, locale, onDeleted }) => 
         actions = (
             <span className='pf-cm-actions'>
                 <button type='button' className='pf-cm-button pf-cm-button--danger' onClick={confirm} disabled={state === 'busy'}>{t('ContentConfirm')}</button>
+                <ImmediateButton days={protectedDays} busy={state === 'busy'} onClick={confirmImmediate} />
                 <button type='button' className='pf-cm-button' onClick={back} disabled={state === 'busy'}>{t('ContentCancel')}</button>
             </span>
         );

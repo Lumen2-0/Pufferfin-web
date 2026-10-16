@@ -10,6 +10,8 @@ import {
     TV_SHOW_TYPES,
     getDiscoverRows,
     getDiskItemTypes,
+    getSeason,
+    rankSeasonal,
     hasFeatured,
     parseDiscoverType
 } from './discover';
@@ -33,17 +35,18 @@ describe('Pufferfin: Discover types', () => {
         }
     });
 
-    it('opens films on the top films of the month, series on the top series', () => {
-        expect(getDiscoverRows(DiscoverType.All)[0]).toBe(DiscoverRow.TopMovies);
-        expect(getDiscoverRows(DiscoverType.Movies)[0]).toBe(DiscoverRow.TopMovies);
-        expect(getDiscoverRows(DiscoverType.Series)[0]).toBe(DiscoverRow.TopShows);
-        expect(getDiscoverRows(DiscoverType.Movies)).not.toContain(DiscoverRow.TopShows);
-        expect(getDiscoverRows(DiscoverType.Series)).not.toContain(DiscoverRow.TopMovies);
+    it('opens on the watch list, then what is being watched, then the tops', () => {
+        for (const type of [ DiscoverType.All, DiscoverType.Movies, DiscoverType.Series ]) {
+            expect(getDiscoverRows(type)[0]).toBe(DiscoverRow.Bookmarks);
+            expect(getDiscoverRows(type)[1]).toBe(DiscoverRow.ContinueWatching);
+            expect(getDiscoverRows(type)).not.toContain(DiscoverRow.NewOnServer);
+        }
+        expect(getDiscoverRows(DiscoverType.Movies)).not.toContain(DiscoverRow.TopShowsWeek);
+        expect(getDiscoverRows(DiscoverType.Series)).not.toContain(DiscoverRow.TopMoviesWeek);
     });
 
-    it('keeps what is being watched right under the top', () => {
+    it('keeps the lists of every type sound', () => {
         for (const type of [ DiscoverType.All, DiscoverType.Movies, DiscoverType.Series ]) {
-            expect(getDiscoverRows(type)[1]).toBe(DiscoverRow.ContinueWatching);
             expect(getDiscoverRows(type)).toContain(DiscoverRow.Bookmarks);
         }
         expect(getDiscoverRows(DiscoverType.TvShows)).toEqual([ DiscoverRow.LiveTvOnNow, DiscoverRow.Recordings ]);
@@ -97,5 +100,22 @@ describe('Pufferfin: Discover types', () => {
     it('offers documentaries by their TMDB genre', () => {
         expect(DISCOVER_TYPES).toContain(DiscoverType.Documentaries);
         expect(DOCUMENTARY_GENRE_ID).toBe(99);
+    });
+});
+
+describe('getSeason', () => {
+    it('shows each season only in its weeks', () => {
+        expect(getSeason(new Date(2026, 9, 1))?.title).toBe('RowSeasonHalloween');
+        expect(getSeason(new Date(2026, 9, 31))?.title).toBe('RowSeasonHalloween');
+        expect(getSeason(new Date(2026, 11, 26))?.title).toBe('RowSeasonChristmas');
+        expect(getSeason(new Date(2026, 1, 14))?.title).toBe('RowSeasonValentine');
+        expect(getSeason(new Date(2026, 10, 1))).toBeUndefined();
+        expect(getSeason(new Date(2026, 11, 27))).toBeUndefined();
+    });
+
+    it('puts the titles with the most genres of the theme first, films and series alternating', () => {
+        const movies = [ { id: 'm1', GenreIds: [ 28 ] }, { id: 'm2', GenreIds: [ 35, 10751 ] }, { id: 'm3', GenreIds: [ 35 ] } ];
+        const series = [ { id: 's1', GenreIds: null }, { id: 's2', GenreIds: [ 35 ] } ];
+        expect(rankSeasonal([ movies, series ], [ 35, 10751 ]).map(item => item.id)).toEqual([ 'm2', 's2', 'm3', 's1', 'm1' ]);
     });
 });

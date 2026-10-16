@@ -51,6 +51,7 @@ video[controls]::-webkit-media-controls {
 }
 
 .videoSubtitles {
+    pointer-events: none;
     position: fixed;
     bottom: 0;
     text-align: center;
@@ -66,7 +67,12 @@ video[controls]::-webkit-media-controls {
     align-items: center;
 }
 
+/* PUFFERFIN: only the text takes the mouse, to be dragged where the user wants it */
 .videoSubtitlesInner {
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
     max-width: 70%;
     background-color: rgba(0, 0, 0, 0.8);
 }

@@ -12,12 +12,15 @@ import { CarouselSkeleton } from '../components/Skeleton';
 import MediaRow from '../components/MediaRow';
 import PosterCard from '../components/PosterCard';
 import Rail from '../components/Rail';
+import HeroQuickActions from '../components/HeroQuickActions';
+import ImdbButton from '../components/ImdbButton';
 import RoundButton from '../components/RoundButton';
 import { CatalogAvailability, CatalogItemKind, type CatalogItem } from '../features/catalog/api/types';
 import {
     type AudiobookPopularSort,
     type CatalogDiscoverFilter,
     useCatalogDiscover,
+    useCatalogGenres,
     usePopularAudiobooks,
     useRecommendedForYou,
     useTrending,
@@ -29,14 +32,16 @@ import { useVisibleCatalogItems } from '../features/preferences/useVisibleCatalo
 import { useLiveTvOnNow, useRecordings } from '../features/discover/api/useDiscoverRows';
 import ThemeRowView from '../features/discover/components/ThemeRowView';
 import BrandPicker from '../features/discover/components/BrandPicker';
-import TypePicker from '../features/discover/components/TypePicker';
 import {
     DISCOVER_TYPE_LABELS,
     DISCOVER_TYPE_PARAM,
     DiscoverRow,
     DiscoverType,
+    ANIMATION_GENRE_ID,
     DOCUMENTARY_GENRE_ID,
     getDiscoverRows,
+    getSeason,
+    rankSeasonal,
     getDiskItemTypes,
     hasFeatured,
     parseDiscoverType,
@@ -44,7 +49,7 @@ import {
 } from '../features/discover/utils/discover';
 import { pickThemeRows } from '../features/discover/utils/themes';
 import BookmarksRow from '../features/bookmarks/BookmarksRow';
-import { BecauseYouWatchedRow, LatestRow, SortedCatalogRow } from '../features/discover/components/DiscoverRows';
+import { BecauseYouWatchedRow, LatestRow, SortedCatalogRow, SuggestionsRow } from '../features/discover/components/DiscoverRows';
 import ResumeRow from '../features/discover/components/ResumeRow';
 import TopTenRow from '../features/discover/components/TopTenRow';
 import { useResumeItems } from '../features/home/api/useHomeRows';
@@ -67,6 +72,7 @@ const BRAND_PARAM = 'brand';
 const parseBrand = (value: string | null) => (value && /^[a-z0-9]{1,24}$/.test(value) ? value : undefined);
 const getCatalogKey = (item: CatalogItem) => item.Key;
 const renderCatalogCard = (item: CatalogItem) => <CatalogCard item={item} />;
+const renderTaggedCatalogCard = (item: CatalogItem) => <CatalogCard item={item} showKind />;
 
 /** Card renderers shared by the library rows of every type. */
 function useCardRenderers() {
@@ -140,23 +146,6 @@ const getBookmarkKind = (type: DiscoverType) => {
     return undefined;
 };
 
-const RecommendedRow: FC = () => {
-    const t = useTranslation();
-    const visible = useVisibleCatalogItems();
-    const forYou = useRecommendedForYou();
-    return (
-        <MediaRow
-            title={t('RowRecommendedForYou')}
-            shape='portrait'
-            items={visible(forYou.data)}
-            isPending={forYou.isPending}
-            isError={forYou.isError}
-            getKey={getCatalogKey}
-            renderItem={renderCatalogCard}
-        />
-    );
-};
-
 const TrendingRow: FC<{ kind: CatalogItemKind.Movie | CatalogItemKind.Series }> = ({ kind }) => {
     const t = useTranslation();
     const visible = useVisibleCatalogItems();
@@ -200,6 +189,36 @@ const CatalogDiscoverRow: FC<CatalogDiscoverRowProps> = ({ title, kind, filter }
 
 const DOCUMENTARY_FILTER: CatalogDiscoverFilter = { genreId: DOCUMENTARY_GENRE_ID };
 const TV_SHOW_FILTER: CatalogDiscoverFilter = { tvTypes: TV_SHOW_TYPES };
+const ANIME_FILTER: CatalogDiscoverFilter = { genreId: ANIMATION_GENRE_ID, originalLanguage: 'ja', sort: 'TopRated' };
+
+/**
+ * The films and series of the season (Halloween, Christmas...), only in its weeks: the ones the public loves most,
+ * not the latest, those with the most genres of the theme first.
+ */
+const SeasonalRow: FC = () => {
+    const t = useTranslation();
+    const visible = useVisibleCatalogItems();
+    const season = getSeason();
+    const keywords = season?.keywordIds.join(',');
+    const movies = useCatalogDiscover(CatalogItemKind.Movie, { keywords, genreId: season?.movieGenreId, sort: 'TopRated' }, !!season);
+    const series = useCatalogDiscover(CatalogItemKind.Series, { keywords, sort: 'TopRated' }, !!season);
+    const items = useMemo(
+        () => season && movies.data && series.data && rankSeasonal([ movies.data, series.data ], season.genreIds),
+        [ season, movies.data, series.data ]
+    );
+    if (!season) return null;
+    return (
+        <MediaRow
+            title={t(season.title)}
+            shape='portrait'
+            items={visible(items)}
+            isPending={movies.isPending || series.isPending}
+            isError={movies.isError && series.isError}
+            getKey={getCatalogKey}
+            renderItem={renderTaggedCatalogCard}
+        />
+    );
+};
 
 /** Best sellers or new releases of Audible, in the preferred languages: books to discover, on disk or missing. */
 const PopularAudiobooksRow: FC<{ sort: AudiobookPopularSort }> = ({ sort }) => {
@@ -264,12 +283,22 @@ const RecordingsRow: FC = () => {
 /** One row of a Discover screen; each fetches its own data, only when it is shown. */
 const DiscoverRowView: FC<RowProps> = ({ row, type }) => {
     switch (row) {
-        case DiscoverRow.TopMovies:
-            return <TopTenRow kind={CatalogItemKind.Movie} />;
-        case DiscoverRow.TopShows:
-            return <TopTenRow kind={CatalogItemKind.Series} />;
+        case DiscoverRow.TopMoviesWeek:
+            return <TopTenRow kind={CatalogItemKind.Movie} period='week' />;
+        case DiscoverRow.TopMoviesMonth:
+            return <TopTenRow kind={CatalogItemKind.Movie} period='month' />;
+        case DiscoverRow.TopMoviesYear:
+            return <TopTenRow kind={CatalogItemKind.Movie} period='year' />;
+        case DiscoverRow.TopShowsWeek:
+            return <TopTenRow kind={CatalogItemKind.Series} period='week' />;
+        case DiscoverRow.TopShowsMonth:
+            return <TopTenRow kind={CatalogItemKind.Series} period='month' />;
+        case DiscoverRow.TopShowsYear:
+            return <TopTenRow kind={CatalogItemKind.Series} period='year' />;
         case DiscoverRow.ContinueWatching:
             return <ResumeRow itemTypes={getDiskItemTypes(type)} />;
+        case DiscoverRow.Seasonal:
+            return <SeasonalRow />;
         case DiscoverRow.NewOnServer:
             return <LatestRow itemTypes={getLatestItemTypes(type)} />;
         case DiscoverRow.BecauseYouWatched:
@@ -282,10 +311,12 @@ const DiscoverRowView: FC<RowProps> = ({ row, type }) => {
             return <SortedCatalogRow kind={CatalogItemKind.Movie} sort='TopRated' />;
         case DiscoverRow.ClassicsSeries:
             return <SortedCatalogRow kind={CatalogItemKind.Series} sort='TopRated' />;
+        case DiscoverRow.ClassicsAnime:
+            return <CatalogDiscoverRow title='RowClassicsAnime' kind={CatalogItemKind.Series} filter={ANIME_FILTER} />;
         case DiscoverRow.Bookmarks:
             return <BookmarksRow kind={getBookmarkKind(type)} />;
         case DiscoverRow.RecommendedForYou:
-            return <RecommendedRow />;
+            return <SuggestionsRow />;
         case DiscoverRow.TrendingMovies:
             return <TrendingRow kind={CatalogItemKind.Movie} />;
         case DiscoverRow.TrendingShows:
@@ -442,33 +473,65 @@ const Featured: FC<{ type: DiscoverType, brand?: string, pageRef: RefObject<HTML
     // The titles being watched, by library id, and the series of the episodes being watched
     const watchedIds = useMemo(() => new Set((resume.data ?? []).flatMap(item => [ item.Id, item.SeriesId ]).filter(Boolean)), [ resume.data ]);
 
+    const movieGenres = useCatalogGenres(CatalogItemKind.Movie).data;
+    const seriesGenres = useCatalogGenres(CatalogItemKind.Series).data;
+    const getGenres = (item: CatalogItem) => {
+        const names = new Map((item.Kind === CatalogItemKind.Series ? seriesGenres : movieGenres)?.map(genre => [ genre.Id, genre.Name ]));
+        return (item.GenreIds ?? []).map(id => names.get(id)).filter(Boolean).slice(0, 3);
+    };
+
     const slides: HeroSlide[] = catalog.items
         .filter(item => !item.LocalItemId || !watchedIds.has(item.LocalItemId))
-        .map(item => ({
-            key: item.Key,
-            title: item.Title,
-            eyebrow: item.Year ? String(item.Year) : undefined,
-            overview: item.Overview,
-            backdropUrl: item.BackdropUrl!,
-            // On disk: it plays from here; missing: its sheet, with Download
-            actions: item.Availability === CatalogAvailability.OnDisk && item.LocalItemId ? (
+        .map(item => {
+            const isOnDisk = item.Availability === CatalogAvailability.OnDisk && !!item.LocalItemId;
+            const kindLabel = t(item.Kind === CatalogItemKind.Series ? 'HeroBadgeSeries' : 'HeroBadgeMovie');
+            const infoButton = (
                 <RoundButton
-                    variant='primary'
-                    icon={<PlayArrow />}
-                    label={t('ActionPlay')}
-                    value={item.LocalItemId}
-                    onClick={playItemId}
-                />
-            ) : (
-                <RoundButton
-                    variant='primary'
+                    variant={isOnDisk ? 'quiet' : 'primary'}
                     icon={<InfoOutlined />}
-                    label={t('ActionMoreInfo')}
+                    label={t(item.Kind === CatalogItemKind.Series ? 'HeroSheetSeries' : 'HeroSheetMovie')}
                     value={getCatalogItemPath(item)}
                     onClick={openCatalog}
                 />
-            )
-        }))
+            );
+            return {
+                key: item.Key,
+                title: item.Title,
+                meta: [ ...getGenres(item), item.Year ? String(item.Year) : undefined ].filter(Boolean).join(' · '),
+                badges: [ kindLabel ],
+                overview: item.Overview,
+                backdropUrl: item.BackdropUrl!,
+                // On disk: it plays from here, with its sheet beside; missing: its sheet, with Download
+                actions: isOnDisk ? (
+                    <>
+                        <span className='pf-hero__group'>
+                            <RoundButton
+                                variant='primary'
+                                icon={<PlayArrow />}
+                                label={t('ActionPlay')}
+                                value={item.LocalItemId!}
+                                onClick={playItemId}
+                            />
+                            {infoButton}
+                            <ImdbButton item={item} />
+                        </span>
+                        <span className='pf-hero__group'>
+                            <HeroQuickActions item={item} />
+                        </span>
+                    </>
+                ) : (
+                    <>
+                        <span className='pf-hero__group'>
+                            {infoButton}
+                            <ImdbButton item={item} />
+                        </span>
+                        <span className='pf-hero__group'>
+                            <HeroQuickActions item={item} />
+                        </span>
+                    </>
+                )
+            };
+        })
         .slice(0, FEATURED_COUNT);
 
     const isLoaded = !resume.isPending && (catalog.isLoaded || slides.length > 0);
@@ -511,7 +574,6 @@ export const Component = () => {
         if (nextBrand && hasFeatured(nextType)) params[BRAND_PARAM] = nextBrand;
         setSearchParams(params, { replace: true });
     }, [ setSearchParams ]);
-    const onTypeChange = useCallback((next: DiscoverType) => setFilters(next, brand), [ setFilters, brand ]);
     const onBrandChange = useCallback((next: string | undefined) => setFilters(type, next), [ setFilters, type ]);
 
     // Without a featured title, the picker is the starting point
@@ -522,11 +584,6 @@ export const Component = () => {
             {/* The page title for assistive technologies; the picker says which type is shown */}
             {!withFeatured && <h1 className='pf-visually-hidden'>{t('DiscoverTitle', t(DISCOVER_TYPE_LABELS[type]))}</h1>}
             {withFeatured && <Featured key={`${type}-${brand ?? ''}`} type={type} brand={brand} pageRef={pageRef} />}
-
-            {/* The content type: at the top left, in the row of the bar */}
-            <div className='pf-discover__header'>
-                <TypePicker value={type} onChange={onTypeChange} />
-            </div>
 
             {/* Right under the featured card: the streaming services, the studios, the network */}
             {withProviders && (
@@ -539,7 +596,7 @@ export const Component = () => {
                 {brand ?
                     <ProviderRows type={type} brand={brand} /> :
                     getDiscoverRows(type).map(row => <DiscoverRowView key={`${type}-${row}`} row={row} type={type} />)}
-                {themeRows.map(row => <ThemeRowView key={`${row.id}-${brand ?? ''}`} row={row} brand={brand} />)}
+                {brand && themeRows.map(row => <ThemeRowView key={`${row.id}-${brand ?? ''}`} row={row} brand={brand} />)}
             </div>
             {/* Shown by the style sheet only when every row above came back empty */}
             <p className='pf-home__empty pf-discover__empty'>{t('DiscoverEmpty')}</p>

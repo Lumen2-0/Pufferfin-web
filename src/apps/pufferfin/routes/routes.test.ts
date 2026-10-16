@@ -1,7 +1,7 @@
 import { matchRoutes, type RouteObject } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
-import { getCatalogTitlePath, getItemPath, getLibraryPath, isPufferfinPath, parseSheetTarget } from './paths';
+import { getCatalogTitlePath, getHomePath, getItemPath, isPufferfinPath, parseSheetTarget } from './paths';
 import { CatalogItemKind } from '../features/catalog/api/types';
 import { PUFFERFIN_APP_ROUTES } from './routes';
 
@@ -40,11 +40,11 @@ describe('Pufferfin: routes', () => {
     it.each([
         [ 'upstream routes first', [ ...UPSTREAM_ROUTES, ...PUFFERFIN_APP_ROUTES ] ],
         [ 'Pufferfin routes first', [ ...PUFFERFIN_APP_ROUTES, ...UPSTREAM_ROUTES ] ]
-    ])('sends the bare address of the site to the library, %s', (_, routes) => {
+    ])('sends the bare address of the site to the home, %s', (_, routes) => {
         const leaf = matchLeaf(routes, '/');
         expect(leaf?.id).not.toBe(UPSTREAM_INDEX_ID);
         expect(leaf?.index).toBe(true);
-        expect((leaf?.element as { props?: { to?: string } } | undefined)?.props?.to).toBe(getLibraryPath());
+        expect((leaf?.element as { props?: { to?: string } } | undefined)?.props?.to).toBe(getHomePath());
     });
 
     it('leaves the other upstream pages alone', () => {

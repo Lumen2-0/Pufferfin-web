@@ -3,11 +3,12 @@ import React, { type FC, type ReactNode, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router-dom';
 
+import DownloadDot from '../components/DownloadDot';
 import { useTranslation } from '../i18n/useTranslation';
 import { openSpotlight, useIsSpotlightOpen } from '../features/search/spotlight/store';
-import { getDownloadsPath, getHomePath, getLibraryPath } from '../routes/paths';
+import { getDownloadsPath, getExplorePath, getHomePath, getLibraryPath } from '../routes/paths';
 import ProfileSheet from './ProfileSheet';
-import { DiscoverIcon, DownloadsIcon, LibraryIcon, ProfileIcon, SearchIcon } from './tabIcons';
+import { DiscoverIcon, DownloadsIcon, ExploreIcon, LibraryIcon, ProfileIcon, SearchIcon } from './tabIcons';
 
 import './compact.scss';
 
@@ -43,6 +44,9 @@ const BottomBar: FC<{ hasDownloads: boolean }> = ({ hasDownloads }) => {
                 <NavLink to={getLibraryPath()} className={getTabClassName}>
                     <TabContent icon={<LibraryIcon />} label={t('NavLibrary')} />
                 </NavLink>
+                <NavLink to={getExplorePath()} className={getTabClassName}>
+                    <TabContent icon={<ExploreIcon />} label={t('NavExplore')} />
+                </NavLink>
                 <button
                     type='button'
                     className={classNames('pf-tabbar__tab', { 'pf-tabbar__tab--current': isSearchOpen })}
@@ -55,6 +59,7 @@ const BottomBar: FC<{ hasDownloads: boolean }> = ({ hasDownloads }) => {
                 {hasDownloads && (
                     <NavLink to={getDownloadsPath()} className={getTabClassName}>
                         <TabContent icon={<DownloadsIcon />} label={t('NavDownloads')} />
+                        <DownloadDot className='pf-download-dot--tabbar' />
                     </NavLink>
                 )}
                 <button

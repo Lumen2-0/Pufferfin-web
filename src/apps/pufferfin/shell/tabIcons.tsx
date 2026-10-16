@@ -32,6 +32,15 @@ export const LibraryIcon: FC = () => (
     </TabIcon>
 );
 
+export const ExploreIcon: FC = () => (
+    <TabIcon>
+        <rect x='4' y='4' width='7' height='7' rx='1.5' />
+        <rect x='13' y='4' width='7' height='7' rx='1.5' />
+        <rect x='4' y='13' width='7' height='7' rx='1.5' />
+        <rect x='13' y='13' width='7' height='7' rx='1.5' />
+    </TabIcon>
+);
+
 export const SearchIcon: FC = () => (
     <TabIcon>
         <circle cx='11' cy='11' r='7' />

@@ -7,6 +7,7 @@ import type { CatalogTitleKind } from '../../../routes/paths';
 import { getCatalogListFailure } from '../utils/catalog';
 import {
     type CatalogAudiobookDetails,
+    type CatalogGenre,
     type CatalogPersonDetails,
     CatalogItemKind,
     type CatalogListResponse,
@@ -29,7 +30,7 @@ const toItems = (response: CatalogListResponse) => {
 };
 
 /** Films or series trending on TMDB this week, each marked on disk or missing. */
-export const useTrending = (kind: CatalogTitleKind) => {
+export const useTrending = (kind: CatalogTitleKind, isEnabled = true) => {
     const { api, user } = useApi();
     return useQuery({
         queryKey: [ 'Pufferfin', 'Catalog', 'Trending', kind, user?.Id ],
@@ -38,7 +39,7 @@ export const useTrending = (kind: CatalogTitleKind) => {
             '/Pufferfin/Catalog/Trending',
             { params: { kind, limit: ROW_LIMIT }, signal }
         )),
-        enabled: !!api && !!user?.Id
+        enabled: !!api && !!user?.Id && isEnabled
     });
 };
 
@@ -52,23 +53,27 @@ export interface CatalogDiscoverFilter {
     sort?: 'Popular' | 'TopRated' | 'Newest'
     /** Year of release, first air year for a series. */
     year?: number
+    /** Earliest release date, YYYY-MM-DD. */
+    since?: string
     /** Original language, ISO 639-1. */
     originalLanguage?: string
     /** Key of a brand (`netflix`, `marvel`, `adultswim`): a streaming service, a studio or a network (see `useBrands`). */
     brand?: string
+    /** TMDB keyword id, such as 207317 for Christmas. */
+    keywords?: string
 }
 
 /** Films or series matching the filter, in its order, each marked on disk or missing. Waits while `isEnabled` is false. */
 export const useCatalogDiscover = (kind: CatalogTitleKind, filter: CatalogDiscoverFilter, isEnabled = true) => {
     const { api, user } = useApi();
     const tvTypes = filter.tvTypes?.join(',');
-    const { genreId, sort, year, originalLanguage, brand } = filter;
+    const { genreId, sort, year, since, originalLanguage, brand, keywords } = filter;
     return useQuery({
-        queryKey: [ 'Pufferfin', 'Catalog', 'Discover', kind, genreId, tvTypes, sort, year, originalLanguage, brand, user?.Id ],
+        queryKey: [ 'Pufferfin', 'Catalog', 'Discover', kind, genreId, tvTypes, sort, year, since, originalLanguage, brand, keywords, user?.Id ],
         queryFn: async ({ signal }) => toItems(await getPufferfin<CatalogListResponse>(
             api!,
             '/Pufferfin/Catalog/Discover',
-            { params: { kind, genreId, tvTypes, sort, year, originalLanguage, brand, limit: ROW_LIMIT }, signal }
+            { params: { kind, genreId, tvTypes, sort, year, since, originalLanguage, brand, keywords, limit: ROW_LIMIT }, signal }
         )),
         enabled: !!api && !!user?.Id && isEnabled
     });
@@ -194,6 +199,17 @@ export const useBrands = () => {
     return useQuery({
         queryKey: [ 'Pufferfin', 'Catalog', 'Brands', user?.Id ],
         queryFn: ({ signal }) => getPufferfin<Brand[]>(api!, '/Pufferfin/Catalog/Brands', { signal }),
+        enabled: !!api && !!user?.Id,
+        staleTime: Infinity
+    });
+};
+
+/** The TMDB genres of films or series, for the words under a title. */
+export const useCatalogGenres = (kind: CatalogTitleKind) => {
+    const { api, user } = useApi();
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Catalog', 'Genres', kind, user?.Id ],
+        queryFn: ({ signal }) => getPufferfin<CatalogGenre[]>(api!, '/Pufferfin/Catalog/Genres', { params: { kind }, signal }),
         enabled: !!api && !!user?.Id,
         staleTime: Infinity
     });

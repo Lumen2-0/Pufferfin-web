@@ -45,7 +45,6 @@ const SyncPlayButton: FC = () => {
                 type='button'
                 className={classNames('pf-button', 'pf-button--quiet', 'pf-button--icon', 'pf-nav__link', { 'pf-button--selected': isActive })}
                 aria-label={label}
-                title={label}
                 aria-haspopup='dialog'
                 aria-expanded={isOpen}
                 onClick={onClick}

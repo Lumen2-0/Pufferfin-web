@@ -15,9 +15,10 @@ import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage } from '../../.
 import { useOpenItem } from '../../../utils/navigation';
 import { isPlayableItem } from '../../../utils/playback';
 import { usePlayItem } from '../../../utils/usePlay';
-import { useLibraryGenres, useLibraryItems, useLibraryYears } from '../api/useLibraryItems';
+import { useLibraryGenres, useLibraryItems, useLibraryTags, useLibraryYears } from '../api/useLibraryItems';
 import {
     BOOK_SORTS,
+    hasActiveFilters,
     type CatalogFilters,
     getCountKeys,
     getDecades,
@@ -27,10 +28,11 @@ import {
     SORT_LABELS,
     toItemsFilter
 } from '../utils/catalogFilters';
-import { isAudiobookEntry } from '../utils/library';
+import { ALL_LIBRARY_ID, isAudiobookEntry } from '../utils/library';
 
 import LibraryDropdown, { type DropdownOption } from './LibraryDropdown';
 import { LibraryPoster } from './LibraryCards';
+import LibrarySections from './LibrarySections';
 
 /** The text filter follows the typing after a short pause, so each keystroke is not a request. */
 const DEBOUNCE_MS = 300;
@@ -81,6 +83,8 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
     const parentId = view.Id ?? undefined;
     const libraryName = view.Name ?? '';
     const isBookLibrary = !!itemTypes?.includes(BaseItemKind.AudioBook);
+    // No library behind it: the titles of every library, together
+    const isAll = !parentId;
 
     // The field answers at once, the grid after a pause
     const [ text, setText ] = useState(filters.query);
@@ -93,7 +97,10 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
     }, [ debouncedText ]);
     const onTextChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setText(event.target.value), []);
 
-    const itemsFilter = useMemo(() => toItemsFilter(filters, isBookLibrary), [ filters, isBookLibrary ]);
+    const itemsFilter = useMemo(
+        () => ({ ...toItemsFilter(filters, isBookLibrary), ...(isAll ? { isServerWide: true } : {}) }),
+        [ filters, isBookLibrary, isAll ]
+    );
     const {
         data,
         isPending,
@@ -106,14 +113,19 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
     const items = useMemo(() => data?.pages.flatMap(page => page.items) ?? [], [ data ]);
     const total = data?.pages[0]?.totalCount ?? 0;
 
-    const genres = useLibraryGenres(isBookLibrary ? undefined : parentId, itemTypes);
-    const years = useLibraryYears(isBookLibrary ? undefined : parentId, itemTypes);
+    const genres = useLibraryGenres(isBookLibrary ? undefined : parentId, itemTypes, isAll);
+    const tags = useLibraryTags(isBookLibrary ? undefined : parentId, itemTypes, isAll);
+    const years = useLibraryYears(isBookLibrary ? undefined : parentId, itemTypes, isAll);
 
     const typeOptions = libraries;
     const genreOptions = useMemo<DropdownOption<string>[]>(() => [
         { id: ALL, label: t('LibraryAllGenres') },
         ...(genres.data ?? []).filter(genre => !!genre.Id).map(genre => ({ id: genre.Id!, label: genre.Name ?? '' }))
     ], [ genres.data, t ]);
+    const tagOptions = useMemo<DropdownOption<string>[]>(() => [
+        { id: ALL, label: t('LibraryAllTags') },
+        ...(tags.data ?? []).map(tag => ({ id: tag, label: tag }))
+    ], [ tags.data, t ]);
     const decadeOptions = useMemo<DropdownOption<string>[]>(() => [
         { id: ALL, label: t('LibraryAllYears') },
         ...getDecades(years.data ?? []).map(decade => ({ id: String(decade), label: t('LibraryDecade', decade) }))
@@ -125,6 +137,7 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
 
     const chosenGenre = genreOptions.find(option => option.id === filters.genreId && option.id !== ALL);
     const onGenre = useCallback((id: string) => onFiltersChange({ ...filters, genreId: id || undefined }), [ filters, onFiltersChange ]);
+    const onTag = useCallback((id: string) => onFiltersChange({ ...filters, tag: id || undefined }), [ filters, onFiltersChange ]);
     const onDecade = useCallback((id: string) => onFiltersChange({ ...filters, decade: id ? Number(id) : undefined }), [ filters, onFiltersChange ]);
     const onSort = useCallback((sort: LibrarySort) => onFiltersChange({ ...filters, sort }), [ filters, onFiltersChange ]);
     const onUnplayed = useCallback(() => onFiltersChange({ ...filters, isUnplayed: !filters.isUnplayed }), [ filters, onFiltersChange ]);
@@ -162,8 +175,13 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
         return item.ProductionYear ? String(item.ProductionYear) : undefined;
     };
 
+    // Every title, nothing narrowed down: titled rows rather than one long grid
+    const isSectioned = isAll && !isBookLibrary && !hasActiveFilters(filters);
+
     let grid: React.ReactNode;
-    if (isError) {
+    if (isSectioned) {
+        grid = <LibrarySections />;
+    } else if (isError) {
         // Failure is told with an icon and words, never with color alone
         grid = (
             <p className='pf-row__error' role='status'>
@@ -174,7 +192,7 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
     } else if (isPending) {
         grid = <GridSkeleton isSquare={false} />;
     } else if (!items.length) {
-        grid = <p className='pf-lib__note'>{filters.query || filters.genreId || filters.decade || filters.isUnplayed ? t('LibraryNoMatch') : t('LibraryEmpty')}</p>;
+        grid = <p className='pf-lib__note'>{filters.query || filters.genreId || filters.tag || filters.decade || filters.isUnplayed ? t('LibraryNoMatch') : t('LibraryEmpty')}</p>;
     } else {
         grid = (
             <ul ref={gridRef} className='pf-lib-grid' aria-busy={isFetchingNextPage}>
@@ -224,7 +242,7 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
                         label={libraryName}
                         ariaLabel={t('DiscoverTypePicker')}
                         options={typeOptions}
-                        selectedId={parentId}
+                        selectedId={parentId ?? ALL_LIBRARY_ID}
                         onSelect={onSelectLibrary}
                     />
                 )}
@@ -238,6 +256,16 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
                             onSelect={onGenre}
                             isActive={!!chosenGenre}
                         />
+                        {tagOptions.length > 1 && (
+                            <LibraryDropdown
+                                label={filters.tag ?? t('LibraryTagPicker')}
+                                ariaLabel={t('LibraryTagPicker')}
+                                options={tagOptions}
+                                selectedId={filters.tag ?? ALL}
+                                onSelect={onTag}
+                                isActive={!!filters.tag}
+                            />
+                        )}
                         <LibraryDropdown
                             label={filters.decade ? t('LibraryDecade', filters.decade) : t('LibraryYearPicker')}
                             ariaLabel={t('LibraryYearPicker')}
@@ -258,7 +286,7 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
                     </>
                 )}
                 <span className='pf-lib-toolbar__spacer' />
-                {!isPending && !isError && (
+                {!isSectioned && !isPending && !isError && (
                     <span className='pf-lib-toolbar__count' role='status'>
                         {t(total === 1 ? countKeys.one : countKeys.count, total)}
                     </span>
@@ -276,13 +304,13 @@ const LibraryCatalog: FC<LibraryCatalogProps> = ({ view, itemTypes, libraries, o
 
             {grid}
 
-            {isFetchNextPageError && (
+            {!isSectioned && isFetchNextPageError && (
                 <p className='pf-row__error' role='status'>
                     <ErrorOutline aria-hidden='true' />
                     {t('LibraryLoadError')}
                 </p>
             )}
-            {!isPending && !isError && items.length > 0 && total > items.length && (
+            {!isSectioned && !isPending && !isError && items.length > 0 && total > items.length && (
                 <div className='pf-lib-more'>
                     <span className='pf-lib-more__count'>{t(countKeys.progress, items.length, total)}</span>
                     <span className='pf-lib-more__bar' aria-hidden='true'>

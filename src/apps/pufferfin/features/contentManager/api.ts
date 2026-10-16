@@ -27,11 +27,15 @@ export const useContentInventory = (isEnabled: boolean) => {
     });
 };
 
-/** Deletes a title now, safely: a private torrent before its minimum keeps seeding, then goes. */
+/** Deletes a title now. Safely by default: a private torrent before its minimum keeps seeding, then goes. Immediately: everything goes, whatever the tracker minimum. */
 export const useDeleteContent = () => {
     const { api } = useApi();
     return useMutation({
-        mutationFn: (itemId: string) => deletePufferfin<DeletionOutcome>(api!, getTitlePath(itemId)),
+        mutationFn: ({ itemId, immediate }: { itemId: string, immediate: boolean }) => (
+            immediate ?
+                deletePufferfin<DeletionOutcome>(api!, `/Pufferfin/Library/${encodeURIComponent(itemId)}`, { params: { mode: 'Immediate', confirm: true } }) :
+                deletePufferfin<DeletionOutcome>(api!, getTitlePath(itemId))
+        ),
         onSettled: refresh
     });
 };

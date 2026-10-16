@@ -3,6 +3,8 @@ import debounce from 'lodash-es/debounce';
 import Screenfull from 'screenfull';
 
 import { useCustomSubtitles } from 'apps/legacy/features/playback/utils/subtitleStyles';
+import { applyPlayerEffects } from 'apps/pufferfin/features/player/playerEffects';
+import { SUBTITLE_MOVED_EVENT } from 'apps/pufferfin/features/player/subtitlePosition';
 import subtitleAppearanceHelper from 'components/subtitlesettings/subtitleappearancehelper';
 import { AppFeature } from 'constants/appFeature';
 import { PluginType } from 'constants/pluginType';
@@ -562,7 +564,10 @@ export class HtmlVideoPlayer {
                 // This issue usually happens when using HWA encoders with a high bitrate setting.
                 // Limit the BufferLength to 6s, it works fine when playing 4k 120Mbps over HLS on chrome.
                 // https://github.com/video-dev/hls.js/issues/876
-                if ((browser.chrome || browser.edgeChromium || browser.firefox) && playbackManager.getMaxStreamingBitrate(this) >= 25000000) {
+                // PUFFERFIN: judged on the bitrate of the film itself when known. The limit of the setting can be
+                // far above it (400 Mbps), which kept every film to a 6 second buffer and froze on any slow fragment
+                const streamBitrate = Math.min(options.mediaSource?.Bitrate || Infinity, playbackManager.getMaxStreamingBitrate(this));
+                if ((browser.chrome || browser.edgeChromium || browser.firefox) && streamBitrate >= 25000000) {
                     maxBufferLength = 6;
                 }
 
@@ -1572,6 +1577,7 @@ export class HtmlVideoPlayer {
                 subtitlesContainer.appendChild(subtitlesElement);
                 this.#videoSubtitlesElem = subtitlesElement;
                 this.setSubtitleAppearance(subtitlesContainer, this.#videoSubtitlesElem);
+                this.enableSubtitleDrag(subtitlesContainer, subtitlesElement);
                 videoElement.parentNode.appendChild(subtitlesContainer);
                 this.#currentTrackEvents = subtitleData.TrackEvents;
             } else if (!this.#videoSecondarySubtitlesElem && this.isSecondaryTrack(targetTextTrackIndex)) {
@@ -1593,6 +1599,45 @@ export class HtmlVideoPlayer {
     }
 
     /**
+     * PUFFERFIN: lets the user drag the subtitles with the mouse; the spot is saved in percent of the screen.
+     * @private
+     */
+    enableSubtitleDrag(container, elem) {
+        elem.addEventListener('pointerdown', (down) => {
+            const settings = userSettings.getSubtitleAppearanceSettings();
+            const startX = parseFloat(settings.dragX) || 0;
+            const startY = parseFloat(settings.dragY) || 0;
+            let x = startX;
+            let y = startY;
+            elem.setPointerCapture(down.pointerId);
+            elem.style.cursor = 'grabbing';
+            const move = (event) => {
+                x = startX + ((event.clientX - down.clientX) / window.innerWidth) * 100;
+                y = startY + ((event.clientY - down.clientY) / window.innerHeight) * 100;
+                container.style.transform = `translate(${x}vw, ${y}vh)`;
+            };
+            const end = () => {
+                elem.removeEventListener('pointermove', move);
+                elem.removeEventListener('pointerup', end);
+                elem.removeEventListener('pointercancel', end);
+                elem.style.cursor = '';
+                userSettings.setSubtitleAppearanceSettings({ ...userSettings.getSubtitleAppearanceSettings(), dragX: x, dragY: y }, undefined);
+                window.dispatchEvent(new Event(SUBTITLE_MOVED_EVENT));
+            };
+            elem.addEventListener('pointermove', move);
+            elem.addEventListener('pointerup', end);
+            elem.addEventListener('pointercancel', end);
+        });
+    }
+
+    /**
+     * PUFFERFIN: puts the saved brightness, contrast, audio delay and night mode on the video.
+     */
+    applyPlayerEffects() {
+        if (this.#mediaElement) applyPlayerEffects(this.#mediaElement);
+    }
+
+    /**
      * @private
      */
     setSubtitleAppearance(elem, innerElem) {
@@ -1600,6 +1645,33 @@ export class HtmlVideoPlayer {
             text: innerElem,
             window: elem
         }, userSettings.getSubtitleAppearanceSettings());
+    }
+
+    /**
+     * Draws the subtitles again with the appearance settings now saved: the custom element,
+     * the native cues and their position, without reloading the track.
+     */
+    refreshSubtitleAppearance() {
+        const container = this.#videoSubtitlesElem?.parentNode;
+        if (container) {
+            [ this.#videoSubtitlesElem, this.#videoSecondarySubtitlesElem ].forEach(elem => {
+                if (elem) this.setSubtitleAppearance(container, elem);
+            });
+        }
+        this.setCueAppearance();
+
+        const cueLine = parseInt(userSettings.getSubtitleAppearanceSettings().verticalPosition, 10);
+        const tracks = this.#mediaElement?.textTracks;
+        for (let i = 0; tracks && i < tracks.length; i++) {
+            for (const cue of Array.from(tracks[i].cues || [])) {
+                if (cueLine < 0) {
+                    const lineCount = (cue.text.match(/\n/g) || []).length;
+                    cue.line = cueLine - lineCount;
+                } else {
+                    cue.line = cueLine;
+                }
+            }
+        }
     }
 
     /**
@@ -1857,6 +1929,7 @@ export class HtmlVideoPlayer {
                 document.body.insertBefore(playerDlg, document.body.firstChild);
                 this.#videoDialog = playerDlg;
                 this.#mediaElement = videoElement;
+                applyPlayerEffects(videoElement);
 
                 delete this.forcedFullscreen;
 

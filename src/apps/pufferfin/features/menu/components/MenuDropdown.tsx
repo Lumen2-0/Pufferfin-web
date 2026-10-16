@@ -40,7 +40,7 @@ const MenuDropdown: FC = () => {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [ isOpen, setIsOpen ] = useState(false);
     // The account picture stands for the menu of the account, the three lines without one
-    const { userName, avatarUrl, accountEntries, adminEntries, choose } = useMenuEntries();
+    const { userName, avatarUrl, accountEntries, adminEntries, sessionEntries, choose } = useMenuEntries();
 
     const close = useCallback((restoreFocus = false) => {
         setIsOpen(false);
@@ -96,7 +96,6 @@ const MenuDropdown: FC = () => {
                 type='button'
                 className={classNames('pf-button pf-button--quiet pf-button--icon pf-nav__link', { 'pf-button--selected': isOpen })}
                 aria-label={t('NavMenu')}
-                title={t('NavMenu')}
                 aria-haspopup='menu'
                 aria-expanded={isOpen}
                 aria-controls={isOpen ? menuId : undefined}
@@ -122,6 +121,9 @@ const MenuDropdown: FC = () => {
                             </ul>
                         </>
                     )}
+                    <ul className='pf-dropdown__list pf-dropdown__list--session' role='none'>
+                        {sessionEntries.map(entry => <MenuItem key={entry.id} entry={entry} onChoose={onChoose} />)}
+                    </ul>
                 </div>
             )}
         </div>

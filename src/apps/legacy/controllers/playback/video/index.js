@@ -33,6 +33,10 @@ import { ServerConnections } from 'lib/jellyfin-apiclient';
 import LibraryMenu from 'scripts/libraryMenu';
 import { setBackdropTransparency, TRANSPARENCY_LEVEL } from 'components/backdrop/backdrop';
 import { pluginManager } from 'components/pluginManager';
+import { AMBILIGHT_LEVELS, AMBILIGHT_SIZES, getAmbilightLevel, getAmbilightSize, setAmbilightLevel, setAmbilightSize } from 'apps/pufferfin/features/player/ambilight';
+import { getEffectSettings } from 'apps/pufferfin/features/player/playerEffects';
+import { getSubtitleSettings } from 'apps/pufferfin/features/player/subtitleAppearance';
+import { restoreSubtitlePosition, saveSubtitlePosition, SUBTITLE_MOVED_EVENT } from 'apps/pufferfin/features/player/subtitlePosition';
 import { createInlineVolume, enableButtonHints, getVolumeIcon } from 'apps/pufferfin/features/player/volumePanel';
 // PUFFERFIN: the panels of the player (audio and subtitles, settings, episodes) and the words they use
 import { MediaSegmentType } from '@jellyfin/sdk/lib/generated-client/models/media-segment-type';
@@ -45,7 +49,6 @@ import { getChapterAt, getChapterMarkers } from 'apps/pufferfin/features/player/
 import { createPanelHost, PANEL_OPEN_CLASS, PANEL_TOGGLE_ATTRIBUTE } from 'apps/pufferfin/features/player/osd/panelHost';
 import { renderSettingsPanel } from 'apps/pufferfin/features/player/osd/settingsPanel';
 import { loadPlayerText, playerText } from 'apps/pufferfin/features/player/osd/strings';
-import { renderTracksPanel } from 'apps/pufferfin/features/player/osd/tracksPanel';
 import { statusForAction, statusForGroupState } from 'apps/pufferfin/features/syncplay/model';
 import { createSyncPlayStatus } from 'apps/pufferfin/features/syncplay/playerStatus';
 import { syncPlayControl } from 'apps/pufferfin/features/syncplay/syncPlayControl';
@@ -200,6 +203,12 @@ export default function (view) {
         const item = state.NowPlayingItem;
 
         currentItem = item;
+        const titleKey = item?.SeriesId || item?.Id;
+        if (titleKey && titleKey !== subtitleTitleKey) {
+            subtitleTitleKey = titleKey;
+            restoreSubtitlePosition(titleKey);
+            player.refreshSubtitleAppearance?.();
+        }
         if (!item) {
             updateRecordingButton(null);
             LibraryMenu.setTitle('');
@@ -208,7 +217,6 @@ export default function (view) {
             nowPlayingPositionSlider.disabled = true;
             btnFastForward.disabled = true;
             btnRewind.disabled = true;
-            view.querySelector('.btnSubtitles').classList.add('hide');
             view.querySelector('.osdTitle').innerHTML = '';
             updateEpisodesAvailability(null);
             return;
@@ -226,11 +234,6 @@ export default function (view) {
         } else {
             toggleSubtitleSync('forceToHide');
         }
-
-        // PUFFERFIN: one button for the audio and the subtitles, shown when there is a choice
-        const hasTrackChoice = playbackManager.subtitleTracks(player).length > 0 || playbackManager.audioTracks(player).length > 1;
-        view.querySelector('.btnSubtitles').classList.toggle('hide', !hasTrackChoice);
-        if (!hasTrackChoice && panels.isOpen('tracks')) panels.close(false);
 
         if (currentItem.Chapters?.length > 1) {
             view.querySelector('.btnPreviousChapter').classList.remove('hide');
@@ -549,10 +552,18 @@ export default function (view) {
         }
     }
 
+    // PUFFERFIN: the title the subtitle position was put back for, and the way to keep a new one
+    let subtitleTitleKey;
+    const onSubtitleMoved = () => {
+        if (subtitleTitleKey) saveSubtitlePosition(subtitleTitleKey);
+    };
+    window.addEventListener(SUBTITLE_MOVED_EVENT, onSubtitleMoved);
+
     function onPlaybackStart(e, state) {
         console.debug('nowplaying event: ' + e.type);
         const player = this;
         onStateChanged.call(player, e, state);
+        player.applyPlayerEffects?.();
         resetUpNextDialog();
         // PUFFERFIN: another video: its tracks and its settings, not those of the last one
         panels.close(false);
@@ -585,8 +596,6 @@ export default function (view) {
         onStateChanged.call(player, {
             type: 'init'
         }, state);
-        // PUFFERFIN: the open audio and subtitles panel checks the new choice
-        if (panels.isOpen('tracks')) panels.refresh();
     }
 
     function onBeginFetch() {
@@ -851,7 +860,7 @@ export default function (view) {
                 }
 
                 if (runtimeTicks && positionTicks != null && currentRuntimeTicks && !enableProgressByTimeOfDay && currentItem.RunTimeTicks && currentItem.Type !== 'Recording' && playbackRate !== null) {
-                    endsAtText.textContent = mediaInfo.getEndsAtFromPosition(runtimeTicks, positionTicks, playbackRate, true);
+                    endsAtText.textContent = mediaInfo.getEndsAtFromPosition(runtimeTicks, positionTicks, playbackRate, true, currentItem.Type);
                 } else {
                     endsAtText.innerHTML = '';
                 }
@@ -1013,12 +1022,59 @@ export default function (view) {
         };
     }
 
+    // PUFFERFIN: the tracks of the media as a setting of the panel, `offLabel` first when they can be turned off
+    function getTrackSetting(tracks, current, offLabel, select) {
+        const options = tracks.map(track => ({
+            label: track.DisplayTitle || String(track.Index),
+            selected: track.Index === current,
+            onSelect: () => select(track.Index)
+        }));
+        if (offLabel) options.unshift({ label: offLabel, selected: current === -1, onSelect: () => select(-1) });
+        return { value: options.find(option => option.selected)?.label || '', options };
+    }
+
+    // PUFFERFIN: the language picked becomes the one the next videos start with
+    function rememberLanguage(user, kind, track) {
+        if (userSettings.get('pf-remember-language', false) === 'false' || !user?.Configuration || !currentItem) return;
+        const config = user.Configuration;
+        if (kind === 'audio') {
+            if (!track?.Language) return;
+            config.AudioLanguagePreference = track.Language;
+        } else if (!track) {
+            config.SubtitleMode = 'None';
+        } else if (track.Language) {
+            config.SubtitleLanguagePreference = track.Language;
+            config.SubtitleMode = 'Always';
+        } else {
+            return;
+        }
+        ServerConnections.getApiClient(currentItem.ServerId).updateUserConfiguration(user.Id, config).catch(err => {
+            console.error('[VideoPlayer] failed to remember the language', err);
+        });
+    }
+
     function getSettingsModel(player, user) {
         const state = playbackManager.getPlayerState(player);
         const supportedCommands = playbackManager.getSupportedCommands(player);
         const model = { locale: globalize.getCurrentLocale() };
 
         model.quality = getQualitySetting(player, user, state);
+
+        const audioTracks = playbackManager.audioTracks(player);
+        if (audioTracks.length > 1) {
+            model.audio = getTrackSetting(audioTracks, playbackManager.getAudioStreamIndex(player), null, index => {
+                playbackManager.setAudioStreamIndex(index, player);
+                rememberLanguage(user, 'audio', audioTracks.find(track => track.Index === index));
+            });
+        }
+        const subtitleTracks = playbackManager.subtitleTracks(player);
+        if (subtitleTracks.length) {
+            model.subtitleTrack = getTrackSetting(subtitleTracks, playbackManager.getSubtitleStreamIndex(player) ?? -1, playerText('Player.SubtitlesOff'), index => {
+                playbackManager.setSubtitleStreamIndex(index, player);
+                toggleSubtitleSync();
+                rememberLanguage(user, 'subtitle', subtitleTracks.find(track => track.Index === index));
+            });
+        }
 
         if (supportedCommands.includes('PlaybackRate')) {
             model.speed = {
@@ -1041,12 +1097,49 @@ export default function (view) {
             };
         }
 
-        if (playbackManager.supportSubtitleOffset(player) && playbackManager.canHandleOffsetOnCurrentSubtitle(player)) {
-            model.subtitleOffset = () => {
+        const ambilightLevel = getAmbilightLevel();
+        const ambilightName = level => playerText(`Player.Ambilight${level.charAt(0).toUpperCase()}${level.slice(1)}`);
+        model.ambilight = {
+            value: ambilightName(ambilightLevel),
+            options: AMBILIGHT_LEVELS.map(level => ({
+                label: ambilightName(level),
+                selected: level === ambilightLevel,
+                onSelect: () => setAmbilightLevel(level)
+            }))
+        };
+
+        const ambilightSize = getAmbilightSize();
+        const sizeName = size => playerText(`Player.AmbilightSize${size.charAt(0).toUpperCase()}${size.slice(1)}`);
+        model.ambilightSize = {
+            value: sizeName(ambilightSize),
+            options: AMBILIGHT_SIZES.map(size => ({
+                label: sizeName(size),
+                selected: size === ambilightSize,
+                onSelect: () => setAmbilightSize(size)
+            }))
+        };
+
+        const canOffset = playbackManager.supportSubtitleOffset(player) && playbackManager.canHandleOffsetOnCurrentSubtitle(player);
+        model.subtitles = getSubtitleSettings(
+            () => player.refreshSubtitleAppearance?.(),
+            canOffset ? () => {
                 panels.close();
                 onSettingsOption('suboffset');
-            };
-        }
+            } : undefined,
+            () => {
+                // PUFFERFIN: build the subtitles again, as a custom element or as native cues
+                const index = playbackManager.getSubtitleStreamIndex(player);
+                if (index == null || index < 0) return;
+                playbackManager.setSubtitleStreamIndex(-1, player);
+                playbackManager.setSubtitleStreamIndex(index, player);
+            }
+        );
+
+        Object.assign(model, getEffectSettings(() => player.applyPlayerEffects?.(), typeof player.applyPlayerEffects === 'function'));
+        model.rememberLanguage = {
+            checked: userSettings.get('pf-remember-language', false) !== 'false',
+            set: checked => userSettings.set('pf-remember-language', checked, false)
+        };
 
         model.stats = () => {
             panels.close();
@@ -1071,6 +1164,14 @@ export default function (view) {
             checked: getMediaSegmentAction(userSettings, MediaSegmentType.Intro) === MediaSegmentAction.Skip,
             set: checked => {
                 userSettings.set(getSegmentSettingId(MediaSegmentType.Intro), checked ? MediaSegmentAction.Skip : MediaSegmentAction.AskToSkip, false);
+            }
+        };
+
+        const extras = [ MediaSegmentType.Recap, MediaSegmentType.Outro, MediaSegmentType.Preview ];
+        model.autoSkipExtras = {
+            checked: extras.every(type => getMediaSegmentAction(userSettings, type) === MediaSegmentAction.Skip),
+            set: checked => {
+                for (const type of extras) userSettings.set(getSegmentSettingId(type), checked ? MediaSegmentAction.Skip : MediaSegmentAction.AskToSkip, false);
             }
         };
 
@@ -1132,32 +1233,6 @@ export default function (view) {
             statsOverlay.destroy();
             statsOverlay = null;
         }
-    }
-
-    // PUFFERFIN: the audio tracks and the subtitles side by side, in a panel of the player
-    function renderTracks(panel) {
-        const player = currentPlayer;
-        if (!player) return;
-        renderTracksPanel(panel, {
-            audio: playbackManager.audioTracks(player),
-            audioIndex: playbackManager.getAudioStreamIndex(player),
-            subtitles: playbackManager.subtitleTracks(player),
-            subtitleIndex: playbackManager.getSubtitleStreamIndex(player),
-            setAudio: index => {
-                playbackManager.setAudioStreamIndex(index, player);
-                panels.refresh();
-            },
-            setSubtitles: index => {
-                playbackManager.setSubtitleStreamIndex(index, player);
-                toggleSubtitleSync();
-                panels.refresh();
-            }
-        });
-    }
-
-    function showTracksPanel() {
-        if (!currentPlayer) return;
-        panels.toggle('tracks', this, playerText('Player.AudioAndSubtitles'), renderTracks);
     }
 
     // PUFFERFIN: the episodes of the series, in a drawer beside the picture
@@ -1880,6 +1955,7 @@ export default function (view) {
         headerElement.classList.remove('hide');
     });
     view.addEventListener('viewdestroy', function () {
+        window.removeEventListener(SUBTITLE_MOVED_EVENT, onSubtitleMoved);
         if (self.touchHelper) {
             self.touchHelper.destroy();
             self.touchHelper = null;
@@ -2073,7 +2149,6 @@ export default function (view) {
     btnFastForward.addEventListener('click', function () {
         playbackManager.fastForward(currentPlayer);
     });
-    view.querySelector('.btnSubtitles').addEventListener('click', showTracksPanel);
 
     // PUFFERFIN: the state of the SyncPlay group over the picture, in words: a
     // quiet pill at the top, in place of the large pulsing icon

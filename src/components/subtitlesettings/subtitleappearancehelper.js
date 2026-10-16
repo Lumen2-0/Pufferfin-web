@@ -127,6 +127,8 @@ function getWindowStyles(settings, preview) {
             list.push({ name: 'top', value: '0' });
             list.push({ name: 'bottom', value: '' });
         }
+        // PUFFERFIN: where the user dragged the subtitles, in percent of the screen
+        list.push({ name: 'transform', value: `translate(${parseFloat(settings.dragX) || 0}vw, ${parseFloat(settings.dragY) || 0}vh)` });
     }
 
     return list;

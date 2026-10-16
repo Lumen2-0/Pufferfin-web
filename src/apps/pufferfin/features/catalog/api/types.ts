@@ -89,6 +89,7 @@ export interface CatalogTitleDetails {
     Title: string;
     OriginalTitle?: string | null;
     Overview?: string | null;
+    ImdbId?: string | null;
     Tagline?: string | null;
     Year?: number | null;
     RuntimeMinutes?: number | null;

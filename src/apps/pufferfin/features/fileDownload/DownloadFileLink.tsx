@@ -14,7 +14,7 @@ import './fileDownload.scss';
 /** Whether the user turned the download links on, and how to turn them on or off. */
 export function useContentDownload(): [ boolean, (isEnabled: boolean) => void ] {
     const [ value, setValue ] = useUserPreference(CONTENT_DOWNLOAD_SETTING);
-    const set = useCallback((isEnabled: boolean) => setValue(isEnabled ? 'true' : null), [ setValue ]);
+    const set = useCallback((isEnabled: boolean) => setValue(isEnabled ? null : 'false'), [ setValue ]);
     return [ parseContentDownload(value), set ];
 }
 

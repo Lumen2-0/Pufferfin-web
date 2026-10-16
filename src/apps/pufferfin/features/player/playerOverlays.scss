@@ -72,7 +72,7 @@
         padding: 0;
         overflow: hidden;
         color: #fff;
-        background: #141414;
+        background: #000;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 16px;
         box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
@@ -109,7 +109,7 @@
         width: 112px;
         aspect-ratio: 16 / 9;
         overflow: hidden;
-        background: #0e0e0e;
+        background: #000;
         border-radius: 8px;
     }
 
@@ -199,8 +199,8 @@
 
     .upNextDialog-button.pf-upnext__cancel {
         color: #fff;
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.12);
+        border: 0;
 
         &:hover {
             background: rgba(255, 255, 255, 0.14);
@@ -264,6 +264,98 @@
     @media (max-width: 30em) {
         .pf-upnext__art {
             width: 96px;
+        }
+    }
+
+    // The next episode when nothing is queued after the one playing: watch it
+    // from the library, or ask for it when it is missing
+
+    .pf-nextep {
+        position: fixed;
+        right: var(--pf-osd-gutter, 24px);
+        bottom: 88px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        box-sizing: border-box;
+        width: min(360px, calc(100vw - 32px));
+        padding: 14px;
+        color: #fff;
+        background: #000;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    }
+
+    .pf-nextep__eyebrow {
+        margin: 0;
+        color: #a3a3a3;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .pf-nextep__title {
+        margin: 0;
+        overflow: hidden;
+        font-weight: 700;
+        font-size: 15px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .pf-nextep__buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .pf-nextep__primary,
+    .pf-nextep__secondary {
+        min-height: 38px;
+        padding: 0 18px;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: inherit;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+
+    .pf-nextep__primary {
+        flex: 1;
+        color: #000;
+        font-weight: 700;
+        background: #fff;
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: 2px;
+        }
+
+        &:hover:not(:disabled) {
+            background: #e5e5e5;
+        }
+    }
+
+    .pf-nextep__secondary {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+
+        &:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: 2px;
+        }
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.14);
         }
     }
 }

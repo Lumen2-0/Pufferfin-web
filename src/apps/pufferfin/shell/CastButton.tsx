@@ -49,7 +49,6 @@ const CastButton: FC = () => {
                     'pf-button--selected': isRemote
                 })}
                 aria-label={isRemote ? t('ShellCastActive', deviceName ?? '') : t('ShellCast')}
-                title={isRemote ? undefined : t('ShellCast')}
                 aria-controls={isRemote ? ACTIVE_ID : ID}
                 aria-haspopup='true'
                 aria-expanded={!!anchorEl}

@@ -7,16 +7,17 @@ interface EndsAtProps {
     className?: string;
     runTimeTicks: number;
     positionTicks?: number;
+    itemType?: string;
 }
 
-const EndsAt: FC<EndsAtProps> = ({ runTimeTicks, positionTicks, className }) => {
+const EndsAt: FC<EndsAtProps> = ({ runTimeTicks, positionTicks, className, itemType }) => {
     const cssClass = classNames(
         'mediaInfoItem',
         'endsAt',
         className
     );
 
-    const displayTime = mediainfo.getEndsAtFromPosition(runTimeTicks, positionTicks, 1, true);
+    const displayTime = mediainfo.getEndsAtFromPosition(runTimeTicks, positionTicks, 1, true, itemType);
 
     return (
         <Box className={cssClass}>

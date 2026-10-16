@@ -1,6 +1,8 @@
 import { type FC, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
+import { useAmbilight } from './ambilight';
+import { useBufferingSpinner } from './bufferingSpinner';
 import { getPlaybackSkinClasses } from './playerSkin';
 
 import '../dialogs/dialogs.scss';
@@ -20,6 +22,8 @@ import './osd/osd.scss';
  */
 const PlaybackSkin: FC = () => {
     const { pathname } = useLocation();
+    useAmbilight();
+    useBufferingSpinner();
     const classNames = getPlaybackSkinClasses(pathname).join(' ');
 
     useEffect(() => {

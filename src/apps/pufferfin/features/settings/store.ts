@@ -3,21 +3,19 @@ import { useSyncExternalStore } from 'react';
 /** The sections of the settings window, in their order in its side list; the profile comes first. */
 export enum SettingsSection {
     Profile = 'profile',
-    Preferences = 'preferences',
-    Playback = 'playback',
-    Subtitles = 'subtitles',
-    Downloads = 'downloads',
     Interface = 'interface',
+    Playback = 'playback',
+    Preferences = 'preferences',
+    Downloads = 'downloads',
     Devices = 'devices'
 }
 
 export const SETTINGS_SECTIONS: SettingsSection[] = [
     SettingsSection.Profile,
-    SettingsSection.Preferences,
-    SettingsSection.Playback,
-    SettingsSection.Subtitles,
-    SettingsSection.Downloads,
     SettingsSection.Interface,
+    SettingsSection.Playback,
+    SettingsSection.Preferences,
+    SettingsSection.Downloads,
     SettingsSection.Devices
 ];
 

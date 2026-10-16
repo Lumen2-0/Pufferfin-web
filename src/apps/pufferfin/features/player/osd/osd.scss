@@ -1,11 +1,11 @@
 // The panels of the video player, as the design draws them: one solid sheet
-// (#141414, a hairline, 16px corners, a deep shadow, no frosted glass) on the
+// (#000, a hairline, 16px corners, a deep shadow, no frosted glass) on the
 // right, above the controls. Audio and subtitles in two columns, the settings
 // with their lists, and the Episodes drawer that runs from under the header.
 // On a phone each one rises from the bottom over a dimmed picture.
 
 :root.pf-player-skin {
-    --pf-osd-sheet: #141414;
+    --pf-osd-sheet: #000;
     --pf-osd-sheet-border: rgba(255, 255, 255, 0.12);
     --pf-osd-sheet-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
     --pf-osd-selected: #262626;
@@ -23,6 +23,7 @@
         max-width: calc(100vw - 48px);
         max-height: calc(100vh - 156px);
         padding: 10px;
+        overflow-x: hidden;
         overflow-y: auto;
         color: #fff;
         font-size: 14px;
@@ -152,11 +153,19 @@
     }
 
     .pf-osd-option__label,
+    // The label keeps its words, a long value is cut with an ellipsis
     .pf-osd-row__label {
-        flex: 1;
-        min-width: 0;
+        flex: 0 0 auto;
+        max-width: 55%;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .pf-osd-row--switch .pf-osd-row__label {
+        flex: 1;
+        max-width: none;
+        white-space: normal;
     }
 
     .pf-osd-option__label {
@@ -172,11 +181,20 @@
 
     .pf-osd-row__value {
         display: flex;
-        flex: none;
+        flex: 1;
+        min-width: 0;
+        justify-content: flex-end;
         gap: 6px;
         align-items: center;
         color: #a3a3a3;
         font-size: 13px;
+    }
+
+    .pf-osd-row__text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .pf-osd-separator {
@@ -232,6 +250,28 @@
     .pf-osd-subheader__title {
         font-weight: 700;
         font-size: 15px;
+    }
+
+    // The sample line of the subtitle settings, on a dim picture, drawn with the real styles
+
+    .pf-osd-subpreview {
+        display: grid;
+        place-items: center;
+        min-height: 72px;
+        margin: 0 0 8px;
+        padding: 12px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #3b4a5a, #1b232c 60%, #4a3b3b);
+        border-radius: 10px;
+    }
+
+    .pf-osd-subpreview__text {
+        padding: 0 0.2em;
+        text-align: center;
+    }
+
+    .pf-osd-heading--value {
+        text-align: center;
     }
 
     .pf-osd-iconbutton {
@@ -319,11 +359,11 @@
         font-size: 13px;
         white-space: nowrap;
         text-overflow: ellipsis;
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        border: 0;
         border-radius: 999px;
         cursor: pointer;
-        transition: border-color 120ms ease;
+        transition: background-color 120ms ease;
 
         &[hidden] {
             display: none;
@@ -331,7 +371,7 @@
 
         &:hover,
         &[aria-expanded='true'] {
-            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.16);
         }
 
         &:focus {
@@ -412,7 +452,7 @@
         width: 112px;
         aspect-ratio: 16 / 9;
         overflow: hidden;
-        background: #0e0e0e;
+        background: #000;
         border-radius: 8px;
     }
 

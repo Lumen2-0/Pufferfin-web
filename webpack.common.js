@@ -365,7 +365,7 @@ const config = {
                 type: 'asset/resource'
             },
             {
-                test: /\.(mp3)$/i,
+                test: /\.(mp3|mp4)$/i,
                 type: 'asset/resource'
             },
             {

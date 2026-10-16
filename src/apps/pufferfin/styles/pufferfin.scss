@@ -5,12 +5,11 @@
 
 @use 'tokens' as *;
 
-// Large screens: the whole interface grows with the width of the screen. The
-// upstream base size (93%) stays up to about 1600px wide, then everything sized
-// in rem follows, up to 1.8 times on a 4K screen. The TV and phone layouts keep
-// their own sizes.
+// Large screens: the interface grows slowly with the width of the screen, as the
+// streaming sites do. 14px up to 1920px wide (a 1080p screen), 16px at 2560px,
+// 20px on a 4K screen. The TV and phone layouts keep their own sizes.
 html.layout-desktop {
-    font-size: clamp(93%, calc(0.6vw + 0.35rem), 170%);
+    font-size: clamp(87.5%, calc(0.3125vw + 0.5rem), 150%);
 }
 
 // No scroll bars: the content scrolls with the wheel, the touch pad, a finger
@@ -53,6 +52,18 @@ body,
 .pf-app__main {
     min-height: 100%;
     padding-bottom: 4rem;
+    // A new screen fades in. Opacity only: a transform would move the fixed layers inside it
+    animation: pf-screen-in 260ms var(--pf-ease) both;
+}
+
+@keyframes pf-screen-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .pf-visually-hidden {
@@ -81,9 +92,11 @@ body,
     font-weight: 600;
     font-size: 0.875rem;
     font-family: inherit;
-    background: transparent;
-    border: 1px solid var(--pf-hairline);
+    // Flat translucent surface, like the brand tiles: no outline
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid transparent;
     border-radius: 999px;
+    text-decoration: none;
     outline: none;
     cursor: pointer;
     transition:
@@ -94,7 +107,7 @@ body,
     scroll-margin: 2rem;
 
     &:hover {
-        background: var(--pf-quiet-background-strong);
+        background: rgba(255, 255, 255, 0.1);
     }
 
     &:disabled {
@@ -168,6 +181,8 @@ body,
     width: 100%;
     height: 100%;
     object-fit: cover;
+    // Wide frames crop the top and bottom: keep the faces, which sit in the upper half
+    object-position: 50% 25%;
 }
 
 .pf-hero__veil {
@@ -229,6 +244,13 @@ body,
     margin-top: 1.25rem;
 }
 
+// The buttons come in two groups, the main ones and the small ones, which wrap as groups on a narrow card
+.pf-hero__group {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
 // The Discover card: below the bar, inside the margins
 .pf-hero--card {
     padding: calc(var(--pf-nav-height) + 0.25rem) var(--pf-gutter) 0;
@@ -238,8 +260,7 @@ body,
         min-height: clamp(19rem, 56vh, 36rem);
         background: var(--pf-color-surface);
         border-radius: var(--pf-radius-hero);
-        // A hairline keeps the edge of a dark image from melting into the page
-        box-shadow: 0 0 0 1px var(--pf-glass-border), 0 24px 60px rgba(0, 0, 0, 0.55);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
     }
 
     .pf-hero__veil {
@@ -378,6 +399,9 @@ body,
 // Rows
 
 .pf-home__rows {
+    // The featured card is centred in a 120rem column: the rows start where it starts, and still scroll edge to edge
+    --pf-gutter: calc(clamp(1rem, 3.5vw, 3.5rem) + max(0px, (100vw - 120rem) / 2));
+
     position: relative;
     margin-top: -1rem;
 }
@@ -393,58 +417,60 @@ body,
 .pf-brands {
     display: flex;
     flex: none;
+    flex-wrap: nowrap;
+    gap: 0.6rem;
     align-items: center;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0.5rem 0;
 }
 
 .pf-brand {
+    position: relative;
     display: inline-flex;
-    flex: none;
+    overflow: hidden;
     align-items: center;
-    height: var(--pf-capsule-height);
-    margin: 0 0.5rem 0 0;
-    padding: 0 0.9rem 0 0.4rem;
+    justify-content: center;
+    // Every tile is as wide as the others, up to 12rem, so the row stays within the width of the hero
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 12rem;
+    height: 3.25rem;
+    margin: 0;
+    padding: 0 0.5rem;
     color: var(--pf-color-text);
     font: inherit;
-    font-weight: 500;
-    font-size: 0.8125rem;
+    font-weight: 600;
+    font-size: 0.9rem;
     white-space: nowrap;
-    background: var(--pf-glass-background);
-    border: 1px solid var(--pf-glass-border);
-    border-radius: 999px;
+    // Flat tiles, like the app tiles of a TV: a solid surface, no glass
+    background: rgba(255, 255, 255, 0.05);
+    border: 0;
+    border-radius: 1rem;
     outline: none;
     cursor: pointer;
-    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
     transition:
+        transform var(--pf-duration) var(--pf-ease),
         color var(--pf-duration) var(--pf-ease),
-        background-color var(--pf-duration) var(--pf-ease),
-        border-color var(--pf-duration) var(--pf-ease);
+        background-color var(--pf-duration) var(--pf-ease);
 
     &:hover {
-        background: var(--pf-quiet-background-strong);
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(1.06);
     }
-
-    [dir='rtl'] & {
-        margin: 0 0 0 0.5rem;
-    }
-}
-
-// A wordmark needs no icon on its left: even padding
-.pf-brand--studio,
-.pf-brand--network {
-    padding: 0 1rem;
 }
 
 .pf-brand__icon {
     display: block;
-    width: calc(var(--pf-capsule-height) - 0.8rem);
-    height: calc(var(--pf-capsule-height) - 0.8rem);
-    margin-right: 0.55rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-right: 0.75rem;
     object-fit: cover;
-    border-radius: 7px;
+    border-radius: 0.65rem;
 
     [dir='rtl'] & {
         margin-right: 0;
-        margin-left: 0.55rem;
+        margin-left: 0.75rem;
     }
 }
 
@@ -454,25 +480,40 @@ body,
     flex: none;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    line-height: 1;
-}
-
-.pf-brand__badge--marvel {
-    height: 1.35rem;
-    padding: 0 0.35rem;
+    height: 1.5rem;
+    margin-right: 0.5rem;
+    padding: 0 0.4rem;
     color: #fff;
-    font-size: 0.95rem;
+    font-weight: 800;
+    font-size: 1.05rem;
     font-family: Impact, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1;
     letter-spacing: -0.02em;
     background: #ec1d24;
     border-radius: 2px;
     transform: scaleY(1.08);
+
+    [dir='rtl'] & {
+        margin-right: 0;
+        margin-left: 0.5rem;
+    }
 }
 
-// Marvel is its block alone: the capsule hugs it
-.pf-brand--studio:has(.pf-brand__badge--marvel) {
-    padding: 0 0.55rem;
+// While its intro plays, the tile shows nothing of its own
+.pf-brand--playing > :not(.pf-brand__intro) {
+    visibility: hidden;
+}
+
+// The intro of the brand plays over the tile, muted, the video cropped to fill it
+.pf-brand__intro {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    object-fit: cover;
+    pointer-events: none;
 }
 
 .pf-brand__icon--logo {
@@ -480,24 +521,25 @@ body,
     border-radius: 0;
 }
 
-// A wordmark needs no icon on its left; a studio with its logo does
-.pf-brand--studio:has(.pf-brand__icon--logo) {
-    padding: 0 0.9rem 0 0.5rem;
+.pf-brand__badge--outline {
+    font-family: 'Courier New', monospace;
+    text-transform: lowercase;
+    background: transparent;
+    border: 2px solid currentColor;
 }
 
 .pf-brand__wordmark {
     display: block;
-    width: 4.5rem;
-    height: 1.05rem;
+    width: 6.5rem;
+    height: 1.4rem;
     background-color: currentColor;
     mask: var(--pf-brand-logo) center / contain no-repeat;
 }
 
 .pf-brand--selected,
 .pf-brand--selected:hover {
-    color: var(--pf-color-on-accent);
-    background: var(--pf-color-accent);
-    border-color: transparent;
+    color: #000;
+    background: #fff;
 }
 
 .pf-home__empty {
@@ -515,7 +557,7 @@ body,
     margin: 0;
     padding: 0 var(--pf-gutter);
     font-weight: 600;
-    font-size: 1.05rem;
+    font-size: 1.3rem;
     letter-spacing: -0.005em;
 }
 
@@ -529,6 +571,8 @@ body,
     list-style: none;
     scroll-behavior: smooth;
     scrollbar-width: none;
+    // Its own layer: the row scrolls without repainting the page
+    will-change: scroll-position;
 
     &::-webkit-scrollbar {
         display: none;
@@ -587,17 +631,18 @@ body,
     cursor: default;
 }
 
+// Card widths follow the screen, so an ultrawide shows bigger art, not a thin row
 .pf-card--landscape {
-    width: clamp(13rem, 18vw, 18.5rem);
+    width: calc(clamp(12rem, 11vw, 26rem) * var(--pf-poster-scale, 1));
 }
 
 .pf-card--portrait {
-    width: clamp(7.5rem, 10vw, 10.5rem);
+    width: calc(clamp(7rem, 6.2vw, 16rem) * var(--pf-poster-scale, 1));
 }
 
 // An audiobook cover: square, a little wider than a poster so it reads at the same weight
 .pf-card--square {
-    width: clamp(9rem, 12vw, 12.5rem);
+    width: calc(clamp(8.5rem, 7.5vw, 20rem) * var(--pf-poster-scale, 1));
 }
 
 .pf-card__art {
@@ -638,6 +683,12 @@ body,
 .pf-card__image {
     display: block;
     object-fit: cover;
+    opacity: 0;
+    transition: opacity 180ms var(--pf-ease);
+}
+
+.pf-card__image--loaded {
+    opacity: 1;
 }
 
 .pf-card__placeholder {
@@ -708,6 +759,46 @@ body,
     text-overflow: ellipsis;
 }
 
+// A poster is too narrow for the words when a badge has an icon: the icon stays, screen readers read the label
+.pf-card--portrait .pf-card__badge:has(.pf-card__badge-icon),
+.pf-card--square .pf-card__badge:has(.pf-card__badge-icon) {
+    padding: 0.25rem;
+
+    .pf-card__badge-icon {
+        margin: 0;
+    }
+
+    .pf-card__badge-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        clip-path: inset(50%);
+    }
+}
+
+// What the title is, in a row of films and series: the Movie / Series tag of the hero, smaller
+.pf-card__tag {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    padding: 0.15rem 0.45rem;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: rgba(0, 0, 0, 0.6);
+    border-left: 3px solid #fff;
+
+    [dir='rtl'] & {
+        right: 0.5rem;
+        left: auto;
+        border-right: 3px solid #fff;
+        border-left: 0;
+    }
+}
+
 .pf-card__caption {
     display: block;
     padding-top: 0.55rem;
@@ -747,20 +838,6 @@ body,
     position: relative;
 }
 
-// The type picker sits in the top bar, at its start, as tall as the capsule
-// of the tabs; only the picker itself takes clicks
-.pf-discover__header {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    height: var(--pf-nav-height);
-    padding: 0 var(--pf-gutter);
-    pointer-events: none;
-}
-
 // Without a featured card, the rows open the screen under the bar
 .pf-discover:not(.pf-discover--featured) .pf-discover__rows {
     margin-top: 0;
@@ -770,7 +847,11 @@ body,
 // The brands under the featured card, in a row that scrolls sideways when it is longer than the screen
 .pf-discover__brands {
     display: flex;
+    // As wide as the featured card above it, and centered like it
+    max-width: 120rem;
+    margin: 0 auto;
     align-items: center;
+    justify-content: center;
     min-height: var(--pf-discover-bar);
     padding: 0 var(--pf-gutter);
     overflow-x: auto;
@@ -798,7 +879,7 @@ body,
     font-weight: 500;
     font-size: 0.8125rem;
     background: var(--pf-glass-background);
-    border-color: var(--pf-glass-border);
+    border-color: transparent;
     backdrop-filter: blur(var(--pf-glass-blur));
 }
 
@@ -1223,11 +1304,11 @@ body,
 }
 
 .pf-grid .pf-card--portrait {
-    width: clamp(8rem, 10vw, 10.5rem);
+    width: calc(clamp(7.5rem, 6.6vw, 16rem) * var(--pf-poster-scale, 1));
 }
 
 .pf-grid .pf-card--square {
-    width: clamp(9.5rem, 12vw, 12.5rem);
+    width: calc(clamp(9rem, 8vw, 20rem) * var(--pf-poster-scale, 1));
 }
 
 // Top bar: one compact line over the screen content, like the toolbar of a Mac
@@ -1240,24 +1321,62 @@ body,
     right: 0;
     left: 0;
     z-index: 2;
+    // Aligned on the featured card, not on the edges of an ultrawide screen
+    max-width: 120rem;
+    margin: 0 auto;
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    // Tabs at the start, search at the center, actions at the end
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 1rem;
     align-items: center;
     height: var(--pf-nav-height);
     padding: 0 var(--pf-gutter);
-    // A veil under the bar: the tabs stay readable over a light featured image
+}
+
+// A veil under the bar, as wide as the screen: it shows no edge over the glow of the card
+.pf-nav::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: -1;
+    width: 100vw;
+    height: 100%;
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.pf-nav__start {
+    display: flex;
+    gap: 7rem;
+    justify-self: start;
+    align-items: center;
+}
+
+.pf-nav__brand {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: var(--pf-color-text);
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    outline: none;
+}
+
+.pf-nav__brand-mark {
+    width: 1.6rem;
+    height: 1.6rem;
 }
 
 .pf-nav__tabs {
     display: flex;
+    justify-self: start;
     align-items: center;
     height: var(--pf-capsule-height);
-    padding: 3px;
-    background: var(--pf-glass-background);
-    border: 1px solid var(--pf-glass-border);
-    border-radius: 999px;
-    backdrop-filter: blur(var(--pf-glass-blur));
+    padding: 0;
 }
 
 .pf-nav__tab {
@@ -1297,12 +1416,28 @@ body,
     background: var(--pf-quiet-background-strong);
 }
 
+// A slash sits in the gap between two tabs
 .pf-nav__tab + .pf-nav__tab {
-    margin-left: 2px;
+    margin-left: 1.5rem;
+
+    &::before {
+        position: absolute;
+        left: -1rem;
+        color: var(--pf-color-text-secondary);
+        font-weight: 400;
+        content: '/';
+        opacity: 0.5;
+        pointer-events: none;
+    }
 
     [dir='rtl'] & {
-        margin-right: 2px;
+        margin-right: 1.5rem;
         margin-left: 0;
+
+        &::before {
+            right: -1rem;
+            left: auto;
+        }
     }
 }
 
@@ -1313,6 +1448,91 @@ body,
     .MuiSvgIcon-root {
         font-size: 1.1rem;
     }
+}
+
+.pf-nav__searchbar {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-self: end;
+    width: 100%;
+    max-width: 26rem;
+    min-width: 0;
+    margin-inline-end: 3rem;
+}
+
+// A round button beside the search field: opens a title among the most watched
+.pf-nav__random {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: var(--pf-capsule-height);
+    height: var(--pf-capsule-height);
+    margin: 0;
+    padding: 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 1.25rem;
+    background: var(--pf-glass-background);
+    border: 0;
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    backdrop-filter: blur(var(--pf-glass-blur));
+    transition:
+        color var(--pf-duration) var(--pf-ease),
+        background-color var(--pf-duration) var(--pf-ease);
+
+    &:hover {
+        color: var(--pf-color-text);
+        background: var(--pf-quiet-background-strong);
+    }
+}
+
+// The search field: a bar that opens the Spotlight panel
+.pf-nav__search {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 0;
+    height: var(--pf-capsule-height);
+    margin: 0;
+    padding: 0 1rem;
+    color: var(--pf-color-text-secondary);
+    font: inherit;
+    font-size: 0.875rem;
+    text-align: start;
+    background: var(--pf-glass-background);
+    border: 0;
+    border-radius: 999px;
+    outline: none;
+    cursor: text;
+    backdrop-filter: blur(var(--pf-glass-blur));
+    transition:
+        color var(--pf-duration) var(--pf-ease),
+        background-color var(--pf-duration) var(--pf-ease);
+
+    &:hover,
+    &.pf-nav__search--open {
+        color: var(--pf-color-text);
+        background: var(--pf-quiet-background-strong);
+    }
+}
+
+.pf-nav__search-icon {
+    display: inline-flex;
+    flex: none;
+
+    .MuiSvgIcon-root {
+        font-size: 1.25rem;
+    }
+}
+
+.pf-nav__search-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .pf-nav__end {
@@ -1382,7 +1602,8 @@ body,
 // Narrow screens: icons in the capsule, the label stays the accessible name
 @media (max-width: 50em) {
     .pf-nav {
-        grid-template-columns: 0 auto 1fr;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 0.5rem;
     }
 
     .pf-nav__tab {
@@ -1390,26 +1611,16 @@ body,
         padding: 0;
     }
 
+    .pf-nav__tab + .pf-nav__tab {
+        margin-left: 2px;
+
+        &::before {
+            content: none;
+        }
+    }
+
     .pf-nav__tab-icon {
         display: inline-flex;
-    }
-
-    // No room beside the tabs: the type picker gets a second line of the same height
-    .pf-discover__header {
-        top: var(--pf-nav-height);
-        height: var(--pf-capsule-height);
-    }
-
-    .pf-hero--viewport {
-        --pf-hero-top: calc(var(--pf-nav-height) + var(--pf-capsule-height) + 0.75rem);
-    }
-
-    .pf-hero--card {
-        padding-top: calc(var(--pf-nav-height) + var(--pf-capsule-height) + 0.75rem);
-    }
-
-    .pf-discover:not(.pf-discover--featured) .pf-discover__rows {
-        padding-top: calc(var(--pf-nav-height) + var(--pf-capsule-height) + 0.5rem);
     }
 
     .pf-nav__tab-label {
@@ -1507,6 +1718,11 @@ body,
     line-height: 1.1;
 }
 
+.pf-library__filters {
+    padding: 0 var(--pf-gutter);
+    margin-bottom: 0.5rem;
+}
+
 .pf-library__note {
     margin: 0;
     padding: 1rem var(--pf-gutter);
@@ -1572,18 +1788,17 @@ body,
     display: flex;
     align-items: center;
     margin: 0 0 0.75rem;
-    color: var(--pf-color-text-secondary);
+    color: var(--pf-color-text);
     font-weight: 600;
-    font-size: 0.75rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-size: 1.3rem;
+    letter-spacing: -0.005em;
 }
 
 .pf-downloads__count {
     margin-left: 0.5rem;
-    padding: 0.1rem 0.45rem;
+    padding: 0.1rem 0.5rem;
     color: var(--pf-color-text);
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     letter-spacing: 0;
     background: var(--pf-quiet-background);
     border-radius: 999px;
@@ -1593,6 +1808,34 @@ body,
         margin-right: 0.5rem;
         margin-left: 0;
     }
+}
+
+.pf-downloads__services {
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+
+    .pf-brand {
+        flex: 1 1 auto;
+        max-width: none;
+        padding: 0 0.6rem;
+        text-decoration: none;
+    }
+}
+
+.pf-downloads__logo {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.5rem;
+    object-fit: contain;
+}
+
+.pf-downloads .pf-downloads__heading .pf-button {
+    margin-left: auto;
+    min-height: 2rem;
+    font-size: 0.75rem;
+    letter-spacing: 0;
+    text-transform: none;
 }
 
 .pf-downloads__list {
@@ -1698,7 +1941,7 @@ body,
 .pf-download__subtitle {
     margin: 0.15rem 0 0;
     overflow: hidden;
-    color: var(--pf-color-text-secondary);
+    color: var(--pf-color-text);
     font-size: 0.875rem;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -1766,15 +2009,36 @@ body,
 }
 
 .pf-download__problem {
-    margin: 0.4rem 0 0;
+    margin: 0.35rem 0 0;
     color: var(--pf-color-text-secondary);
     font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+// The words of a row take the color of how it goes: a strong one for the status, a softer one for the explanation
+.pf-download--error {
+    --pf-tone: #ef6f6f;
+}
+
+.pf-download--waiting {
+    --pf-tone: #f2cf4f;
+}
+
+.pf-download--ok {
+    --pf-tone: #5fd38d;
+}
+
+.pf-download--tone .pf-req-status,
+.pf-download--tone .pf-download__state-text {
+    color: var(--pf-tone);
 }
 
 .pf-download__actions {
     display: flex;
     flex: none;
     align-items: center;
+    align-self: flex-start;
+    margin-top: 0.15rem;
 
     .pf-button + .pf-button {
         margin-left: 0.4rem;
@@ -1783,6 +2047,27 @@ body,
             margin-right: 0.4rem;
             margin-left: 0;
         }
+    }
+}
+
+// Visible at rest: the flat default is invisible on the black card
+.pf-download .pf-download__actions .pf-button.pf-button {
+    color: var(--pf-color-text);
+    background: var(--pf-quiet-background-strong);
+    border-color: var(--pf-glass-border);
+
+    &:hover {
+        background: rgba(245, 242, 236, 0.28);
+    }
+}
+
+.pf-download .pf-download__actions .pf-button--primary.pf-button--primary {
+    color: var(--pf-color-on-accent);
+    background: var(--pf-color-accent);
+    border-color: transparent;
+
+    &:hover {
+        background: var(--pf-color-text);
     }
 }
 
@@ -1825,38 +2110,150 @@ body,
     // filters stay in view, the first row starts below the fold
     padding-bottom: 0;
 
+    // Not stretched across an ultrawide screen: the card stops at a width and is centered
+    max-width: 120rem;
+    margin: 0 auto;
+
+    // The words of the card are not selected by a click or a drag
+    user-select: none;
+
     .pf-hero__frame {
-        height: calc(100vh - var(--pf-hero-top) - var(--pf-discover-bar));
-        height: calc(100svh - var(--pf-hero-top) - var(--pf-discover-bar));
-        min-height: 26rem;
+        // A share of the screen height, the user's choice in the settings: the first rows peek under it
+        height: calc(var(--pf-hero-vh, 64) * 1vh);
+        height: calc(var(--pf-hero-vh, 64) * 1svh);
+        min-height: 22rem;
+        z-index: 1;
+        border-radius: calc(var(--pf-radius-hero) * 1.25);
         touch-action: pan-y;
+    }
+
+    // Netflix style: big title, facts, short summary, a white Play beside a grey More info,
+    // small tags at the bottom right
+    .pf-hero__veil {
+        background:
+            linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.25) 40%, rgba(0, 0, 0, 0) 65%),
+            linear-gradient(to right, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0) 70%);
+    }
+
+    .pf-hero__content {
+        max-width: calc(40rem + 2 * clamp(1.5rem, 4vw, 4rem));
+        padding: 0 clamp(1.5rem, 4vw, 4rem) clamp(2.5rem, 7vh, 4.5rem);
+    }
+
+    .pf-hero__title {
+        font-weight: 800;
+        font-size: clamp(2.25rem, 4.6vw, 4.5rem);
+        line-height: 1;
+        letter-spacing: -0.025em;
+        text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .pf-hero__facts {
+        margin: 0.9rem 0 0;
+        color: var(--pf-color-text);
+        font-weight: 600;
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .pf-hero__overview {
+        max-width: 34rem;
+        margin-top: 0.6rem;
+        color: var(--pf-color-text);
+        font-size: 1rem;
+        opacity: 0.85;
+        -webkit-line-clamp: 3;
+    }
+
+    .pf-hero__actions {
+        margin-top: 1.4rem;
+    }
+
+    // Both buttons are taller and wider than the default: white Play, frosted grey More info
+    .pf-hero__actions.pf-button-row .pf-button {
+        min-height: calc(var(--pf-control-height) * 1.15);
+        padding: 0 1.6rem;
+        font-size: 1rem;
+        border: 0;
+    }
+
+    .pf-hero__actions.pf-button-row .pf-button.pf-button--icon {
+        width: calc(var(--pf-control-height) * 1.15);
+        padding: 0;
+    }
+
+    .pf-hero__actions.pf-button-row .pf-button--primary {
+        color: #111;
+        background: rgba(255, 255, 255, 0.88);
+
+        &:hover {
+            background: #fff;
+        }
+    }
+
+    .pf-hero__actions.pf-button-row .pf-button--quiet {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(12px);
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    }
+
+    .pf-button__icon {
+        margin-right: 0.5rem;
+        font-size: 1.5rem;
     }
 }
 
+// The next art fades in over the one leaving, which only goes once it is covered: no dip to black
+// in between
+// Under the veil and the words: negative, within the stacking context of the card
 .pf-carousel__backdrop {
+    z-index: -2;
     opacity: 0;
-    transition: opacity 700ms var(--pf-ease);
+    transition: opacity 0ms linear 900ms;
+    will-change: opacity;
     user-select: none;
 }
 
 .pf-carousel__backdrop--active {
+    z-index: -1;
     opacity: 1;
+    transition: opacity 900ms cubic-bezier(0.45, 0, 0.55, 1);
 }
 
-@keyframes pf-carousel-text {
-    from {
-        opacity: 0;
-        transform: translateY(0.75rem);
-    }
-
-    to {
-        opacity: 1;
-        transform: none;
-    }
+// Every title keeps its place in the same cell: the words of the next one fade in as the others fade out
+.pf-carousel__texts {
+    display: grid;
 }
 
+// The words leaving go quickly; the next ones fade in once they are nearly gone,
+// so two texts are never read over each other
 .pf-carousel__text {
-    animation: pf-carousel-text 500ms var(--pf-ease) both;
+    display: flex;
+    flex-direction: column;
+    grid-area: 1 / 1;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 300ms cubic-bezier(0.4, 0, 1, 1),
+        visibility 0ms linear 300ms;
+}
+
+// The buttons sit at the foot of the cell, which is as tall as the tallest title: nothing moves from one title to the next
+.pf-carousel__text .pf-hero__actions {
+    margin-top: auto;
+    padding-top: 1.4rem;
+}
+
+.pf-carousel__text--active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 600ms cubic-bezier(0, 0, 0.2, 1) 250ms;
 }
 
 .pf-carousel__dots {
@@ -1950,6 +2347,8 @@ body,
     position: relative;
     display: inline-block;
     vertical-align: top;
+    // Room made for a trailer preview, given and taken back smoothly
+    transition: margin-right 600ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .pf-card-play__zone {
@@ -2025,7 +2424,7 @@ body,
     color: var(--pf-color-text);
     font-size: 0.95rem;
     background: rgba(10, 10, 10, 0.72);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 0;
     border-radius: 50%;
     outline: none;
     cursor: pointer;
@@ -2034,7 +2433,6 @@ body,
         opacity var(--pf-duration) var(--pf-ease),
         background-color var(--pf-duration) var(--pf-ease);
     pointer-events: auto;
-    backdrop-filter: blur(6px);
 
     &:hover {
         background: rgba(38, 38, 38, 0.95);
@@ -2051,6 +2449,75 @@ body,
     }
 }
 
+// Bookmark at the top right, Download at the bottom left: small dark glass circles like the cross
+.pf-card-play__bookmark,
+.pf-card-play__download {
+    position: absolute;
+    bottom: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    color: var(--pf-color-text);
+    font-size: 1.05rem;
+    background: rgba(10, 10, 10, 0.72);
+    border: 0;
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-0.25rem) scale(0.9);
+    transition:
+        opacity var(--pf-duration) var(--pf-ease),
+        transform var(--pf-duration) var(--pf-ease),
+        background-color var(--pf-duration) var(--pf-ease);
+    pointer-events: auto;
+}
+
+// Along the bottom: the bookmark and Download on the left, Play on the right
+.pf-card-play__bookmark {
+    left: 0.5rem;
+
+    &[aria-pressed='true'] {
+        color: #000;
+        background: rgba(245, 242, 236, 0.95);
+    }
+
+    [dir='rtl'] & {
+        right: 0.5rem;
+        left: auto;
+    }
+}
+
+.pf-card-play__download {
+    left: 3.1rem;
+
+    [dir='rtl'] & {
+        right: 3.1rem;
+        left: auto;
+    }
+}
+
+.pf-card-play__download:disabled {
+    cursor: default;
+}
+
+.pf-card-play__bookmark:hover:not(:disabled),
+.pf-card-play__download:hover:not(:disabled) {
+    background: rgba(38, 38, 38, 0.95);
+    transform: scale(1.08);
+}
+
+.pf-card-play__bookmark[aria-pressed='true']:hover {
+    background: rgba(255, 255, 255, 1);
+}
+
+.pf-card-play:hover .pf-card-play__bookmark,
+.pf-card-play:focus-within .pf-card-play__bookmark,
+.pf-card-play:hover .pf-card-play__download,
+.pf-card-play:focus-within .pf-card-play__download,
 .pf-card-play:hover .pf-card-play__button,
 .pf-card-play:focus-within .pf-card-play__button,
 .pf-card-play:hover .pf-card-play__dismiss,
@@ -2059,9 +2526,20 @@ body,
     transform: none;
 }
 
+.pf-card-play__zone > .pf-card-play__download:first-child {
+    left: 0.5rem;
+
+    [dir='rtl'] & {
+        right: 0.5rem;
+        left: auto;
+    }
+}
+
 // No pointer to hover with: the Play and the cross stay in view
 @media (hover: none) {
     .pf-card-play__button,
+    .pf-card-play__bookmark,
+    .pf-card-play__download,
     .pf-card-play__dismiss {
         opacity: 1;
         transform: none;
@@ -2099,12 +2577,11 @@ body,
     z-index: 30;
     width: 15rem;
     padding: 0.35rem;
-    background: rgba(24, 22, 20, 0.92);
-    border: 1px solid var(--pf-glass-border);
-    border-radius: 14px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+    background: var(--pf-panel-background);
+    border: 1px solid var(--pf-panel-border);
+    border-radius: 18px;
+    box-shadow: var(--pf-panel-shadow);
     transform-origin: top right;
-    backdrop-filter: blur(var(--pf-glass-blur)) saturate(160%);
     animation: pf-dropdown-in 160ms var(--pf-ease) both;
 
     [dir='rtl'] & {
@@ -2122,7 +2599,7 @@ body,
     font-size: 0.9rem;
     white-space: nowrap;
     text-overflow: ellipsis;
-    border-bottom: 1px solid var(--pf-glass-border);
+    border-bottom: 1px solid var(--pf-panel-border);
 }
 
 .pf-dropdown__label {
@@ -2133,13 +2610,19 @@ body,
     font-size: 0.68rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    border-top: 1px solid var(--pf-glass-border);
+    border-top: 1px solid var(--pf-panel-border);
 }
 
 .pf-dropdown__list {
     margin: 0;
     padding: 0.25rem 0 0;
     list-style: none;
+}
+
+.pf-dropdown__list--session,
+.pf-sheet__list--session {
+    margin-top: 0.35rem;
+    border-top: 1px solid var(--pf-panel-border);
 }
 
 .pf-dropdown__item {
@@ -2152,13 +2635,13 @@ body,
     text-align: start;
     background: none;
     border: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     outline: none;
     cursor: pointer;
 
     &:hover,
     &:focus-visible {
-        background: rgba(245, 242, 236, 0.1);
+        background: var(--pf-item-hover);
     }
 }
 
@@ -2398,6 +2881,14 @@ body,
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .pf-app__main {
+        animation: none;
+    }
+
+    .pf-card__image {
+        transition: none;
+    }
+
     .pf-quiet-loading::after {
         width: 100%;
         opacity: 0.6;
@@ -2929,4 +3420,217 @@ body,
     height: 1.75rem;
     object-fit: cover;
     border-radius: 50%;
+}
+
+.pf-carousel__glow {
+    position: absolute;
+    top: var(--pf-hero-top);
+    right: var(--pf-gutter);
+    bottom: 0;
+    left: var(--pf-gutter);
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 2rem;
+    filter: blur(4rem) saturate(2) brightness(1.1);
+    transform: scale(1.1);
+}
+
+.pf-carousel__glow-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 900ms cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.pf-carousel__glow-image--active {
+    opacity: 0.8;
+}
+
+.pf-carousel__badges {
+    position: absolute;
+    right: clamp(1.5rem, 4vw, 4rem);
+    bottom: clamp(2.5rem, 7vh, 4.5rem);
+    display: flex;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    animation: pf-carousel-text 500ms var(--pf-ease) both;
+}
+
+.pf-carousel__badge {
+    padding: 0.3rem 0.7rem;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: rgba(0, 0, 0, 0.45);
+    border-left: 3px solid #fff;
+    backdrop-filter: blur(8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-carousel__badges {
+        animation: none;
+    }
+}
+
+// Card trailer preview: the wrapper adds no box to the row; the panel floats over the page
+.pf-card-preview {
+    display: contents;
+}
+
+.pf-card-preview__panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 5;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    border-radius: var(--pf-radius-card);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    cursor: pointer;
+    pointer-events: auto;
+    transition:
+        width 600ms cubic-bezier(0.32, 0.72, 0, 1),
+        box-shadow 600ms ease;
+    will-change: width;
+
+    // The poster keeps its size on the left while the panel opens to the right, then the video fades in over it
+    img,
+    iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: block;
+        height: 100%;
+        border: 0;
+    }
+
+    img {
+        object-fit: cover;
+        transition: opacity 400ms ease 600ms;
+    }
+
+    // Taller than the panel: the video fills the width, the bars where YouTube puts its title and links are cut off
+    iframe {
+        top: -4rem;
+        width: 100%;
+        height: calc(100% + 8rem);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 400ms ease 600ms;
+    }
+}
+
+// While the player is open, the card under it and its buttons are hidden
+.pf-card-play--previewing .pf-card__image,
+.pf-card-play--previewing .pf-card-play__zone > :not(.pf-card-preview__panel) {
+    visibility: hidden;
+}
+
+.pf-card-preview__panel--open {
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.7);
+
+    img {
+        opacity: 0;
+    }
+
+    iframe {
+        opacity: 1;
+    }
+}
+
+// Leaving: the poster comes back at once as the panel shrinks, the video fades out
+.pf-card-preview__panel--closing {
+    img {
+        transition: opacity 250ms ease;
+    }
+
+    iframe {
+        transition: opacity 200ms ease;
+    }
+}
+
+// The countdown, bottom right of the poster: a ring that fills over the delay and the seconds left
+.pf-card-preview__count {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--pf-color-text);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: pf-card-preview-count-in 200ms var(--pf-ease);
+
+    .pf-card-preview__svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+
+    span {
+        position: relative;
+    }
+}
+
+.pf-card-preview__ring {
+    fill: none;
+    stroke: var(--pf-color-text);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: pf-card-preview-ring 5s linear forwards;
+}
+
+@keyframes pf-card-preview-ring {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes pf-card-preview-count-in {
+    from {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+}
+
+// A white dot that blinks next to Downloads while a download runs
+.pf-download-dot {
+    flex: none;
+    width: 0.4rem;
+    height: 0.4rem;
+    margin-left: 0.4rem;
+    background: #fff;
+    border-radius: 50%;
+    animation: pf-download-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes pf-download-blink {
+    50% {
+        opacity: 0.15;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-download-dot {
+        animation: none;
+    }
 }

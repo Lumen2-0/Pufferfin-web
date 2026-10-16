@@ -1,4 +1,5 @@
 import type { StringKey } from '../../../i18n/translate';
+import { getStatsPath } from '../../../routes/paths';
 
 /** Destination inside the client, reached through the router. */
 export interface MenuLink {
@@ -39,12 +40,20 @@ export function getAccountEntries(context: MenuContext): MenuEntry[] {
 
     // One settings window: the profile at its top, every setting, Quick Connect
     entries.push({ kind: 'action', id: 'settings', labelKey: 'MenuSettings' });
+    entries.push({ kind: 'link', id: 'stats', labelKey: 'MenuStats', path: getStatsPath() });
     if (context.supportsDownloadManager) {
         entries.push({ kind: 'action', id: 'downloadManager', labelKey: 'MenuDownloadManager' });
     }
     if (context.supportsClientSettings) {
         entries.push({ kind: 'action', id: 'clientSettings', labelKey: 'MenuClientSettings' });
     }
+
+    return entries;
+}
+
+/** The end of the menu, after the administration: change server, sign out, exit. */
+export function getSessionEntries(context: MenuContext): MenuEntry[] {
+    const entries: MenuEntry[] = [];
     if (context.supportsMultiServer) {
         entries.push({ kind: 'action', id: 'selectServer', labelKey: 'MenuSelectServer' });
     }
@@ -52,7 +61,6 @@ export function getAccountEntries(context: MenuContext): MenuEntry[] {
     if (context.supportsExit) {
         entries.push({ kind: 'action', id: 'exitApp', labelKey: 'MenuExitApp' });
     }
-
     return entries;
 }
 
@@ -61,8 +69,8 @@ export function getAdminEntries(context: MenuContext): MenuEntry[] {
     if (!context.isAdministrator) return [];
     return [
         { kind: 'link', id: 'dashboard', labelKey: 'MenuDashboard', path: '/dashboard' },
-        { kind: 'link', id: 'metadata', labelKey: 'MenuMetadataManager', path: '/metadata' },
         // Every title on disk with its torrents, deleted now or seven days later
-        { kind: 'action', id: 'contentManager', labelKey: 'MenuContentManager' }
+        { kind: 'action', id: 'contentManager', labelKey: 'MenuContentManager' },
+        { kind: 'link', id: 'metadata', labelKey: 'MenuMetadataManager', path: '/metadata' }
     ];
 }

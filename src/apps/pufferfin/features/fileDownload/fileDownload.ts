@@ -1,8 +1,8 @@
-/** The preference that shows a "Download" link on every title on disk; off unless the user turns it on. */
+/** The preference that shows a "Download" link on every title on disk; on unless the user turned it off. */
 export const CONTENT_DOWNLOAD_SETTING = 'pufferfin-content-download';
 
-/** Whether the stored value of the preference turns it on. */
-export const parseContentDownload = (value: string | null | undefined) => value === 'true';
+/** Whether the stored value of the preference turns it on: only an explicit "false" turns it off. */
+export const parseContentDownload = (value: string | null | undefined) => value !== 'false';
 
 interface DownloadableItem {
     Id?: string | null

@@ -48,12 +48,22 @@ export const useChangePassword = () => {
 /** The largest picture a user can send for their avatar. */
 export const MAX_AVATAR_BYTES = 10 * 1024 * 1024;
 
+/** The picture as base64 text, which is how the server takes an uploaded image. */
+const readBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+});
+
 export const useChangeAvatar = () => {
     const { api } = useApi();
     return useMutation({
         mutationFn: async ({ userId, file }: { userId: string, file: File | null }) => {
             if (file) {
-                await getImageApi(api!).postUserImage({ userId, body: file }, { headers: { 'Content-Type': file.type } });
+                const body = await readBase64(file);
+                // The generated client types the body as a file, but sends a string as it is
+                await getImageApi(api!).postUserImage({ userId, body: body as unknown as File }, { headers: { 'Content-Type': file.type } });
             } else {
                 await getImageApi(api!).deleteUserImage({ userId });
             }

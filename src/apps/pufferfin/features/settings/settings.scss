@@ -52,13 +52,13 @@
 
 .pf-settings__panel {
     display: flex;
-    width: min(54rem, 100%);
-    height: min(38rem, 100%);
+    width: min(60rem, 100%);
+    height: min(42rem, 100%);
     overflow: hidden;
-    background: #0e0d0c;
-    border: 1px solid var(--pf-glass-border);
-    border-radius: 16px;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+    background: var(--pf-panel-background);
+    border: 1px solid var(--pf-panel-border);
+    border-radius: 22px;
+    box-shadow: var(--pf-panel-shadow);
     animation: pf-settings-in 200ms var(--pf-ease) both;
 }
 
@@ -68,8 +68,8 @@
     display: flex;
     flex: none;
     flex-direction: column;
-    width: 13.5rem;
-    padding: 1.1rem 0.6rem;
+    width: 14.5rem;
+    padding: 1.4rem 0.75rem;
     background: rgba(245, 242, 236, 0.03);
     border-right: 1px solid var(--pf-glass-border);
 }
@@ -86,10 +86,10 @@
     align-items: center;
     width: 100%;
     margin-bottom: 0.15rem;
-    padding: 0.55rem 0.6rem;
+    padding: 0.65rem 0.75rem;
     color: var(--pf-color-text-secondary);
     font: inherit;
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     text-align: start;
     background: none;
     border: 0;
@@ -133,15 +133,25 @@
     display: flex;
     flex: none;
     align-items: center;
-    padding: 1.1rem 1.25rem 0.9rem 1.75rem;
+    padding: 1.25rem 1.25rem 1rem 1.75rem;
     border-bottom: 1px solid var(--pf-glass-border);
 }
 
-.pf-settings__section-title {
+.pf-settings__heading {
     flex: 1;
+    min-width: 0;
+}
+
+.pf-settings__section-title {
     margin: 0;
     font-weight: 600;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
+}
+
+.pf-settings__section-hint {
+    margin: 0.2rem 0 0;
+    color: var(--pf-color-text-secondary);
+    font-size: 0.8rem;
 }
 
 .pf-settings__saved {
@@ -187,9 +197,30 @@
 
 .pf-settings__body {
     flex: 1;
-    padding: 0.5rem 1.75rem 1.5rem;
+    padding: 0.25rem 1.75rem 1.75rem;
     overflow-y: auto;
     overscroll-behavior: contain;
+}
+
+// A card of settings under its small title, such as the subtitles among the playback settings
+.pf-settings__card {
+    padding: 0 1.25rem;
+    background: rgba(245, 242, 236, 0.03);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: 14px;
+}
+
+.pf-settings__card--padded {
+    padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.pf-settings__group {
+    margin: 1.5rem 0 0.6rem;
+    color: var(--pf-color-text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .pf-settings__loading {
@@ -255,7 +286,7 @@
     transition: background-color var(--pf-duration) var(--pf-ease);
 
     &:focus-visible {
-        box-shadow: 0 0 0 2px #0e0d0c, 0 0 0 4px rgba(245, 242, 236, 0.6);
+        box-shadow: 0 0 0 2px #000, 0 0 0 4px rgba(245, 242, 236, 0.6);
     }
 
     &:disabled {
@@ -315,7 +346,7 @@
 
     option {
         color: #f5f2ec;
-        background: #161412;
+        background: #000;
     }
 }
 
@@ -360,8 +391,8 @@
     font-weight: 500;
     font-size: 0.85rem;
     white-space: nowrap;
-    background: transparent;
-    border: 1px solid rgba(245, 242, 236, 0.16);
+    background: rgba(245, 242, 236, 0.08);
+    border: 0;
     border-radius: 8px;
     cursor: pointer;
     transition:
@@ -402,10 +433,11 @@
 .pf-profile-card {
     display: flex;
     align-items: center;
-    margin: 0.75rem 0 1.25rem;
-    padding: 1rem;
+    margin: 0.75rem 0 1rem;
+    padding: 1.25rem;
+    background: rgba(245, 242, 236, 0.03);
     border: 1px solid var(--pf-glass-border);
-    border-radius: 12px;
+    border-radius: 14px;
 }
 
 .pf-profile-card__avatar {
@@ -413,8 +445,8 @@
     flex: none;
     align-items: center;
     justify-content: center;
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 4.25rem;
+    height: 4.25rem;
     overflow: hidden;
     color: var(--pf-color-text);
     font-weight: 600;
@@ -535,7 +567,8 @@
     margin: 0 0.5rem 0.5rem 0;
     padding: 0 0.35rem 0 0.4rem;
     font-size: 0.85rem;
-    border: 1px solid rgba(245, 242, 236, 0.16);
+    background: rgba(245, 242, 236, 0.08);
+    border: 0;
     border-radius: 8px;
 }
 
@@ -699,7 +732,7 @@
 }
 
 .pf-genre-check__input:focus-visible + .pf-genre-check__box {
-    box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 4px #a3a3a3;
+    box-shadow: 0 0 0 2px #000, 0 0 0 4px #a3a3a3;
 }
 
 .pf-genre-check__label {

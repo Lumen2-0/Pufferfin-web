@@ -4,6 +4,7 @@ import React, { type FC, useCallback, useId, useState } from 'react';
 
 import { useTranslation } from '../../i18n/useTranslation';
 import { FOCUSABLE_ATTRIBUTE } from '../../navigation/focus';
+import { byName, getStackLogo } from './stackLogos';
 import { useStackLinks } from './useStackLinks';
 
 import './stack.scss';
@@ -53,7 +54,7 @@ const StackLinksMenu: FC<StackLinksMenuProps> = ({ variant, onOpen }) => {
             </button>
             {isOpen && (
                 <ul id={listId} className='pf-stack__list' role={isMenu ? 'menu' : undefined} aria-label={t('MenuStackArr')}>
-                    {links.map(link => (
+                    {[ ...links ].sort(byName).map(link => (
                         <li key={`${link.Name}-${link.Url}`} role={isMenu ? 'none' : undefined}>
                             <a
                                 className={classNames(itemClass, 'pf-stack__link')}
@@ -64,6 +65,9 @@ const StackLinksMenu: FC<StackLinksMenuProps> = ({ variant, onOpen }) => {
                                 onClick={onOpen}
                                 {...{ [FOCUSABLE_ATTRIBUTE]: true }}
                             >
+                                {getStackLogo(link.Name) ?
+                                    <img className='pf-stack__logo' src={getStackLogo(link.Name)} alt='' draggable={false} /> :
+                                    <span className='pf-stack__logo' aria-hidden='true' />}
                                 <span className='pf-stack__label'>{link.Name}</span>
                                 <ExternalLink className='pf-stack__external' aria-hidden='true' focusable='false' size='0.875em' />
                             </a>

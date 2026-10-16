@@ -127,6 +127,8 @@ export interface DownloadTagState {
     label?: string
     /** The time left of a single download, in seconds, when known. */
     etaSeconds?: number
+    /** The speed of a single download, in bytes per second, when known. */
+    bytesPerSecond?: number
     /** Stalled for want of seeds: the bar stands still and the words say why. */
     isStalled?: boolean
 }
@@ -139,6 +141,7 @@ function getTagState(request: MediaRequest, t: Translate): DownloadTagState {
         text: getRequestStateText(request, t),
         label: isRequestStalled(request) ? t('RequestStalledNoSeeds') : t(getRequestStateLabel(request)),
         etaSeconds: request.State === RequestState.Downloading ? request.EtaSeconds ?? undefined : undefined,
+        bytesPerSecond: request.State === RequestState.Downloading && request.BytesPerSecond ? request.BytesPerSecond : undefined,
         isStalled: isRequestStalled(request)
     };
 }

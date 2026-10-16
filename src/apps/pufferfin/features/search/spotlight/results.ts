@@ -1,6 +1,6 @@
 import { CatalogAvailability, type CatalogItem, CatalogItemKind } from '../../catalog/api/types';
 import { getCatalogItemPath } from '../../catalog/utils/catalog';
-import { getPersonPath } from '../../../routes/paths';
+import { getPersonPath, getTmdbPersonPath } from '../../../routes/paths';
 
 /** The filters of the panel; All shows every kind in its own section. */
 export enum SpotlightFilter {
@@ -35,12 +35,12 @@ export const LIBRARY_SECTION_LIMIT = 5;
 
 /**
  * Where a result leads: the sheet of a title, on disk or not, or the page of
- * a person of the library. A person TMDB knows but the library does not has
- * no page yet: no result for them.
+ * a person: the library page, else the one read from TMDB.
  */
 export function getResultPath(item: CatalogItem): string | undefined {
     if (item.Kind === CatalogItemKind.Person) {
-        return item.Availability === CatalogAvailability.OnDisk && item.LocalItemId ? getPersonPath(item.LocalItemId) : undefined;
+        if (item.Availability === CatalogAvailability.OnDisk && item.LocalItemId) return getPersonPath(item.LocalItemId);
+        return item.TmdbId ? getTmdbPersonPath(item.TmdbId) : undefined;
     }
     return getCatalogItemPath(item);
 }

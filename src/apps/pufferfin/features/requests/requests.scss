@@ -6,7 +6,7 @@ $pf-req-ghost-border: rgba(245, 242, 236, 0.3);
 $pf-req-ghost-background: rgba(0, 0, 0, 0.4);
 $pf-req-track: rgba(255, 255, 255, 0.2);
 $pf-req-soft: #a3a3a3;
-$pf-req-sheet: #141414;
+$pf-req-sheet: #000;
 $pf-req-sheet-border: rgba(255, 255, 255, 0.12);
 $pf-req-option-hover: #262626;
 
@@ -86,15 +86,70 @@ $pf-req-option-hover: #262626;
     flex-basis: 100%;
     order: 3;
     max-width: none;
-    margin: 0.5rem 0 0;
+    height: 6px;
+    margin: 0.6rem 0 0;
 }
 
 .pf-req-status__fill {
+    position: relative;
     display: block;
     height: 100%;
+    overflow: hidden;
     background: var(--pf-color-text);
     border-radius: 999px;
-    transition: width 600ms var(--pf-ease);
+    transition: width 900ms var(--pf-ease);
+
+    // A soft light sweeps along the bar: the download is alive
+    &::after {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.22), transparent);
+        transform: translateX(-100%);
+        animation: pf-req-sheen 1.8s ease-in-out infinite;
+        content: '';
+    }
+}
+
+@keyframes pf-req-sheen {
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.pf-download__moment {
+    margin: 0.35rem 0 0;
+    color: var(--pf-color-text);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+}
+
+// A card slides in when the page opens or a request appears
+@keyframes pf-download-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.5rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.pf-download {
+    animation: pf-download-in 320ms var(--pf-ease) both;
+}
+
+.pf-download:nth-child(2) {
+    animation-delay: 50ms;
+}
+
+.pf-download:nth-child(3) {
+    animation-delay: 100ms;
+}
+
+.pf-download:nth-child(n + 4) {
+    animation-delay: 150ms;
 }
 
 .pf-req-status__meta {
@@ -105,6 +160,7 @@ $pf-req-option-hover: #262626;
 }
 
 .pf-req-status--row .pf-req-status__meta {
+    color: var(--pf-color-text);
     margin-left: auto;
     padding-left: 0.75rem;
 
@@ -172,6 +228,14 @@ $pf-req-option-hover: #262626;
 
     .pf-req-status__fill {
         transition: none;
+
+        &::after {
+            animation: none;
+        }
+    }
+
+    .pf-download {
+        animation: none;
     }
 }
 

@@ -3,6 +3,8 @@ import { Timer } from 'lucide-react';
 import React, { type FC } from 'react';
 import { Link } from 'react-router-dom';
 
+import globalize from 'lib/globalize';
+
 import RoundButton from '../../../components/RoundButton';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../../../navigation/focus';
@@ -13,6 +15,7 @@ import { isRequestCancellable, isRequestStale, summarizeRequests } from '../util
 import { getTemporaryState, type TemporaryState } from '../utils/temporary';
 import { getRequestPartText, getRequestProblemLabel, getRequestStateText, getRequestTitlePath, isRequestStalled } from '../utils/status';
 import RequestStatus from './RequestStatus';
+import { useSmoothedEta } from '../utils/useSmoothedEta';
 import { useNow } from '../utils/useNow';
 import { ArrowDownward, ArrowUpward, Block, Check, Close, Refresh } from '../../../components/icons';
 
@@ -56,6 +59,29 @@ function useRequestArt(request: MediaRequest): { url?: string, isCover: boolean 
     return { isCover: false };
 }
 
+/** Hour and minutes: 19h56 in French, the usual short time elsewhere. */
+function formatTime(date: Date): string {
+    const locale = globalize.getCurrentLocale() || undefined;
+    if (locale?.toLowerCase().startsWith('fr')) {
+        return `${String(date.getHours()).padStart(2, '0')}h${String(date.getMinutes()).padStart(2, '0')}`;
+    }
+    return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(date);
+}
+
+/** The day, such as 16/10/2026. */
+function formatDay(date: Date): string {
+    const locale = globalize.getCurrentLocale() || undefined;
+    return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+}
+
+/** How it goes, for the color of the words: red failed or stalled, amber no source yet, green in the library. */
+function getTone(request: MediaRequest, isFailed: boolean, isStalled: boolean): string | undefined {
+    if (isFailed || isStalled) return 'error';
+    if (request.State === RequestState.WaitingForSources) return 'waiting';
+    if (request.State === RequestState.Available) return 'ok';
+    return undefined;
+}
+
 /** The words of the temporary chip of a downloads card. */
 function getTemporaryText(state: TemporaryState, t: ReturnType<typeof useTranslation>): string {
     switch (state.kind) {
@@ -89,16 +115,29 @@ const DownloadRow: FC<DownloadRowProps> = ({
 
     const isDownloading = request.State === RequestState.Downloading;
     const now = useNow(isDownloading);
+    const eta = useSmoothedEta(request);
     const isStale = isDownloading && isRequestStale(lastSyncAt, now);
     const isStalled = isRequestStalled(request);
     const isActive = isRequestCancellable(request) && request.State !== RequestState.Failed;
     const isFailed = request.State === RequestState.Failed || request.State === RequestState.Rejected;
+    const tone = getTone(request, isFailed, isStalled);
     const part = getRequestPartText(request, t);
     const problem = getRequestProblemLabel(request);
     const isPendingApproval = request.State === RequestState.PendingApproval;
     // On its way or failed: the status with its bar; finished: its words only
-    const tag = summarizeRequests([ request ], t);
+    const summary = summarizeRequests([ request ], t);
+    const tag = summary && isDownloading ? { ...summary, etaSeconds: eta } : summary;
     const temporary = getTemporaryState(request, Date.now());
+    const isDone = request.State === RequestState.Available;
+    let moment: string | undefined;
+    if (isDownloading && eta) {
+        const end = new Date(Date.now() + eta * 1000);
+        moment = end.toDateString() === new Date().toDateString() ?
+            t('DownloadsEndsAt', formatTime(end)) :
+            t('DownloadsEndsOn', formatDay(end), formatTime(end));
+    } else if (isDone) {
+        moment = t('DownloadsEndedAt', formatDay(new Date(request.UpdatedAt)), formatTime(new Date(request.UpdatedAt)));
+    }
     const subtitle = [ part, ownerName ? t('DownloadsRequestedBy', ownerName) : undefined ].filter(Boolean).join(' · ');
 
     return (
@@ -106,6 +145,8 @@ const DownloadRow: FC<DownloadRowProps> = ({
             className={classNames('pf-download', {
                 'pf-download--failed': isFailed,
                 'pf-download--stalled': isStalled,
+                'pf-download--tone': !!tone,
+                [`pf-download--${tone}`]: !!tone,
                 'pf-download--done': !isActive && !isFailed
             })}
             {...{ [REQUEST_ROW_ATTRIBUTE]: request.Id, [FOCUS_GROUP_ATTRIBUTE]: true }}
@@ -139,6 +180,7 @@ const DownloadRow: FC<DownloadRowProps> = ({
                         {getTemporaryText(temporary, t)}
                     </span>
                 )}
+                {moment && <p className='pf-download__moment'>{moment}</p>}
                 {problem && <p className='pf-download__problem'>{t(problem)}</p>}
             </div>
 

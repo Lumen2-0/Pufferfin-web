@@ -1,21 +1,50 @@
 import { getUserApi } from '@jellyfin/sdk/lib/utils/api/user-api';
 import { useQuery } from '@tanstack/react-query';
-import React, { type FC, type FocusEvent, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { type FC, type FocusEvent, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
+import ServiceLinks from '../features/requests/components/ServiceLinks';
 import DownloadRow, { type DownloadRowActions, REQUEST_ROW_ATTRIBUTE } from '../features/requests/components/DownloadRow';
 import type { MediaRequest } from '../features/requests/api/types';
 import { useAllRequests, useChangeRequest, useMoveRequest, useMyRequests } from '../features/requests/api/useRequests';
-import { getMoveIndex, isSameId, type MoveDirection, normalizeId, splitRequests } from '../features/requests/utils/requests';
+import { getMoveIndex, type MoveDirection, normalizeId, splitRequests } from '../features/requests/utils/requests';
 import { useTranslation } from '../i18n/useTranslation';
 import { focusElement, focusFirst, getFocusables } from '../navigation/focus';
 import { useInitialFocus } from '../navigation/useInitialFocus';
 import { DownloadsSkeleton } from '../components/Skeleton';
+import { Trash2 } from 'lucide-react';
+import RoundButton from '../components/RoundButton';
 import { Download as DownloadIcon, ErrorOutline } from '../components/icons';
 
 /** How many finished requests the panel keeps on screen. */
 const FINISHED_LIMIT = 20;
+
+const DISMISSED_KEY = 'pufferfin.dismissedDownloads';
+
+/** Finished requests the user cleared from the list, kept in this browser; the requests themselves stay on the server. */
+const useDismissed = (userId: string | undefined) => {
+    const key = `${DISMISSED_KEY}.${userId ?? ''}`;
+    const [ dismissed, setDismissed ] = useState<string[]>(() => {
+        try {
+            return JSON.parse(localStorage.getItem(key) ?? '[]') as string[];
+        } catch {
+            return [];
+        }
+    });
+    const dismiss = useCallback((ids: string[]) => {
+        setDismissed(previous => {
+            const next = [ ...new Set([ ...previous, ...ids ]) ];
+            try {
+                localStorage.setItem(key, JSON.stringify(next));
+            } catch {
+                // Storage unavailable: the list is cleared until the page reloads
+            }
+            return next;
+        });
+    }, [ key ]);
+    return { dismissed, dismiss };
+};
 
 /** Names of the users, for an administrator who sees every request. */
 const useOwnerNames = (isEnabled: boolean) => {
@@ -72,14 +101,16 @@ const RequestList: FC<{
     allRequests: MediaRequest[]
     lastSyncAt: number
     isAdministrator: boolean
-    userId?: string
     ownerNames: Map<string, string>
     actions: DownloadRowActions
-}> = ({ title, titleId, requests, allRequests, lastSyncAt, isAdministrator, userId, ownerNames, actions }) => (
+    onClear?: () => void
+    clearLabel?: string
+}> = ({ title, titleId, requests, allRequests, lastSyncAt, isAdministrator, ownerNames, actions, onClear, clearLabel }) => (
     <section className='pf-downloads__section' aria-labelledby={titleId}>
         <h2 id={titleId} className='pf-downloads__heading'>
             {title}
             <span className='pf-downloads__count'>{requests.length}</span>
+            {onClear && <RoundButton label={clearLabel} icon={<Trash2 size='1em' />} onClick={onClear} />}
         </h2>
         <ul className='pf-downloads__list'>
             {requests.map(item => (
@@ -87,9 +118,7 @@ const RequestList: FC<{
                     key={item.Id}
                     request={item}
                     lastSyncAt={lastSyncAt}
-                    ownerName={isAdministrator && !isSameId(item.UserId, userId) ?
-                        ownerNames.get(normalizeId(item.UserId)) :
-                        undefined}
+                    ownerName={isAdministrator ? ownerNames.get(normalizeId(item.UserId)) : undefined}
                     isAdministrator={isAdministrator}
                     canMoveUp={isAdministrator && getMoveIndex(allRequests, item.Id, 'up') !== undefined}
                     canMoveDown={isAdministrator && getMoveIndex(allRequests, item.Id, 'down') !== undefined}
@@ -116,7 +145,10 @@ export const Component = () => {
     const own = useMyRequests();
     const all = useAllRequests(isAdministrator);
     const query = isAdministrator ? all : own;
-    const { current, finished } = useMemo(() => splitRequests(query.data), [ query.data ]);
+    const { current, finished: allFinished } = useMemo(() => splitRequests(query.data), [ query.data ]);
+    const { dismissed, dismiss } = useDismissed(user?.Id);
+    const finished = useMemo(() => allFinished.filter(item => !dismissed.includes(item.Id)), [ allFinished, dismissed ]);
+    const clearFinished = useCallback(() => dismiss(finished.map(item => item.Id)), [ dismiss, finished ]);
     const users = useOwnerNames(isAdministrator);
     const ownerNames = useMemo(
         () => new Map(users.map(owner => [ normalizeId(owner.Id ?? ''), owner.Name ?? '' ])),
@@ -172,12 +204,12 @@ export const Component = () => {
             allRequests: allRequests ?? [],
             lastSyncAt: query.dataUpdatedAt,
             isAdministrator,
-            userId: user?.Id,
             ownerNames,
             actions
         };
         content = (
             <>
+                {isAdministrator && <ServiceLinks />}
                 {current.length > 0 ? (
                     <RequestList title={t('DownloadsCurrent')} titleId='pf-downloads-current' requests={current} {...listProps} />
                 ) : (
@@ -188,6 +220,8 @@ export const Component = () => {
                         title={t('DownloadsFinished')}
                         titleId='pf-downloads-finished'
                         requests={finished.slice(0, FINISHED_LIMIT)}
+                        onClear={clearFinished}
+                        clearLabel={t('DownloadsClearFinished')}
                         {...listProps}
                     />
                 )}

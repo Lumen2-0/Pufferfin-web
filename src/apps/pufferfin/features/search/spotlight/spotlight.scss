@@ -46,9 +46,10 @@
     display: flex;
     justify-content: center;
     padding: 96px 24px 24px;
-    color: #fff;
+    color: var(--pf-color-text);
     font-family: inherit;
-    background: rgba(0, 0, 0, 0.72);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
     animation: pf-spotlight-dim 160ms var(--pf-ease) both;
 
     *,
@@ -68,10 +69,10 @@
     align-self: flex-start;
     padding: 16px;
     overflow: hidden;
-    background: #141414;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 18px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    background: var(--pf-panel-background);
+    border: 1px solid var(--pf-panel-border);
+    border-radius: 22px;
+    box-shadow: var(--pf-panel-shadow);
     animation: pf-spotlight-in 200ms var(--pf-ease) both;
 }
 
@@ -82,19 +83,18 @@
     align-items: center;
     height: 52px;
     padding: 0 14px 0 18px;
-    background: #0e0e0e;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 14px;
-    transition: border-color 0.2s ease;
+    background: var(--pf-field-background);
+    border-radius: 999px;
+    transition: background-color var(--pf-duration) var(--pf-ease);
 
     &:focus-within {
-        border-color: rgba(255, 255, 255, 0.45);
+        background: var(--pf-field-background-focus);
     }
 }
 
 .pf-spotlight__icon {
     flex: none;
-    color: #a3a3a3;
+    color: var(--pf-color-text-secondary);
     font-size: 22px !important;
 }
 
@@ -104,17 +104,18 @@
     height: 100%;
     margin: 0 12px;
     padding: 0;
-    color: #fff;
+    color: var(--pf-color-text);
     font: inherit;
     font-size: 18px;
     background: none;
     border: 0;
     outline: none;
     appearance: none;
-    caret-color: #fff;
+    caret-color: var(--pf-color-text);
 
     &::placeholder {
-        color: #737373;
+        color: var(--pf-color-text-secondary);
+        opacity: 0.7;
     }
 
     &::-webkit-search-cancel-button {
@@ -131,7 +132,7 @@
     height: 36px;
     margin-right: 8px;
     padding: 0;
-    color: #a3a3a3;
+    color: var(--pf-color-text-secondary);
     font-size: 18px;
     background: none;
     border: 0;
@@ -139,26 +140,26 @@
     cursor: pointer;
 
     &:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.1);
+        color: var(--pf-color-text);
+        background: var(--pf-quiet-background-strong);
     }
 }
 
 .pf-spotlight__voice--listening,
 .pf-spotlight__voice--listening:hover {
-    color: #000;
-    background: #fff;
+    color: var(--pf-color-on-accent);
+    background: var(--pf-color-accent);
 }
 
 .pf-spotlight__key {
     flex: none;
     padding: 3px 8px;
-    color: #a3a3a3;
+    color: var(--pf-color-text-secondary);
     font-weight: 600;
     font-size: 12px;
     font-family: inherit;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
+    background: var(--pf-soft-button);
+    border-radius: 8px;
 }
 
 .pf-spotlight__filters {
@@ -172,27 +173,29 @@
     display: inline-flex;
     flex: none;
     align-items: center;
-    min-height: 30px;
-    padding: 0 12px;
-    color: #fff;
+    min-height: 32px;
+    padding: 0 14px;
+    color: var(--pf-color-text-secondary);
     font: inherit;
     font-weight: 500;
     font-size: 13px;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: var(--pf-quiet-background);
+    border: 0;
     border-radius: 999px;
     outline: none;
     cursor: pointer;
-    transition: border-color 0.2s ease;
+    transition: color var(--pf-duration) var(--pf-ease), background-color var(--pf-duration) var(--pf-ease);
 
     &:hover {
-        border-color: rgba(255, 255, 255, 0.4);
+        color: var(--pf-color-text);
+        background: var(--pf-quiet-background-strong);
     }
 }
 
 .pf-spotlight__chip--selected,
 .pf-spotlight__chip--selected:hover {
-    border-color: #fff;
+    color: #111;
+    background: var(--pf-primary-button);
 }
 
 .pf-spotlight__results {
@@ -202,7 +205,7 @@
     padding: 0 4px;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-color: #3a3a3a transparent;
+    scrollbar-color: var(--pf-hairline) transparent;
     scrollbar-width: thin;
 }
 
@@ -210,12 +213,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 8rem;
-    margin: 0;
+    min-height: 9rem;
+    margin: 0 auto;
     padding: 1.5rem 1rem;
-    color: #a3a3a3;
+    color: var(--pf-color-text-secondary);
     font-size: 14px;
+    line-height: 1.5;
     text-align: center;
+    text-wrap: balance;
+    max-width: 26rem;
 }
 
 .pf-spotlight__section {
@@ -231,7 +237,7 @@
 .pf-spotlight__section-title {
     margin: 0;
     padding: 4px 8px 6px;
-    color: #a3a3a3;
+    color: var(--pf-color-text-secondary);
     font-weight: 700;
     font-size: 12px;
     letter-spacing: 0.06em;
@@ -253,19 +259,19 @@
     align-items: center;
     width: 100%;
     padding: 8px;
-    color: #fff;
+    color: var(--pf-color-text);
     font: inherit;
     text-align: start;
     background: transparent;
     border: 0;
-    border-radius: 12px;
+    border-radius: 14px;
     outline: none;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: background-color var(--pf-duration) var(--pf-ease);
 }
 
 .pf-spotlight__row--active {
-    background: rgba(255, 255, 255, 0.14);
+    background: var(--pf-item-hover);
 }
 
 .pf-spotlight__thumb {
@@ -274,8 +280,8 @@
     width: 48px;
     height: 72px;
     overflow: hidden;
-    background: #0e0e0e;
-    border-radius: 8px;
+    background: var(--pf-quiet-background);
+    border-radius: var(--pf-radius-card);
 
     img {
         display: block;
@@ -312,7 +318,7 @@
 
 .pf-spotlight__subtitle {
     overflow: hidden;
-    color: #a3a3a3;
+    color: var(--pf-color-text-secondary);
     font-size: 13px;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -323,7 +329,8 @@
     padding: 3px 10px;
     font-weight: 600;
     font-size: 12px;
-    background: #262626;
+    color: var(--pf-color-on-accent);
+    background: var(--pf-color-accent);
     border-radius: 999px;
 }
 
@@ -331,7 +338,7 @@
     display: inline-flex;
     flex: none;
     align-items: center;
-    color: #a3a3a3;
+    color: var(--pf-color-text-secondary);
     font-size: 12px;
 
     svg {
@@ -343,7 +350,7 @@
 .pf-spotlight__more {
     min-height: 44px;
     padding: 0 8px;
-    color: #a3a3a3;
+    color: var(--pf-color-text-secondary);
     font-size: 14px;
 
     svg {
@@ -361,10 +368,11 @@
     flex: none;
     flex-wrap: wrap;
     gap: 18px;
-    padding: 10px 8px 0;
-    color: #a3a3a3;
+    padding: 12px 8px 0;
+    color: var(--pf-color-text-secondary);
     font-size: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    opacity: 0.8;
+    border-top: 1px solid var(--pf-panel-border);
 }
 
 .pf-spotlight__row--skeleton {
@@ -372,14 +380,14 @@
 
     .pf-bone {
         display: block;
-        background: linear-gradient(90deg, #111 0, #1c1c1c 50%, #111 100%);
+        background: linear-gradient(90deg, var(--pf-quiet-background) 0, var(--pf-quiet-background-strong) 50%, var(--pf-quiet-background) 100%);
         background-size: 800px 100%;
         border-radius: 999px;
         animation: pf-spotlight-shimmer 1.6s linear infinite;
     }
 
     .pf-spotlight__thumb {
-        border-radius: 8px;
+        border-radius: var(--pf-radius-card);
     }
 
     .pf-bone--line {

@@ -322,13 +322,13 @@ export function getMediaInfoHtml(item, options = {}) {
 export function getEndsAt(item) {
     if (item.MediaType === 'Video' && item.RunTimeTicks && !item.StartDate) {
         const positionTicks = item.UserData?.PlaybackPositionTicks;
-        return getEndsAtFromPosition(item.RunTimeTicks, positionTicks, 1, true);
+        return getEndsAtFromPosition(item.RunTimeTicks, positionTicks, 1, true, item.Type);
     }
 
     return null;
 }
 
-export function getEndsAtFromPosition(runtimeTicks, positionTicks, playbackRate, includeText) {
+export function getEndsAtFromPosition(runtimeTicks, positionTicks, playbackRate, includeText, itemType) {
     let endDate = new Date().getTime() + (1 / playbackRate) * ((runtimeTicks - (positionTicks || 0)) / 10000);
     endDate = new Date(endDate);
 
@@ -337,7 +337,9 @@ export function getEndsAtFromPosition(runtimeTicks, positionTicks, playbackRate,
     if (includeText === false) {
         return displayTime;
     }
-    return globalize.translate('EndsAtValue', displayTime);
+    // French writes 1h55, not 01:55
+    const frenchTime = globalize.getCurrentLocale().startsWith('fr') ? displayTime.replace(/^0?(\d{1,2}):(\d{2})$/, '$1h$2') : displayTime;
+    return globalize.translate(itemType === 'Episode' ? 'EndsAtEpisodeValue' : 'EndsAtValue', frenchTime);
 }
 
 function getMediaInfoItem(m, cssClass) {

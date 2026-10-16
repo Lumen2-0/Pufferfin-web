@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderEpisodesPanel } from './episodesPanel';
 import { createPanelHost } from './panelHost';
 import { renderSettingsPanel } from './settingsPanel';
-import { renderTracksPanel } from './tracksPanel';
 
 // The words are their keys here: the tests read what is said, not how
 vi.mock('./strings', () => ({
@@ -64,44 +63,6 @@ describe('createPanelHost', () => {
     });
 });
 
-describe('renderTracksPanel', () => {
-    it('lists audio and subtitles with the current ones checked, Off first', () => {
-        const panel = document.createElement('div');
-        const setSubtitles = vi.fn();
-        renderTracksPanel(panel, {
-            audio: [ { Index: 1, DisplayTitle: 'Français 5.1' }, { Index: 2, DisplayTitle: 'English 5.1' } ],
-            audioIndex: 1,
-            subtitles: [ { Index: 3, DisplayTitle: 'Français' } ],
-            subtitleIndex: 3,
-            setAudio: vi.fn(),
-            setSubtitles
-        });
-
-        const columns = panel.querySelectorAll('.pf-osd-tracks__column');
-        expect(columns).toHaveLength(2);
-        const subtitles = columns[1].querySelectorAll<HTMLButtonElement>('.pf-osd-option');
-        expect(subtitles[0].textContent).toBe('Player.SubtitlesOff');
-        expect(subtitles[1].getAttribute('aria-checked')).toBe('true');
-
-        subtitles[0].click();
-        expect(setSubtitles).toHaveBeenCalledWith(-1);
-    });
-
-    it('leaves out the audio column with a single track', () => {
-        const panel = document.createElement('div');
-        renderTracksPanel(panel, {
-            audio: [ { Index: 1, DisplayTitle: 'Français' } ],
-            audioIndex: 1,
-            subtitles: [],
-            subtitleIndex: -1,
-            setAudio: vi.fn(),
-            setSubtitles: vi.fn()
-        });
-        expect(panel.querySelectorAll('.pf-osd-tracks__column')).toHaveLength(1);
-        expect(panel.classList.contains('pf-osd-panel--single')).toBe(true);
-    });
-});
-
 describe('renderSettingsPanel', () => {
     it('opens the speeds, picks one and comes back', () => {
         const panel = document.createElement('div');
@@ -118,6 +79,40 @@ describe('renderSettingsPanel', () => {
 
         expect(select).toHaveBeenCalledWith(1.5);
         expect(panel.querySelector('.pf-osd-row')?.textContent).toContain('1,5×');
+    });
+
+    it('groups the rows and opens the subtitle look, a trait at a time', () => {
+        const panel = document.createElement('div');
+        const select = vi.fn();
+        const subtitles = {
+            choices: [ { key: 'textSize', label: 'Size', setting: { value: 'Medium', options: [
+                { label: 'Medium', selected: true, onSelect: vi.fn() },
+                { label: 'Large', onSelect: select }
+            ] } } ],
+            height: { value: 'L3', step: vi.fn(() => 'L4') },
+            preview: vi.fn(),
+            recenter: vi.fn(),
+            reset: vi.fn()
+        };
+        renderSettingsPanel(panel, { quality: { value: 'Auto', options: [] }, subtitles });
+
+        expect(Array.from(panel.querySelectorAll('.pf-osd-heading')).map(heading => heading.textContent))
+            .toEqual([ 'Player.Settings', 'Player.GroupPlayback', 'Player.Subtitles' ]);
+        panel.querySelectorAll<HTMLButtonElement>('.pf-osd-row')[1].click();
+        expect(subtitles.preview).toHaveBeenCalled();
+
+        const rows = () => panel.querySelectorAll<HTMLButtonElement>('.pf-osd-row');
+        expect(rows()[0].textContent).toContain('Medium');
+        rows()[0].click();
+        panel.querySelectorAll<HTMLButtonElement>('.pf-osd-option')[1].click();
+        expect(select).toHaveBeenCalled();
+        // Back on the subtitle view, with the new value
+        expect(rows()[0].textContent).toContain('Large');
+
+        rows()[1].click();
+        panel.querySelectorAll<HTMLButtonElement>('.pf-osd-row')[0].click();
+        expect(subtitles.height.step).toHaveBeenCalledWith(-1);
+        expect(panel.querySelector('.pf-osd-heading--value')?.textContent).toBe('L4');
     });
 
     it('turns a switch', () => {

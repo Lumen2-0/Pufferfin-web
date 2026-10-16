@@ -14,7 +14,6 @@ $pf-sheet-rule: rgba(245, 242, 236, 0.12);
         // bottom, nothing of the sections below (rule, seasons, cast) in view
         min-height: 100vh;
         min-height: max(30rem, 100vh);
-        min-height: max(30rem, 100dvh);
     }
 
     .pf-hero__backdrop {
@@ -268,7 +267,7 @@ $pf-sheet-rule: rgba(245, 242, 236, 0.12);
     height: 5.5rem;
     margin-right: 1rem;
     overflow: hidden;
-    background: #141414;
+    background: #000;
     border-radius: 12px;
 
     img {

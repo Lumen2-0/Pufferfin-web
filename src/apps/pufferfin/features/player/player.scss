@@ -333,7 +333,7 @@
         position: relative;
         aspect-ratio: 16 / 9;
         overflow: hidden;
-        background: #141414;
+        background: #000;
         border: 2px solid #fff;
         border-radius: 8px;
         box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
@@ -361,7 +361,7 @@
         font-weight: 600;
         font-size: 12px;
         white-space: nowrap;
-        background: #141414;
+        background: #000;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 8px;
         font-variant-numeric: tabular-nums;
@@ -588,7 +588,7 @@
     .subtitleSyncContainer,
     .playerStats {
         color: var(--pf-color-text);
-        background: #141414;
+        background: #000;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 18px;
         box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
@@ -680,4 +680,49 @@
             animation: none;
         }
     }
+}
+
+// The video waits for data: a ring that shows only past a short wait, so a quick one flashes nothing
+.pf-player-skin.pf-buffering .videoPlayerContainer::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: -1.75rem 0 0 -1.75rem;
+    border: 3px solid rgba(255, 255, 255, 0.25);
+    border-top-color: #fff;
+    border-radius: 50%;
+    content: '';
+    opacity: 0;
+    pointer-events: none;
+    animation:
+        pf-buffering-in 200ms ease 500ms forwards,
+        pf-buffering-spin 0.9s linear infinite;
+}
+
+@keyframes pf-buffering-in {
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pf-buffering-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// Ambilight: the sampled picture, blurred, on the picture and spilling past its edges, under the video
+.pf-player-skin .pf-ambilight {
+    position: absolute;
+    z-index: -1;
+    filter: blur(5rem) saturate(1.8);
+    opacity: var(--pf-ambilight-opacity, 0.3);
+    transform: scale(var(--pf-ambilight-scale, 1.35));
+    transition:
+        opacity 400ms ease,
+        transform 400ms ease;
+    pointer-events: none;
 }

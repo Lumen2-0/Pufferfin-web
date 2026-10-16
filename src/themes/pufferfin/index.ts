@@ -53,7 +53,7 @@ const OPTIONS: ColorSystemOptions = {
         },
         background: {
             default: '#000',
-            paper: '#161412'
+            paper: '#000'
         },
         text: {
             primary: '#f5f2ec',

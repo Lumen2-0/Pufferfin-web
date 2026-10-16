@@ -116,6 +116,7 @@ $pf-lift-duration: 0.25s;
 }
 
 .pf-resume-card__image,
+.pf-resume-card__video,
 .pf-resume-card__placeholder,
 .pf-resume-card__shade {
     position: absolute;
@@ -128,6 +129,17 @@ $pf-lift-duration: 0.25s;
 .pf-resume-card__image {
     display: block;
     object-fit: cover;
+}
+
+.pf-resume-card__video {
+    display: block;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.pf-resume-card--previewing .pf-resume-card__video {
+    opacity: 1;
 }
 
 .pf-resume-card__placeholder {
@@ -206,18 +218,18 @@ $pf-lift-duration: 0.25s;
 
 .pf-resume-card__dismiss {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
+    top: 0.45rem;
+    right: 0.45rem;
     z-index: 2;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 1.75rem;
+    height: 1.75rem;
     padding: 0;
     color: #fff;
-    font-size: 1.05rem;
-    background: rgba(0, 0, 0, 0.78);
+    font-size: 0.95rem;
+    background: rgba(10, 10, 10, 0.72);
     border: 0;
     border-radius: 50%;
     outline: none;
@@ -229,7 +241,7 @@ $pf-lift-duration: 0.25s;
         transform $pf-lift-duration ease;
 
     &:hover {
-        background: #c0392b;
+        background: rgba(38, 38, 38, 0.95);
     }
 
     &:focus-visible {
@@ -239,7 +251,7 @@ $pf-lift-duration: 0.25s;
 
     [dir='rtl'] & {
         right: auto;
-        left: 0.5rem;
+        left: 0.45rem;
     }
 }
 
@@ -259,6 +271,47 @@ $pf-lift-duration: 0.25s;
 
     .pf-resume-card__triangle {
         transform: none;
+    }
+}
+
+// The pointer stayed: the card lights up and a ring fills in the 5 seconds before it plays
+.pf-resume-card--starting .pf-resume-card__open .pf-resume-card__shade,
+.pf-resume-card--starting .pf-resume-card__open .pf-resume-card__triangle {
+    opacity: 1;
+}
+
+.pf-resume-card--starting .pf-resume-card__open .pf-resume-card__triangle {
+    transform: none;
+}
+
+.pf-resume-card--previewing .pf-resume-card__art::after {
+    position: absolute;
+    inset: 0;
+    border: 2px solid #fff;
+    border-radius: var(--pf-radius-card);
+    content: '';
+    animation: pf-resume-start 5s linear forwards;
+}
+
+// The film runs: no veil or triangle over it, only the ring
+.pf-resume-card--previewing .pf-resume-card__open .pf-resume-card__shade,
+.pf-resume-card--previewing .pf-resume-card__open .pf-resume-card__triangle {
+    opacity: 0;
+}
+
+@keyframes pf-resume-start {
+    from {
+        clip-path: inset(0 100% 0 0);
+    }
+
+    to {
+        clip-path: inset(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-resume-card--previewing .pf-resume-card__art::after {
+        animation: none;
     }
 }
 

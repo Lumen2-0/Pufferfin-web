@@ -8,7 +8,10 @@ import { FOCUS_GROUP_ATTRIBUTE, FOCUSABLE_ATTRIBUTE } from '../navigation/focus'
 export interface HeroSlide {
     key: string
     title: string
-    eyebrow?: string
+    /** Facts under the title, such as the genres and the year. */
+    meta?: string
+    /** Small tags at the bottom right of the card, such as Movie or Series. */
+    badges?: string[]
     overview?: string | null
     backdropUrl: string
     actions: ReactNode
@@ -109,6 +112,18 @@ const HeroCarousel: FC<{ slides: HeroSlide[] }> = ({ slides }) => {
             onFocus={holdForKeyboard}
             onBlur={onBlur}
         >
+            {/* Ambilight: the art of the shown title, blurred, glows around the card and fades with it */}
+            <div className='pf-carousel__glow' aria-hidden='true'>
+                {slides.map((slide, slideIndex) => (
+                    <img
+                        key={slide.key}
+                        className={classNames('pf-carousel__glow-image', { 'pf-carousel__glow-image--active': slideIndex === index })}
+                        src={slide.backdropUrl}
+                        alt=''
+                        draggable={false}
+                    />
+                ))}
+            </div>
             <div className='pf-hero__frame' onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
                 {slides.map((slide, slideIndex) => (
                     <img
@@ -118,20 +133,36 @@ const HeroCarousel: FC<{ slides: HeroSlide[] }> = ({ slides }) => {
                         })}
                         src={slide.backdropUrl}
                         alt=''
-                        // The art of the next slides loads after the first one
-                        loading={slideIndex === 0 ? 'eager' : 'lazy'}
+                        // All loaded up front: the next art is ready when its turn comes, never popping in
+                        loading='eager'
                         draggable={false}
                     />
                 ))}
                 <div className='pf-hero__veil' aria-hidden='true' />
                 <div className='pf-hero__content'>
-                    <div key={active.key} className='pf-hero__text pf-carousel__text' aria-live={isHeld ? 'polite' : 'off'}>
-                        {active.eyebrow && <p className='pf-hero__eyebrow'>{active.eyebrow}</p>}
-                        <h2 className='pf-hero__title'>{active.title}</h2>
-                        {active.overview && <p className='pf-hero__overview'>{active.overview}</p>}
-                        <div className='pf-hero__actions pf-button-row'>{active.actions}</div>
+                    <div className='pf-carousel__texts' aria-live={isHeld ? 'polite' : 'off'}>
+                        {slides.map(slide => {
+                            const isActive = slide === active;
+                            return (
+                                <div
+                                    key={slide.key}
+                                    className={classNames('pf-hero__text', 'pf-carousel__text', { 'pf-carousel__text--active': isActive })}
+                                    aria-hidden={!isActive}
+                                >
+                                    <h2 className='pf-hero__title'>{slide.title}</h2>
+                                    {slide.meta && <p className='pf-hero__facts'>{slide.meta}</p>}
+                                    {slide.overview && <p className='pf-hero__overview'>{slide.overview}</p>}
+                                    <div className='pf-hero__actions pf-button-row'>{slide.actions}</div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
+                {!!active.badges?.length && (
+                    <ul key={active.key} className='pf-carousel__badges' aria-hidden='true'>
+                        {active.badges.map(badge => <li key={badge} className='pf-carousel__badge'>{badge}</li>)}
+                    </ul>
+                )}
                 {count > 1 && (
                     <div className='pf-carousel__dots' {...{ [FOCUS_GROUP_ATTRIBUTE]: true }}>
                         {slides.map((slide, slideIndex) => (

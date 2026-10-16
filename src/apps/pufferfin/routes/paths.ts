@@ -6,6 +6,9 @@ export const PUFFERFIN_APP_PATH = 'pufferfin';
 /** The Pufferfin home replaces the upstream home on the same path. */
 export const HOME_APP_PATH = 'home';
 
+/** Rows per tag of the server (Halloween, Noël, Gore...). */
+export const getExplorePath = () => `/${PUFFERFIN_APP_PATH}/explore`;
+
 /** Pufferfin home: titles on disk and catalog titles mixed. */
 export const getHomePath = () => `/${HOME_APP_PATH}`;
 
@@ -63,6 +66,9 @@ export const getLibraryViewPath = (viewId: string) => `${getLibraryPath()}/${vie
 
 /** Downloads panel: every request on its way, then the latest finished ones. */
 export const getDownloadsPath = () => `/${PUFFERFIN_APP_PATH}/downloads`;
+
+/** Personal statistics: time watched, favourite genres, busiest month. */
+export const getStatsPath = () => `/${PUFFERFIN_APP_PATH}/stats`;
 
 /** Menu: account, administration and the other Jellyfin libraries. */
 export const getMenuPath = () => `/${PUFFERFIN_APP_PATH}/menu`;

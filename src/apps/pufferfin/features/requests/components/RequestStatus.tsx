@@ -1,6 +1,8 @@
 import classNames from 'classnames';
 import React, { type FC } from 'react';
 
+import globalize from 'lib/globalize';
+
 import { useTranslation } from '../../../i18n/useTranslation';
 import { RequestState } from '../api/types';
 import type { DownloadTagState } from '../utils/requests';
@@ -17,6 +19,20 @@ const WAITING_STATES = new Set<RequestState>([
     RequestState.WaitingForSources,
     RequestState.Importing
 ]);
+
+/** A speed in the units of the language: Ko/s, Mo/s, Go/s in French, KB/s, MB/s, GB/s elsewhere. */
+function formatSpeed(bytesPerSecond: number): string {
+    const locale = globalize.getCurrentLocale() || undefined;
+    const units = locale?.toLowerCase().startsWith('fr') ? [ 'o/s', 'Ko/s', 'Mo/s', 'Go/s' ] : [ 'B/s', 'KB/s', 'MB/s', 'GB/s' ];
+    let index = 0;
+    let value = bytesPerSecond;
+    while (value >= 1024 && index < units.length - 1) {
+        value /= 1024;
+        index++;
+    }
+    const digits = value < 10 && index > 0 ? 1 : 0;
+    return `${new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(value)} ${units[index]}`;
+}
 
 interface RequestStatusProps {
     tag: DownloadTagState
@@ -45,7 +61,8 @@ const RequestStatus: FC<RequestStatusProps> = ({ tag, variant, isStale }) => {
     if (eta?.unit === 'under-minute') etaText = t('RequestEtaShortUnderMinute');
     else if (eta?.unit === 'minutes') etaText = t('RequestEtaShortMinutes', eta.minutes);
     else if (eta?.unit === 'hours') etaText = t('RequestEtaShortHours', eta.hours, String(eta.minutes).padStart(2, '0'));
-    const meta = showBar ? [ t('RequestPercent', percent), isStale ? t('RequestStale') : etaText ].filter(Boolean).join(' · ') : undefined;
+    const speedText = tag.bytesPerSecond ? formatSpeed(tag.bytesPerSecond) : undefined;
+    const meta = showBar ? [ t('RequestPercent', percent), speedText, isStale ? t('RequestStale') : etaText ].filter(Boolean).join(' · ') : undefined;
 
     return (
         <div

@@ -29,7 +29,7 @@ const ProfileSheet: FC<ProfileSheetProps> = ({ isOpen, onClose }) => {
     const titleId = useId();
     const panelRef = useRef<HTMLDivElement>(null);
     const openerRef = useRef<HTMLElement | null>(null);
-    const { userName, avatarUrl, accountEntries, adminEntries, choose } = useMenuEntries();
+    const { userName, avatarUrl, accountEntries, adminEntries, sessionEntries, choose } = useMenuEntries();
     const isSyncPlayOpen = useIsSyncPlayOpen();
 
     // Open: the focus moves into the sheet; closed: back to what opened it
@@ -113,6 +113,11 @@ const ProfileSheet: FC<ProfileSheetProps> = ({ isOpen, onClose }) => {
                         </ul>
                     </>
                 )}
+                <ul className='pf-sheet__list pf-sheet__list--session'>
+                    {sessionEntries.map(entry => (
+                        <SheetItem key={entry.id} entry={entry} onChoose={onChoose} />
+                    ))}
+                </ul>
             </div>
         </div>,
         document.body

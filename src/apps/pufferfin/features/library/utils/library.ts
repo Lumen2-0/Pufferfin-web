@@ -8,6 +8,9 @@ export const LIBRARY_PAGE_SIZE = 60;
  * What a library page lists, by the collection type of the library. Null for
  * a library Pufferfin has no page for yet (live TV): it opens upstream.
  */
+/** Id of the choice that lists the films and the series of every library together. */
+export const ALL_LIBRARY_ID = 'all';
+
 export function getViewItemTypes(collectionType: string | null | undefined): BaseItemKind[] | null {
     switch (collectionType) {
         case CollectionType.Movies:

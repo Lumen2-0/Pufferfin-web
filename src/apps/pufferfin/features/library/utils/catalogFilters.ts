@@ -40,16 +40,23 @@ export const SORT_LABELS: Record<LibrarySort, StringKey> = {
 export interface CatalogFilters {
     sort: LibrarySort
     genreId?: string
+    /** A tag of the server (Halloween, Christmas, Gore...), by name. */
+    tag?: string
     /** First year of a decade, such as 1990 for the 1990s. */
     decade?: number
     isUnplayed: boolean
     query: string
 }
 
+/** Whether anything narrows or reorders the titles, so the library shows a grid rather than its rows. */
+export const hasActiveFilters = (filters: CatalogFilters) =>
+    filters.sort !== LibrarySort.TitleAsc || !!filters.query || !!filters.genreId || !!filters.tag || !!filters.decade || filters.isUnplayed;
+
 /** The address parameters of the filters, next to `library`. */
 export const FILTER_PARAMS = {
     sort: 'sort',
     genre: 'genre',
+    tag: 'tag',
     decade: 'decade',
     unplayed: 'unplayed',
     query: 'q'
@@ -65,6 +72,7 @@ export function parseCatalogFilters(params: URLSearchParams): CatalogFilters {
     return {
         sort: isSort(sort) ? sort : LibrarySort.TitleAsc,
         genreId: params.get(FILTER_PARAMS.genre) || undefined,
+        tag: params.get(FILTER_PARAMS.tag) || undefined,
         decade: Number.isInteger(decade) && decade > 0 && decade % 10 === 0 ? decade : undefined,
         isUnplayed: params.get(FILTER_PARAMS.unplayed) === '1',
         query: params.get(FILTER_PARAMS.query) ?? ''
@@ -80,6 +88,7 @@ export function writeCatalogFilters(params: URLSearchParams, filters: CatalogFil
     };
     set(FILTER_PARAMS.sort, filters.sort === LibrarySort.TitleAsc ? undefined : filters.sort);
     set(FILTER_PARAMS.genre, filters.genreId);
+    set(FILTER_PARAMS.tag, filters.tag);
     set(FILTER_PARAMS.decade, filters.decade ? String(filters.decade) : undefined);
     set(FILTER_PARAMS.unplayed, filters.isUnplayed ? '1' : undefined);
     set(FILTER_PARAMS.query, filters.query || undefined);
@@ -146,6 +155,7 @@ export function toItemsFilter(filters: CatalogFilters, isBookLibrary: boolean): 
         sortBy,
         sortOrder,
         genreId: filters.genreId,
+        tag: filters.tag,
         years: filters.decade ? getDecadeYears(filters.decade) : undefined,
         isUnplayed: filters.isUnplayed || undefined,
         searchTerm: query || undefined

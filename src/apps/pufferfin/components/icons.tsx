@@ -1,14 +1,9 @@
 import classNames from 'classnames';
-import {
-    Activity, ArrowDown, ArrowRight, ArrowUp, Ban, BookOpen, Bookmark as LucideBookmark, Camera, Cast as LucideCast, Check as LucideCheck, ChevronDown, CircleAlert,
-    CircleCheck, CircleMinus, Clapperboard, Cloud, CloudOff as LucideCloudOff, Compass, Download as LucideDownload, ExternalLink, Globe, HardDrive, Info,
-    KeyRound, Languages, Library, ListVideo, Lock as LucideLock, type LucideIcon, Menu as LucideMenu, Mic as LucideMic, Music,
-    Network, Play, Puzzle, RefreshCw, RotateCcw, Search as LucideSearch, SlidersHorizontal, Trash2, TriangleAlert,
-    Tv as LucideTv, UserCog, Users, X
-} from 'lucide-react';
+import { Languages, CircleMinus, CloudOff as LucideCloudOff, type LucideIcon, Play, Shuffle as LucideShuffle } from 'lucide-react';
 import React, { type FC, type SVGProps } from 'react';
 
 import './icons.scss';
+import { MAJESTIC } from './majesticIcons';
 
 /**
  * The icons of the Pufferfin interface: Lucide drawings, thin strokes. They
@@ -35,51 +30,68 @@ function icon(Lucide: LucideIcon, name: string, extra: Partial<SVGProps<SVGSVGEl
     return Icon;
 }
 
-export const ArrowDownward = icon(ArrowDown, 'ArrowDownward');
-export const ArrowForward = icon(ArrowRight, 'ArrowForward');
-export const ArrowUpward = icon(ArrowUp, 'ArrowUpward');
-export const Block = icon(Ban, 'Block');
-export const Bookmark = icon(LucideBookmark, 'Bookmark');
-export const BookmarkFilled = icon(LucideBookmark, 'BookmarkFilled', { fill: 'currentColor' });
-export const PhotoCamera = icon(Camera, 'PhotoCamera');
-export const Cast = icon(LucideCast, 'Cast');
-export const CastConnected = icon(LucideCast, 'CastConnected', { fill: 'currentColor', fillOpacity: 0.25 });
-export const Check = icon(LucideCheck, 'Check');
-export const CheckCircle = icon(CircleCheck, 'CheckCircle');
-export const Close = icon(X, 'Close');
+function majestic(name: string): FC<IconProps> {
+    const Icon: FC<IconProps> = ({ fontSize = 'medium', className, ...props }) => (
+        <svg
+            viewBox='0 0 24 24'
+            fill='none'
+            className={classNames('pf-icon', `pf-icon--${fontSize}`, className)}
+            focusable='false'
+            {...props}
+        >
+            {MAJESTIC[name].map(([ Tag, attrs ]) => <Tag key={`${Tag}${attrs.d ?? attrs.cx}`} {...attrs} />)}
+        </svg>
+    );
+    Icon.displayName = name;
+    return Icon;
+}
+
+export const ArrowDownward = majestic('ArrowDownward');
+export const ArrowForward = majestic('ArrowForward');
+export const ArrowUpward = majestic('ArrowUpward');
+export const Block = majestic('Block');
+export const Bookmark = majestic('Bookmark');
+export const BookmarkFilled = majestic('BookmarkFilled');
+export const PhotoCamera = majestic('PhotoCamera');
+export const Cast = majestic('Cast');
+export const CastConnected = majestic('CastConnected');
+export const Check = majestic('Check');
+export const CheckCircle = majestic('CheckCircle');
+export const Close = majestic('Close');
 export const CloudOff = icon(LucideCloudOff, 'CloudOff');
-export const CloudOutlined = icon(Cloud, 'CloudOutlined');
-export const Delete = icon(Trash2, 'Delete');
-export const Download = icon(LucideDownload, 'Download');
-export const ErrorOutline = icon(CircleAlert, 'ErrorOutline');
-export const ExpandMore = icon(ChevronDown, 'ExpandMore');
-export const Explore = icon(Compass, 'Explore');
-export const Extension = icon(Puzzle, 'Extension');
-export const Groups = icon(Users, 'Groups');
-export const Hub = icon(Network, 'Hub');
-export const InfoOutlined = icon(Info, 'InfoOutlined');
-export const KeyOff = icon(KeyRound, 'KeyOff');
-export const Lock = icon(LucideLock, 'Lock');
-export const ManageAccounts = icon(UserCog, 'ManageAccounts');
-export const Menu = icon(LucideMenu, 'Menu');
-export const MenuBook = icon(BookOpen, 'MenuBook');
-export const Mic = icon(LucideMic, 'Mic');
-export const Movie = icon(Clapperboard, 'Movie');
-export const MusicNote = icon(Music, 'MusicNote');
-export const NetworkCheck = icon(Activity, 'NetworkCheck');
+export const CloudOutlined = majestic('CloudOutlined');
+export const Delete = majestic('Delete');
+export const Download = majestic('Download');
+export const ErrorOutline = majestic('ErrorOutline');
+export const ExpandMore = majestic('ExpandMore');
+export const Explore = majestic('Explore');
+export const Extension = majestic('Extension');
+export const Groups = majestic('Groups');
+export const Hub = majestic('Hub');
+export const InfoOutlined = majestic('InfoOutlined');
+export const KeyOff = majestic('KeyOff');
+export const Lock = majestic('Lock');
+export const ManageAccounts = majestic('ManageAccounts');
+export const Menu = majestic('Menu');
+export const MenuBook = majestic('MenuBook');
+export const Mic = majestic('Mic');
+export const Movie = majestic('Movie');
+export const MusicNote = majestic('MusicNote');
+export const NetworkCheck = majestic('NetworkCheck');
 // Play reads as a solid triangle, as on every player
-export const OpenInNew = icon(ExternalLink, 'OpenInNew');
+export const OpenInNew = majestic('OpenInNew');
 export const PlayArrow = icon(Play, 'PlayArrow', { fill: 'currentColor' });
-export const Queue = icon(ListVideo, 'Queue');
-export const Refresh = icon(RefreshCw, 'Refresh');
+export const Queue = majestic('Queue');
+export const Refresh = majestic('Refresh');
 export const RemoveCircleOutline = icon(CircleMinus, 'RemoveCircleOutline');
-export const Replay = icon(RotateCcw, 'Replay');
-export const Search = icon(LucideSearch, 'Search');
-export const Storage = icon(HardDrive, 'Storage');
-export const Sync = icon(RefreshCw, 'Sync');
-export const TravelExplore = icon(Globe, 'TravelExplore');
+export const Replay = majestic('Replay');
+export const Search = majestic('Search');
+export const Shuffle = icon(LucideShuffle, 'Shuffle');
+export const Storage = majestic('Storage');
+export const Sync = majestic('Sync');
+export const TravelExplore = majestic('TravelExplore');
 export const Translate = icon(Languages, 'Translate');
-export const Tune = icon(SlidersHorizontal, 'Tune');
-export const Tv = icon(LucideTv, 'Tv');
-export const VideoLibrary = icon(Library, 'VideoLibrary');
-export const WarningAmber = icon(TriangleAlert, 'WarningAmber');
+export const Tune = majestic('Tune');
+export const Tv = majestic('Tv');
+export const VideoLibrary = majestic('VideoLibrary');
+export const WarningAmber = majestic('WarningAmber');

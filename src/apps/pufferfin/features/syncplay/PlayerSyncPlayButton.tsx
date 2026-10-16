@@ -43,7 +43,6 @@ const PlayerSyncPlayButton: FC = () => {
             type='button'
             className={group ? 'pf-osd-top__sync pf-osd-top__sync--active' : 'pf-osd-top__sync'}
             aria-label={label}
-            title={label}
             aria-haspopup='dialog'
             aria-expanded={isOpen}
             onClick={onClick}

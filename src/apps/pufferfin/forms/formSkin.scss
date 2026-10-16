@@ -17,14 +17,14 @@ $skin: ':root.pf-form-skin';
 
     --pf-field-background: rgba(245, 242, 236, 0.07);
     --pf-field-background-focus: rgba(245, 242, 236, 0.12);
-    --pf-field-radius: 12px;
+    --pf-field-radius: 10px;
     // The ring of a field or a control: on a TV only (see the end of the sheet)
     --pf-field-ring: none;
     --pf-form-width: 30rem;
     --jf-palette-background-default: #000;
     --jf-palette-background-defaultChannel: 0 0 0;
     --jf-palette-background-defaultImage: none;
-    --jf-palette-background-paper: #161412;
+    --jf-palette-background-paper: #000;
     --jf-palette-background-paperChannel: 22 20 18;
     --jf-palette-primary-main: #f5f2ec;
     --jf-palette-primary-mainChannel: 245 242 236;
@@ -52,7 +52,7 @@ $skin: ':root.pf-form-skin';
     --jf-palette-FilledInput-borderColor: transparent;
     --jf-palette-AppBar-defaultBg: #000;
     --jf-palette-AppBar-gradient: none;
-    --jf-palette-Alert-infoFilledBg: #161412;
+    --jf-palette-Alert-infoFilledBg: #000;
     --jf-palette-Alert-infoFilledColor: #f5f2ec;
     --jf-palette-SnackbarContent-bg: #f5f2ec;
     --jf-palette-SnackbarContent-color: #000;
@@ -112,7 +112,7 @@ $skin: ':root.pf-form-skin';
         text-underline-offset: 0.2em;
     }
 
-    // Fields: a faint fill and no frame at rest, a warm white edge and the ring on focus
+    // Fields: a faint fill and no frame, a lighter fill on focus
 
     .emby-input,
     .emby-textarea,
@@ -132,9 +132,9 @@ $skin: ':root.pf-form-skin';
 
         &:focus {
             background: var(--pf-field-background-focus);
-            border-color: var(--pf-color-text) !important;
+            border-color: transparent !important;
             outline: none;
-            box-shadow: var(--pf-field-ring);
+            box-shadow: none;
         }
     }
 
@@ -251,8 +251,8 @@ $skin: ':root.pf-form-skin';
         padding: 0.7em 1.6em;
         color: var(--pf-color-text);
         font-weight: 600;
-        background: transparent;
-        border: 1px solid var(--pf-hairline);
+        background: rgba(255, 255, 255, 0.05);
+        border: 0;
         border-radius: 999px;
         box-shadow: none;
         transition:
@@ -498,8 +498,8 @@ $skin: ':root.pf-form-skin';
     // Profile: saving the password is the main action; the picture buttons stay quiet
     #btnAddImage.button-submit {
         color: var(--pf-color-text);
-        background: transparent;
-        border-color: var(--pf-hairline);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: transparent;
 
         &:hover {
             background: var(--pf-quiet-background-strong);
@@ -564,7 +564,8 @@ $skin: ':root.pf-form-skin';
         left: 50%;
         z-index: 1;
         color: var(--pf-color-text);
-        font-size: 4.5rem;
+        width: 4.5rem;
+        height: 4.5rem;
         transform: translateX(-50%);
     }
 
@@ -589,14 +590,23 @@ $skin: ':root.pf-form-skin';
         text-align: center;
     }
 
-    // The sign in page opens on its form alone: no logo above it, no "Please sign in".
+    // The sign in page opens on the logo and its form: no "Please sign in".
     // The title stays for screen readers, and the form sits in the middle of the screen
     #loginPage.standalonePage {
         display: flex;
         flex-direction: column;
         justify-content: center;
         min-height: 100vh;
-        padding-top: 2rem !important;
+        padding-top: 6rem !important;
+    }
+
+    // Sign in as a card: a black surface, a faint edge, the fields inside it
+    #loginPage .manualLoginForm {
+        box-sizing: border-box;
+        padding: 2rem;
+        background: var(--pf-panel-background);
+        border: 1px solid var(--pf-panel-border);
+        border-radius: 16px;
     }
 
     #loginPage .manualLoginForm .sectionTitle,

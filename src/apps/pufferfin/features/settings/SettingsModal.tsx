@@ -2,7 +2,7 @@ import { MediaSegmentType } from '@jellyfin/sdk/lib/generated-client/models/medi
 import type { UserConfiguration } from '@jellyfin/sdk/lib/generated-client/models/user-configuration';
 import type { UserDto } from '@jellyfin/sdk/lib/generated-client/models/user-dto';
 import classNames from 'classnames';
-import React, { type ChangeEvent, type FC, type FormEvent, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ChangeEvent, type FC, type FormEvent, type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useApi } from 'hooks/useApi';
@@ -11,7 +11,7 @@ import { currentSettings as userSettings } from 'scripts/settings/userSettings';
 import { MediaSegmentAction } from 'apps/legacy/features/playback/constants/mediaSegmentAction';
 import { getId as getSegmentSettingId, getMediaSegmentAction } from 'apps/legacy/features/playback/utils/mediaSegmentSettings';
 
-import { Check, Close, Download, type IconProps, Lock, ManageAccounts, MenuBook, PlayArrow, Translate, Tune, Tv } from '../../components/icons';
+import { Check, Close, Download, type IconProps, Lock, ManageAccounts, PlayArrow, Translate, Tune, Tv } from '../../components/icons';
 import { type GenreKey, GENRE_PREFERENCES } from '../preferences/genres';
 import { useHiddenGenres } from '../preferences/useHiddenGenres';
 import type { StringKey } from '../../i18n/translate';
@@ -34,6 +34,7 @@ import {
 import { FormNote, type SelectOption, Select, SettingRow, SettingsButton, Switch, TextField } from './components/fields';
 import { useReviewSite } from '../reviews/ReviewLink';
 import { parseReviewSite, ReviewSite } from '../reviews/reviewSite';
+import { InterfaceSize, parseInterfaceSize, useHeroSize, usePosterSize } from './interfaceSize';
 import { closeSettings, openSettings, SETTINGS_SECTIONS, SettingsSection, useOpenSettingsSection } from './store';
 
 import './settings.scss';
@@ -43,17 +44,32 @@ const SECTION_LABELS: Record<SettingsSection, StringKey> = {
     [SettingsSection.Profile]: 'SettingsSectionProfile',
     [SettingsSection.Preferences]: 'SettingsSectionPreferences',
     [SettingsSection.Playback]: 'SettingsSectionPlayback',
-    [SettingsSection.Subtitles]: 'SettingsSectionSubtitles',
     [SettingsSection.Downloads]: 'SettingsSectionDownloads',
     [SettingsSection.Interface]: 'SettingsSectionInterface',
     [SettingsSection.Devices]: 'SettingsSectionDevices'
 };
 
+const SECTION_HINTS: Record<SettingsSection, StringKey> = {
+    [SettingsSection.Profile]: 'SettingsHintProfile',
+    [SettingsSection.Preferences]: 'SettingsHintPreferences',
+    [SettingsSection.Playback]: 'SettingsHintPlayback',
+    [SettingsSection.Downloads]: 'SettingsHintDownloads',
+    [SettingsSection.Interface]: 'SettingsHintInterface',
+    [SettingsSection.Devices]: 'SettingsHintDevices'
+};
+
+/** A titled card of settings: what goes together reads together. */
+const SettingsGroup: FC<{ title: string, children: ReactNode }> = ({ title, children }) => (
+    <section className='pf-settings__block'>
+        <h4 className='pf-settings__group'>{title}</h4>
+        <div className='pf-settings__card'>{children}</div>
+    </section>
+);
+
 const SECTION_ICONS: Record<SettingsSection, FC<IconProps>> = {
     [SettingsSection.Profile]: ManageAccounts,
     [SettingsSection.Preferences]: Tune,
     [SettingsSection.Playback]: PlayArrow,
-    [SettingsSection.Subtitles]: MenuBook,
     [SettingsSection.Downloads]: Download,
     [SettingsSection.Interface]: Translate,
     [SettingsSection.Devices]: Tv
@@ -177,7 +193,8 @@ const ProfileSection: FC<{ me: UserDto }> = ({ me }) => {
             {isTooLarge && <FormNote tone='error'>{t('ProfilePictureTooLarge')}</FormNote>}
             {avatar.isError && <FormNote tone='error'>{t('ProfilePictureError')}</FormNote>}
 
-            <form className='pf-settings-form' onSubmit={onSubmit}>
+            <h4 className='pf-settings__group'>{t('SettingsGroupPassword')}</h4>
+            <form className='pf-settings-form pf-settings__card pf-settings__card--padded' onSubmit={onSubmit}>
                 <h3 className='pf-settings-form__title'>
                     <Lock fontSize='inherit' aria-hidden='true' />
                     {t('ProfilePassword')}
@@ -251,6 +268,14 @@ const PlaybackSection: FC<SectionProps> = ({ me, save }) => {
             <SettingRow label={t('PlaybackRememberSubtitles')}>
                 <ConfigSwitch label={t('PlaybackRememberSubtitles')} checked={config.RememberSubtitleSelections !== false} field='RememberSubtitleSelections' save={save} />
             </SettingRow>
+        </>
+    );
+};
+
+const SkipSection: FC = () => {
+    const t = useTranslation();
+    return (
+        <>
             {SKIPPABLE_SEGMENTS.map(({ type, label }, index) => (
                 <SettingRow
                     key={type}
@@ -299,11 +324,43 @@ const LanguageChip: FC<{ code: string, rank: number, name: string, onRemove: (co
 
 const NO_LANGUAGES: string[] = [];
 
-const DownloadsSection: FC<{ onSaved: () => void }> = ({ onSaved }) => {
-    const t = useTranslation();
+/** The Pufferfin settings of the user and how to change them; each saved change calls `onSaved`. */
+function usePufferfinSettingsUpdate(onSaved: () => void) {
     const { data: settings } = usePufferfinUserSettings();
     const save = useSavePufferfinUserSettings();
+    const update = useCallback((change: Partial<PufferfinUserSettings>) => {
+        save.mutate({ ...settings, ...change }, { onSuccess: onSaved });
+    }, [ onSaved, save, settings ]);
+    return { settings, update, isError: save.isError };
+}
+
+/** The Letterboxd account, which shapes the suggestions of Discover. */
+const LetterboxdRow: FC<{ onSaved: () => void }> = ({ onSaved }) => {
+    const t = useTranslation();
+    const { settings, update, isError } = usePufferfinSettingsUpdate(onSaved);
     const [ letterboxd, setLetterboxd ] = useState<string>();
+    const onBlur = useCallback(() => {
+        if (letterboxd !== undefined && letterboxd !== (settings?.LetterboxdUsername ?? '')) update({ LetterboxdUsername: letterboxd || null });
+    }, [ letterboxd, settings?.LetterboxdUsername, update ]);
+    return (
+        <>
+            <SettingRow label={t('LetterboxdAccount')} description={t('LetterboxdAccountHint')} htmlFor='pf-letterboxd'>
+                <TextField
+                    id='pf-letterboxd'
+                    value={letterboxd ?? settings?.LetterboxdUsername ?? ''}
+                    onChange={setLetterboxd}
+                    onBlur={onBlur}
+                    placeholder='username'
+                />
+            </SettingRow>
+            {isError && <FormNote tone='error'>{t('SettingsSaveError')}</FormNote>}
+        </>
+    );
+};
+
+const DownloadsSection: FC<{ onSaved: () => void }> = ({ onSaved }) => {
+    const t = useTranslation();
+    const { settings, update, isError } = usePufferfinSettingsUpdate(onSaved);
     const chosen = settings?.PreferredAudioLanguages ?? NO_LANGUAGES;
     const names = useMemo(() => new Intl.DisplayNames([ document.documentElement.lang || 'fr' ], { type: 'language' }), []);
     const nameOf = useCallback((code: string) => {
@@ -315,17 +372,10 @@ const DownloadsSection: FC<{ onSaved: () => void }> = ({ onSaved }) => {
         }
     }, [ names ]);
 
-    const update = useCallback((change: Partial<PufferfinUserSettings>) => {
-        save.mutate({ ...settings, ...change }, { onSuccess: onSaved });
-    }, [ onSaved, save, settings ]);
     const onRemove = useCallback((code: string) => update({ PreferredAudioLanguages: chosen.filter(item => item !== code) }), [ chosen, update ]);
     const onAdd = useCallback((code: string) => {
         if (code) update({ PreferredAudioLanguages: [ ...chosen, code ] });
     }, [ chosen, update ]);
-    const onLetterboxdBlur = useCallback(() => {
-        if (letterboxd !== undefined && letterboxd !== (settings?.LetterboxdUsername ?? '')) update({ LetterboxdUsername: letterboxd || null });
-    }, [ letterboxd, settings?.LetterboxdUsername, update ]);
-
     const addOptions = useMemo(() => [
         { value: '', label: t('DownloadsAddLanguage') },
         ...DOWNLOAD_LANGUAGES.filter(code => !chosen.includes(code)).map(code => ({ value: code, label: nameOf(code) }))
@@ -341,16 +391,7 @@ const DownloadsSection: FC<{ onSaved: () => void }> = ({ onSaved }) => {
                     <Select value='' options={addOptions} label={t('DownloadsAddLanguage')} onChange={onAdd} />
                 </div>
             </SettingRow>
-            <SettingRow label={t('LetterboxdAccount')} description={t('LetterboxdAccountHint')} htmlFor='pf-letterboxd'>
-                <TextField
-                    id='pf-letterboxd'
-                    value={letterboxd ?? settings?.LetterboxdUsername ?? ''}
-                    onChange={setLetterboxd}
-                    onBlur={onLetterboxdBlur}
-                    placeholder='username'
-                />
-            </SettingRow>
-            {save.isError && <FormNote tone='error'>{t('SettingsSaveError')}</FormNote>}
+            {isError && <FormNote tone='error'>{t('SettingsSaveError')}</FormNote>}
         </>
     );
 };
@@ -427,14 +468,35 @@ const InterfaceSection: FC = () => {
         { value: ReviewSite.SensCritique, label: 'SensCritique' }
     ], []);
     const onReviewSiteChange = useCallback((value: string) => setReviewSite(parseReviewSite(value)), [ setReviewSite ]);
+    const [ posterSize, setPosterSize ] = usePosterSize();
+    const [ heroSize, setHeroSize ] = useHeroSize();
+    const sizes = useMemo<SelectOption[]>(() => [
+        { value: InterfaceSize.Small, label: t('SizeSmall') },
+        { value: InterfaceSize.Medium, label: t('SizeMedium') },
+        { value: InterfaceSize.Large, label: t('SizeLarge') }
+    ], [ t ]);
+    const onPosterSizeChange = useCallback((value: string) => setPosterSize(parseInterfaceSize(value)), [ setPosterSize ]);
+    const onHeroSizeChange = useCallback((value: string) => setHeroSize(parseInterfaceSize(value)), [ setHeroSize ]);
     return (
         <>
-            <SettingRow label={t('InterfaceLanguage')} description={t('InterfaceLanguageHint')} htmlFor='pf-interface-language'>
-                <Select id='pf-interface-language' value={language} options={choices} onChange={onChange} />
-            </SettingRow>
-            <SettingRow label={t('ReviewSite')} description={t('ReviewSiteHint')} htmlFor='pf-review-site'>
-                <Select id='pf-review-site' value={reviewSite} options={reviewSites} onChange={onReviewSiteChange} />
-            </SettingRow>
+            <SettingsGroup title={t('SettingsGroupLanguage')}>
+                <SettingRow label={t('InterfaceLanguage')} description={t('InterfaceLanguageHint')} htmlFor='pf-interface-language'>
+                    <Select id='pf-interface-language' value={language} options={choices} onChange={onChange} />
+                </SettingRow>
+            </SettingsGroup>
+            <SettingsGroup title={t('SettingsGroupPosters')}>
+                <SettingRow label={t('PosterSize')} description={t('PosterSizeHint')} htmlFor='pf-poster-size'>
+                    <Select id='pf-poster-size' value={posterSize} options={sizes} onChange={onPosterSizeChange} />
+                </SettingRow>
+                <SettingRow label={t('HeroSize')} description={t('HeroSizeHint')} htmlFor='pf-hero-size'>
+                    <Select id='pf-hero-size' value={heroSize} options={sizes} onChange={onHeroSizeChange} />
+                </SettingRow>
+            </SettingsGroup>
+            <SettingsGroup title={t('SettingsGroupReviews')}>
+                <SettingRow label={t('ReviewSite')} description={t('ReviewSiteHint')} htmlFor='pf-review-site'>
+                    <Select id='pf-review-site' value={reviewSite} options={reviewSites} onChange={onReviewSiteChange} />
+                </SettingRow>
+            </SettingsGroup>
         </>
     );
 };
@@ -530,25 +592,33 @@ const SettingsPanel: FC<{ section: SettingsSection }> = ({ section }) => {
             case SettingsSection.Preferences:
                 content = (
                     <>
-                        <PreferencesSection />
-                        <ContentDownloadRow />
+                        <SettingsGroup title={t('SettingsGroupGenres')}><PreferencesSection /></SettingsGroup>
+                        <SettingsGroup title={t('SettingsGroupAccounts')}><LetterboxdRow onSaved={flash} /></SettingsGroup>
                     </>
                 );
                 break;
             case SettingsSection.Playback:
-                content = <PlaybackSection me={me} save={save} />;
-                break;
-            case SettingsSection.Subtitles:
-                content = <SubtitlesSection me={me} save={save} />;
+                content = (
+                    <>
+                        <SettingsGroup title={t('SettingsGroupAudio')}><PlaybackSection me={me} save={save} /></SettingsGroup>
+                        <SettingsGroup title={t('SettingsGroupSubtitles')}><SubtitlesSection me={me} save={save} /></SettingsGroup>
+                        <SettingsGroup title={t('SettingsGroupSkip')}><SkipSection /></SettingsGroup>
+                    </>
+                );
                 break;
             case SettingsSection.Downloads:
-                content = <DownloadsSection onSaved={flash} />;
+                content = (
+                    <>
+                        <SettingsGroup title={t('SettingsGroupLanguage')}><DownloadsSection onSaved={flash} /></SettingsGroup>
+                        <SettingsGroup title={t('SettingsGroupFiles')}><ContentDownloadRow /></SettingsGroup>
+                    </>
+                );
                 break;
             case SettingsSection.Interface:
                 content = <InterfaceSection />;
                 break;
             case SettingsSection.Devices:
-                content = <DevicesSection me={me} />;
+                content = <SettingsGroup title={t('QuickConnect')}><DevicesSection me={me} /></SettingsGroup>;
                 break;
         }
     }
@@ -563,7 +633,10 @@ const SettingsPanel: FC<{ section: SettingsSection }> = ({ section }) => {
                 </nav>
                 <section className='pf-settings__content' aria-labelledby='pf-settings-section'>
                     <header className='pf-settings__header'>
-                        <h3 id='pf-settings-section' className='pf-settings__section-title'>{t(SECTION_LABELS[section])}</h3>
+                        <div className='pf-settings__heading'>
+                            <h3 id='pf-settings-section' className='pf-settings__section-title'>{t(SECTION_LABELS[section])}</h3>
+                            <p className='pf-settings__section-hint'>{t(SECTION_HINTS[section])}</p>
+                        </div>
                         <span className={classNames('pf-settings__saved', { 'pf-settings__saved--visible': isSaved })} role='status'>
                             {isSaved && (
                                 <>

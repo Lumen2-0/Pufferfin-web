@@ -17,6 +17,7 @@ import { isPufferfinPath } from 'apps/pufferfin/routes/paths';
 // PUFFERFIN: account, settings, public pages and wizard in the Pufferfin style
 import FormSkin from 'apps/pufferfin/forms/FormSkin';
 // PUFFERFIN: every playback screen and shared dialog in the Pufferfin style
+import NextEpisodePrompt from 'apps/pufferfin/features/player/NextEpisodePrompt';
 import PlaybackSkin from 'apps/pufferfin/features/player/PlaybackSkin';
 import AppHeader from 'components/AppHeader';
 import Backdrop from 'components/Backdrop';
@@ -67,6 +68,7 @@ function RootAppLayout() {
             <Backdrop />
             <FormSkin /> {/* PUFFERFIN: Pufferfin style on the upstream form pages */}
             <PlaybackSkin /> {/* PUFFERFIN: the player skin applies to any playback, whatever its origin */}
+            <NextEpisodePrompt /> {/* PUFFERFIN: offers the next episode, or its download, at the end of one */}
             <AppHeader isHidden={layoutManager.modern || isNewLayoutPath} />
 
             <Outlet />

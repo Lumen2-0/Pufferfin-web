@@ -1,5 +1,6 @@
 import type { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
-import React, { type FC, useCallback } from 'react';
+import classNames from 'classnames';
+import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
@@ -12,6 +13,12 @@ import { getCardImageUrl } from '../../../utils/images';
 import { getDisplayTitle, getEpisodeNumbers, getPlayedPercentage, getRuntime } from '../../../utils/items';
 import { usePlayItem } from '../../../utils/usePlay';
 import { useDismissResume, useResumeItems } from '../../home/api/useHomeRows';
+
+// Under the pointer: after 3 seconds the film plays in the card, with its sound; 5 seconds after it
+// really runs, the full player opens. A film that cannot play in the card opens after the fallback.
+const PREVIEW_DELAY_MS = 3000;
+const PREVIEW_RUN_MS = 5000;
+const FALLBACK_DELAY_MS = PREVIEW_DELAY_MS + 8000;
 
 const getKey = (item: ItemDto) => item.Id ?? '';
 
@@ -49,10 +56,70 @@ const ResumeCard: FC<ResumeCardProps> = ({ item, onPlay, onDismiss }) => {
     const imageUrl = api ? getCardImageUrl(api, item, 'landscape') : undefined;
 
     const play = useCallback(() => onPlay(item), [ item, onPlay ]);
+
+    const [ isStarting, setIsStarting ] = useState(false);
+    const [ isPreviewing, setIsPreviewing ] = useState(false);
+    const timers = useRef<number[]>([]);
+    const hasRun = useRef(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const stopHover = useCallback(() => {
+        hasRun.current = false;
+        // A removed video keeps downloading the whole film until it is let go: it would fight the player for the line
+        videoRef.current?.removeAttribute('src');
+        videoRef.current?.load();
+        for (const timer of timers.current) window.clearTimeout(timer);
+        timers.current = [];
+        setIsStarting(false);
+        setIsPreviewing(false);
+    }, []);
+    const openPlayer = useCallback(() => {
+        stopHover();
+        // Before any click on the page the browser refuses a film with sound: the player would start without ever showing
+        if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
+        onPlay(item);
+    }, [ item, onPlay, stopHover ]);
+    const startHover = useCallback(() => {
+        stopHover();
+        timers.current = [
+            window.setTimeout(() => setIsStarting(true), PREVIEW_DELAY_MS),
+            window.setTimeout(openPlayer, FALLBACK_DELAY_MS)
+        ];
+    }, [ openPlayer, stopHover ]);
+    useEffect(() => stopHover, [ stopHover ]);
+
+    // The film runs in the card: the clock of the full player starts now, the fallback one is dropped
+    const onPreviewPlaying = useCallback(() => {
+        // Once: a freeze that recovers fires "playing" again and must not push the opening back
+        if (hasRun.current || !timers.current.length) return;
+        hasRun.current = true;
+        window.clearTimeout(timers.current[1]);
+        timers.current = [ timers.current[0], window.setTimeout(openPlayer, PREVIEW_RUN_MS) ];
+        setIsPreviewing(true);
+    }, [ openPlayer ]);
+    // A film the browser cannot read or loses: the still comes back, the fallback opens the player
+    const onPreviewError = useCallback(() => {
+        setIsStarting(false);
+        setIsPreviewing(false);
+    }, []);
+    // With its sound; a browser that refuses sound without a click plays it muted instead
+    const onPreviewReady = useCallback((event: React.SyntheticEvent<HTMLVideoElement>) => {
+        const video = event.currentTarget;
+        if (!video.paused) return;
+        video.play().catch(() => {
+            video.muted = true;
+            video.play().catch(() => undefined);
+        });
+    }, []);
+
+    // The film itself, from where it stopped. A format the browser cannot read leaves the still in place
+    const startSeconds = Math.floor((item.UserData?.PlaybackPositionTicks ?? 0) / 10000000);
+    const previewUrl = isStarting && api?.accessToken && item.Id ?
+        `${api.basePath}/Videos/${item.Id}/stream?static=true&api_key=${encodeURIComponent(api.accessToken)}#t=${startSeconds}` :
+        undefined;
     const dismiss = useCallback(() => onDismiss(item), [ item, onDismiss ]);
 
     return (
-        <span className='pf-resume-card'>
+        <span className={classNames('pf-resume-card', { 'pf-resume-card--starting': isStarting, 'pf-resume-card--previewing': isPreviewing })} onMouseEnter={startHover} onMouseLeave={stopHover}>
             <button
                 type='button'
                 className='pf-resume-card__open'
@@ -65,6 +132,11 @@ const ResumeCard: FC<ResumeCardProps> = ({ item, onPlay, onDismiss }) => {
                         <img className='pf-resume-card__image' src={imageUrl} alt='' loading='lazy' />
                     ) : (
                         <span className='pf-resume-card__placeholder' aria-hidden='true'>{title}</span>
+                    )}
+                    {previewUrl && (
+                        // A few seconds of the film as a preview: nothing to caption
+                        // eslint-disable-next-line jsx-a11y/media-has-caption
+                        <video ref={videoRef} className='pf-resume-card__video' src={previewUrl} playsInline preload='auto' aria-hidden='true' tabIndex={-1} onCanPlay={onPreviewReady} onPlaying={onPreviewPlaying} onError={onPreviewError} />
                     )}
                     <span className='pf-resume-card__shade' aria-hidden='true' />
                     <PlayTriangle />
@@ -85,6 +157,8 @@ const ResumeCard: FC<ResumeCardProps> = ({ item, onPlay, onDismiss }) => {
                 aria-label={`${t('ActionStopWatching')}, ${title}`}
                 title={t('ActionStopWatching')}
                 onClick={dismiss}
+                onMouseEnter={stopHover}
+                onMouseLeave={startHover}
                 {...{ [FOCUSABLE_ATTRIBUTE]: true }}
             >
                 <Close fontSize='inherit' aria-hidden='true' />

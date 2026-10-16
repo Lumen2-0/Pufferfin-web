@@ -4,6 +4,7 @@ import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-field
 import { ItemFilter } from '@jellyfin/sdk/lib/generated-client/models/item-filter';
 import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
 import { SortOrder } from '@jellyfin/sdk/lib/generated-client/models/sort-order';
+import { getFilterApi } from '@jellyfin/sdk/lib/utils/api/filter-api';
 import { getGenreApi } from '@jellyfin/sdk/lib/utils/api/genre-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
@@ -33,7 +34,7 @@ const isNewestFirst = (sortBy: ItemSortBy[] | undefined) =>
 /** The listing of a library of books, by name or newest first, without a genre or a studio: that one comes book by book. */
 const isBookListing = (itemTypes: BaseItemKind[] | null, filter: LibraryItemsFilter) =>
     !!itemTypes?.includes(BaseItemKindValue.AudioBook)
-    && !filter.genreId && !filter.studioId && !filter.isServerWide
+    && !filter.genreId && !filter.tag && !filter.studioId && !filter.isServerWide
     && !filter.years?.length && !filter.isUnplayed && !filter.searchTerm
     && (!filter.sortBy || isNewestFirst(filter.sortBy));
 
@@ -47,6 +48,8 @@ const IMAGE_TYPES = [ ImageType.Primary, ImageType.Thumb, ImageType.Backdrop ];
 /** Narrows a library grid: one genre, one network, or another order than by name. */
 export interface LibraryItemsFilter {
     genreId?: string
+    /** Only the titles with this tag. */
+    tag?: string
     studioId?: string
     /** Newest first when set, by name otherwise. */
     sortBy?: ItemSortBy[]
@@ -99,6 +102,7 @@ export const useLibraryItems = (
                 recursive: true,
                 includeItemTypes: itemTypes ?? undefined,
                 genreIds: filter.genreId ? [ filter.genreId ] : undefined,
+                tags: filter.tag ? [ filter.tag ] : undefined,
                 studioIds: filter.studioId ? [ filter.studioId ] : undefined,
                 sortBy: filter.sortBy ?? [ ItemSortBy.SortName ],
                 sortOrder: [ filter.sortOrder ?? (filter.sortBy ? SortOrder.Descending : SortOrder.Ascending) ],
@@ -141,7 +145,7 @@ export const useResumeAudioItems = () => {
 };
 
 /** The genres of one library, by name, for the Genres tab. */
-export const useLibraryGenres = (parentId: string | undefined, itemTypes: BaseItemKind[] | null) => {
+export const useLibraryGenres = (parentId: string | undefined, itemTypes: BaseItemKind[] | null, isServerWide = false) => {
     const { api, user } = useApi();
     return useQuery({
         queryKey: [ 'Pufferfin', 'Library', 'Genres', parentId, itemTypes, user?.Id ],
@@ -156,12 +160,29 @@ export const useLibraryGenres = (parentId: string | undefined, itemTypes: BaseIt
             }, { signal });
             return (response.data.Items ?? []) as ItemDto[];
         },
-        enabled: !!api && !!user?.Id && !!parentId
+        enabled: !!api && !!user?.Id && (!!parentId || isServerWide)
+    });
+};
+
+/** The tags of the titles of one library by name, for the Tag menu. */
+export const useLibraryTags = (parentId: string | undefined, itemTypes: BaseItemKind[] | null, isServerWide = false) => {
+    const { api, user } = useApi();
+    return useQuery({
+        queryKey: [ 'Pufferfin', 'Library', 'Tags', parentId, itemTypes, user?.Id ],
+        queryFn: async ({ signal }) => {
+            const response = await getFilterApi(api!).getQueryFiltersLegacy({
+                userId: user!.Id!,
+                parentId,
+                includeItemTypes: itemTypes ?? undefined
+            }, { signal });
+            return [ ...(response.data.Tags ?? []) ].sort((a, b) => a.localeCompare(b));
+        },
+        enabled: !!api && !!user?.Id && (!!parentId || isServerWide) && itemTypes !== null
     });
 };
 
 /** The years of the titles of one library, for the decades of the Year menu. */
-export const useLibraryYears = (parentId: string | undefined, itemTypes: BaseItemKind[] | null) => {
+export const useLibraryYears = (parentId: string | undefined, itemTypes: BaseItemKind[] | null, isServerWide = false) => {
     const { api, user } = useApi();
     return useQuery({
         queryKey: [ 'Pufferfin', 'Library', 'Years', parentId, itemTypes, user?.Id ],
@@ -175,7 +196,7 @@ export const useLibraryYears = (parentId: string | undefined, itemTypes: BaseIte
             }, { signal });
             return (response.data.Items ?? []).map(year => year.ProductionYear ?? Number(year.Name));
         },
-        enabled: !!api && !!user?.Id && !!parentId && itemTypes !== null
+        enabled: !!api && !!user?.Id && (!!parentId || isServerWide) && itemTypes !== null
     });
 };
 
